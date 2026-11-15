@@ -5,6 +5,20 @@
 import type { CalcDefinition } from "../../types";
 import { gerilimDusumu } from "./gerilim-dusumu";
 import { kabloKesitiSecimi } from "./kablo-kesiti-secimi";
+import { kisaDevreAkimi } from "./kisa-devre-akimi";
+import { kompanzasyon } from "./kompanzasyon";
+import { panoIsiHesabi } from "./pano-isi-hesabi";
 import { sigortaSalterSecimi } from "./sigorta-salter-secimi";
+import { topraklamaDirenci } from "./topraklama-direnci";
+import { trafoSecimiYuklenme } from "./trafo-secimi-yuklenme";
 
-export const TESISAT: CalcDefinition[] = [kabloKesitiSecimi, gerilimDusumu, sigortaSalterSecimi];
+export const TESISAT: CalcDefinition[] = [
+  kabloKesitiSecimi,
+  gerilimDusumu,
+  sigortaSalterSecimi,
+  kompanzasyon,
+  kisaDevreAkimi,
+  trafoSecimiYuklenme,
+  topraklamaDirenci,
+  panoIsiHesabi,
+];
