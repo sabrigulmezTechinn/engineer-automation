@@ -190,20 +190,20 @@ describe("geçerlilik aralığı (AdvancedPCB: ≤35 A, ≤0,4 inç, ΔT 10–10
   it("40 A ve 1 oz → akım ve genişlik uyarısı", () => {
     const u = uyarilar({ ...BASE, I: 40 });
     expect(u.some((c) => c.message.includes("35 A"))).toBe(true);
-    expect(u.some((c) => c.message.includes("0,4 inç"))).toBe(true);
+    expect(u.some((c) => c.message.includes("0,4 inç = 10,16 mm"))).toBe(true);
     expect(u.every((c) => c.reference?.standard.includes("AdvancedPCB"))).toBe(true);
   });
 
   it("ΔT 5 °C ve 120 °C → sıcaklık uyarısı; 10 ve 100 °C sınırda uyarı yok", () => {
-    expect(uyarilar({ ...BASE, dT: 5 }).some((c) => c.message.includes("10–100 °C"))).toBe(true);
-    expect(uyarilar({ ...BASE, dT: 120 }).some((c) => c.message.includes("10–100 °C"))).toBe(true);
+    expect(uyarilar({ ...BASE, dT: 5 }).some((c) => c.message.includes("10 °C – 100 °C"))).toBe(true);
+    expect(uyarilar({ ...BASE, dT: 120 }).some((c) => c.message.includes("10 °C – 100 °C"))).toBe(true);
     expect(uyarilar({ ...BASE, dT: 10 })).toEqual([]);
     expect(uyarilar({ ...BASE, dT: 100 })).toEqual([]);
   });
 
   it("özel kalınlık 12 µm ve 140 µm → kalınlık uyarısı; 0,5 ve 3 oz seçenekleri uyarısız", () => {
-    expect(uyarilar({ ...BASE, bakir: "ozel", t: 12e-6 }).some((c) => c.message.includes("0,5–3 oz"))).toBe(true);
-    expect(uyarilar({ ...BASE, bakir: "ozel", t: 140e-6 }).some((c) => c.message.includes("0,5–3 oz"))).toBe(true);
+    expect(uyarilar({ ...BASE, bakir: "ozel", t: 12e-6 }).some((c) => c.message.includes("0,5 – 3 oz"))).toBe(true);
+    expect(uyarilar({ ...BASE, bakir: "ozel", t: 140e-6 }).some((c) => c.message.includes("0,5 – 3 oz"))).toBe(true);
     expect(uyarilar({ ...BASE, bakir: "0.5", I: 0.5 })).toEqual([]);
     expect(uyarilar({ ...BASE, bakir: "3" })).toEqual([]);
   });

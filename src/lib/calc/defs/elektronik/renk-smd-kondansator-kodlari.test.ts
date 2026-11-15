@@ -265,6 +265,24 @@ describe("ters yön: değerden koda", () => {
     expect(mesaj(r, "SMD kodları")).toBe("SMD kodları: 3 karakter tam gösterilemez; 4 karakter 47L5; EIA-96 tam gösterilemez.");
   });
 
+  it("birim çevirisi artığı sapma sayılmaz: 0,23 kΩ ve 470 mΩ girdide sapma tam 0", () => {
+    for (const [value, unit] of [
+      ["0,23", "kohm"],
+      ["470", "mohm"],
+    ]) {
+      const r = run({ mod: { value: "ters" }, Rd: { value, unit } });
+      if (!r.ok) throw new Error(JSON.stringify(r));
+      expect(r.result.outputs.sapma4, `${value} ${unit}`).toBe(0);
+      expect(r.result.checks.some((c) => c.message.includes("sapma"))).toBe(false);
+    }
+  });
+
+  it("E serisinde olmayan değer: ters kipte 'kodu kontrol edin' yerine değer uyarısı", () => {
+    const u = def.compute({ ...T, Rd: 5000 }, ctx).checks.find((c) => c.level === "uyari");
+    expect(u?.message).toContain("standart (E serisi) bir direnç değeri değil");
+    expect(u?.message).not.toContain("Kodu kontrol edin");
+  });
+
   it("varsayılan dışı birim (runCalc): 2,2 MΩ girdi, 4 bant değeri kΩ ile", () => {
     const r = run({ mod: { value: "ters" }, Rd: { value: "2,2", unit: "Mohm" } }, { R4: "kohm" });
     if (!r.ok) throw new Error(JSON.stringify(r));

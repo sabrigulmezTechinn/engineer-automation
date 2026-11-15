@@ -27,7 +27,8 @@
  *   https://search.kemet.com/download/datasheet/C0805C101J5GACTU
  *   KEMET Y5V SMD MLCC (C1005_Y5V_SMD, 2/20/2025): Z = +%80/−%20:
  *   https://search.kemet.com/download/datasheet/C0805C104Z5VACTU
- *   KEMET X7R SMD MLCC (C1002_X7R, 2026-09-01) örneği "106" = 10 µF (çarpan hanesi 6).
+ *   KEMET X7R SMD MLCC (C1002_X7R, 2026-09-01) örneği "106" = 10 µF (çarpan hanesi 6):
+ *   https://search.kemet.com/download/datasheet/C0805C104K5RACTU
  */
 import { E_SERIES } from "../yardimci/e-serileri";
 

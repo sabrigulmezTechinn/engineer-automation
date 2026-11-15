@@ -15,7 +15,7 @@
  */
 import { latexNum, latexSpec } from "@/lib/calc/latex";
 import type { CalcDefinition, Check, ComputeInputs, InputSpec, OutputSpec, Reference, Step } from "@/lib/calc/types";
-import { formatQuantity, fromSI } from "@/lib/units";
+import { formatNumber, formatQuantity, fromSI } from "@/lib/units";
 import { autoOutputUnit } from "@/lib/calc/auto-unit";
 
 /** 1 mil (thou) = 25,4 µm (tanım gereği tam), m */
@@ -34,14 +34,14 @@ export type PcbBakir = "0.5" | "1" | "2" | "3" | "ozel";
 const MESSAGES = {
   ipc2152:
     "Bu sonuç IPC-2221 grafiklerine uydurulmuş genel formüldür ve yolu yalnız başına (yakınında düzlem/bakır alan olmadan) ele alır. Daha yeni IPC-2152 (2009) iletken boyutlandırmayı grafiklerle verir; bu hesapta kullanılmaz.",
-  akim: (I: string) =>
-    `Akım (${I}) IPC-2221 grafiklerinin kapsadığı 35 A'yı aşıyor; formül bu bölgede yalnızca dışarı değer veriyor (ekstrapolasyon).`,
-  genislik: (w: string) =>
-    `Yol genişliği (${w}) IPC-2221 grafiklerinin kapsadığı 0,4 inçi (10,16 mm) aşıyor; formül bu bölgede yalnızca dışarı değer veriyor.`,
-  sicaklik: (dT: string) =>
-    `Sıcaklık artışı (${dT}) IPC-2221 grafiklerinin kapsadığı 10–100 °C aralığının dışında; formül bu bölgede yalnızca dışarı değer veriyor.`,
-  kalinlik: (t: string) =>
-    `Bakır kalınlığı (${t}) IPC-2221 grafiklerinin kapsadığı 0,5–3 oz/ft² (17,5–105 µm) aralığının dışında; formül bu bölgede yalnızca dışarı değer veriyor.`,
+  akim: (I: string, sinir: string) =>
+    `Akım (${I}) IPC-2221 grafiklerinin kapsadığı ${sinir} değerini aşıyor; formül bu bölgede yalnızca dışarı değer veriyor (ekstrapolasyon).`,
+  genislik: (w: string, sinir: string) =>
+    `Yol genişliği (${w}) IPC-2221 grafiklerinin kapsadığı ${sinir} değerini aşıyor; formül bu bölgede yalnızca dışarı değer veriyor.`,
+  sicaklik: (dT: string, alt: string, ust: string) =>
+    `Sıcaklık artışı (${dT}) IPC-2221 grafiklerinin kapsadığı ${alt} – ${ust} aralığının dışında; formül bu bölgede yalnızca dışarı değer veriyor.`,
+  kalinlik: (t: string, alt: string, ust: string) =>
+    `Bakır kalınlığı (${t}) IPC-2221 grafiklerinin kapsadığı ${alt} – ${ust} oz/ft² aralığının dışında; formül bu bölgede yalnızca dışarı değer veriyor.`,
   direncYok: "Yol direnci, gerilim düşümü ve güç kaybı için yol uzunluğunu girin.",
 } as const;
 
@@ -54,9 +54,9 @@ const REF_ADVANCEDPCB: Reference = {
 
 const REFERENCES: Reference[] = [
   {
-    standard: "IPC-2221B",
-    title: "Generic Standard on Printed Board Design (Kasım 2012; IPC-2221A 2003 ve IPC-2221 1998'in yerine)",
-    note: "Akım taşıma formülü IPC-2221 grafiklerine yapılan eğri uydurmasıdır (k, b, c); standardın tablo ve grafikleri burada yayınlanmaz.",
+    standard: "IPC-2221",
+    title: "Generic Standard on Printed Board Design",
+    note: "Akım taşıma formülü IPC-2221 (eski IPC-D-275) grafiklerine yapılan eğri uydurmasıdır (k, b, c; AdvancedPCB). Standardın tablo ve grafikleri burada yayınlanmaz. Güncel revizyon IPC-2221B (Kasım 2012); grafiklerin bu revizyondaki yeri doğrulanmadı.",
   },
   REF_ADVANCEDPCB,
   {
@@ -279,7 +279,7 @@ export const pcbYolGenisligi: CalcDefinition = {
       t = oz * P.ozKalinligi;
       steps.push({
         label: "Bakır kalınlığı",
-        latex: `t = ${latexNum(oz)} \\cdot 1{,}378\\,\\text{mil} = ${q("t_cu", t)}`,
+        latex: `t = ${latexNum(oz)} \\cdot ${latexNum(P.ozKalinligi / MIL)}\\,\\text{mil} = ${q("t_cu", t)}`,
       });
     }
     outputs.t_cu = t;
@@ -340,14 +340,27 @@ export const pcbYolGenisligi: CalcDefinition = {
 
     // IPC-2221 grafiklerinin kapsamı
     const G = P.gecerlilik;
-    if (I > G.maksAkim) checks.push({ level: "uyari", message: MESSAGES.akim(text("I_izin", I)), reference: REF_ADVANCEDPCB });
-    if (w > G.maksGenislik) checks.push({ level: "uyari", message: MESSAGES.genislik(text("w_gerekli", w)), reference: REF_ADVANCEDPCB });
+    if (I > G.maksAkim) {
+      checks.push({ level: "uyari", message: MESSAGES.akim(text("I_izin", I), text("I_izin", G.maksAkim)), reference: REF_ADVANCEDPCB });
+    }
+    if (w > G.maksGenislik) {
+      const sinir = `${formatQuantity(fromSI(G.maksGenislik, "in"), "in")} = ${formatQuantity(fromSI(G.maksGenislik, "mm"), "mm")}`;
+      checks.push({ level: "uyari", message: MESSAGES.genislik(text("w_gerekli", w), sinir), reference: REF_ADVANCEDPCB });
+    }
     if (dT < G.minSicaklikArtisi || dT > G.maksSicaklikArtisi) {
-      checks.push({ level: "uyari", message: MESSAGES.sicaklik(text("dT", dT)), reference: REF_ADVANCEDPCB });
+      checks.push({
+        level: "uyari",
+        message: MESSAGES.sicaklik(text("dT", dT), text("dT", G.minSicaklikArtisi), text("dT", G.maksSicaklikArtisi)),
+        reference: REF_ADVANCEDPCB,
+      });
     }
     const tol = 1e-9;
     if (t < G.minBakirOz * P.ozKalinligi * (1 - tol) || t > G.maksBakirOz * P.ozKalinligi * (1 + tol)) {
-      checks.push({ level: "uyari", message: MESSAGES.kalinlik(text("t_cu", t)), reference: REF_ADVANCEDPCB });
+      checks.push({
+        level: "uyari",
+        message: MESSAGES.kalinlik(text("t_cu", t), formatNumber(G.minBakirOz), formatNumber(G.maksBakirOz)),
+        reference: REF_ADVANCEDPCB,
+      });
     }
     checks.push({ level: BILGI, message: MESSAGES.ipc2152 });
 

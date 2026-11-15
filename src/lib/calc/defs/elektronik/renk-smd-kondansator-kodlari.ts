@@ -440,6 +440,7 @@ const MESSAGES = {
   bantYonu:
     "Bant sırasını kontrol edin: tolerans bandı diğerlerinden daha geniş ya da daha aralıklıdır; okumaya karşı uçtan başlanır.",
   kodKontrol: "Kodu kontrol edin.",
+  tersSeri: "Bu değer standart (E serisi) bir direnç değeri değil; üretilen kodlar yalnızca gösterim içindir.",
   smd3: "Çip dirençlerde tolerans işaretlenmez; 3 karakterli kod E24 serisindeki %2, %5 ve %10 dirençlerde kullanılır.",
   smd4: "Çip dirençlerde tolerans işaretlenmez; 4 karakterli kod ≤%1 ve %2 (E24, E48/E96) dirençlerde kullanılır.",
   eia96: "EIA-96 kodu 0603 boyutundaki %1'lik (E96) dirençlerde kullanılır; tolerans ayrıca işaretlenmez.",
@@ -631,7 +632,9 @@ function tersHesabi(inputs: ComputeInputs) {
       checks.push({ level: BILGI, message: MESSAGES.tersYok(bant, bant === "4" ? "0,1 Ω – 99 GΩ" : "1 Ω – 999 GΩ"), reference: REF_VISHAY_20020 });
       continue;
     }
-    const sapma = (g.deger - R) / R;
+    // Birim çevirisi artığı (0,23 kΩ → 230,00000000000003 Ω) sapma olarak gösterilmesin.
+    const ham = (g.deger - R) / R;
+    const sapma = Math.abs(ham) <= 1e-9 ? 0 : ham;
     Object.assign(outputs, { [`R${bant}`]: g.deger, [`h${bant}`]: g.m, [`n${bant}`]: g.us, [`sapma${bant}`]: sapma });
     adimlar.push(`R_${bant} = ${g.m} \\cdot 10^{${g.us}}\\,\\Omega = ${q(`R${bant}`, g.deger)}`);
     const adlar = [
@@ -639,7 +642,7 @@ function tersHesabi(inputs: ComputeInputs) {
       etiket(ANAHTAR.carpan, renkler[renkler.length - 1]),
       tolEtiketi,
     ];
-    const yuvarlama = Math.abs(sapma) > 1e-9 ? ` (girilen değerden sapma ${metin("sapma4", sapma)})` : "";
+    const yuvarlama = sapma !== 0 ? ` (girilen değerden sapma ${metin("sapma4", sapma)})` : "";
     checks.push({
       level: BILGI,
       message: `${bant} bant (soldan sağa): ${adlar.join(" – ")} → ${metin("R", g.deger)} ${yuzde(tolBilgi.tol)}${yuvarlama}.`,
@@ -654,7 +657,7 @@ function tersHesabi(inputs: ComputeInputs) {
     message: MESSAGES.tersSmd(smd.uc ?? yok, smd.dort ?? yok, smd.eia96 ?? yok),
     reference: REF_VISHAY_20020,
   });
-  checks.push(seriKontrolu("R", R, MESSAGES.kodKontrol));
+  checks.push(seriKontrolu("R", R, MESSAGES.tersSeri));
   const steps: Step[] =
     adimlar.length > 0 ? [{ label: "Renk kodu: 4 bant 2, 5 bant 3 anlamlı haneye yuvarlanır", latex: adimlar.join(", \\quad ") }] : [];
   return { outputs, steps, checks };
