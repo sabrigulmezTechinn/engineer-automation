@@ -10,7 +10,9 @@ import { filtreKesimFrekansi } from "./filtre-kesim-frekansi";
 import { ledOnDirenci } from "./led-on-direnci";
 import { lm317AyarliRegulator } from "./lm317-ayarli-regulator";
 import { opAmpKazanci } from "./op-amp-kazanci";
+import { pcbYolGenisligi } from "./pcb-yol-genisligi";
 import { rcRlZamanSabiti } from "./rc-rl-zaman-sabiti";
+import { renkSmdKondansatorKodlari } from "./renk-smd-kondansator-kodlari";
 import { sogutucuIsilHesap } from "./sogutucu-isil-hesap";
 import { transistorBazDirenciMosfetKaybi } from "./transistor-baz-direnci-mosfet-kaybi";
 
@@ -19,10 +21,12 @@ export const ELEKTRONIK: CalcDefinition[] = [
   rcRlZamanSabiti,
   filtreKesimFrekansi,
   opAmpKazanci,
+  renkSmdKondansatorKodlari,
   zamanlayici555,
   lm317AyarliRegulator,
   transistorBazDirenciMosfetKaybi,
   buckBoostDonusturucu,
+  pcbYolGenisligi,
   sogutucuIsilHesap,
   bataryaOmru,
 ];
