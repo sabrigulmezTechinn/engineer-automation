@@ -5,8 +5,10 @@
 import type { CalcDefinition } from "../../types";
 import { hidrolikSilindirPompa } from "./hidrolik-silindir-pompa";
 import { pnomatikSilindir } from "./pnomatik-silindir";
+import { vakumVantuz } from "./vakum-vantuz";
 
 export const MEKATRONIK: CalcDefinition[] = [
   pnomatikSilindir,
   hidrolikSilindirPompa,
+  vakumVantuz,
 ];
