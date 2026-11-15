@@ -572,7 +572,9 @@ function CheckList({ checks }: { checks: Check[] }) {
                 {ref && (
                   <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
                     <span>Referans:</span>
-                    <Badge mono>{ref.standard}</Badge>
+                    <Badge mono className="leading-snug [overflow-wrap:anywhere]">
+                      {ref.standard}
+                    </Badge>
                     {ref.clause && <span>{ref.clause}</span>}
                   </p>
                 )}

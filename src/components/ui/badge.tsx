@@ -27,7 +27,7 @@ export function Badge({
   return (
     <span
       className={cx(
-        "inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-xs leading-none font-medium",
+        "inline-flex max-w-full shrink-0 items-center rounded border px-1.5 py-0.5 text-xs leading-none font-medium",
         mono && "font-mono tabular-nums",
         TONES[tone],
         className,
