@@ -11,7 +11,7 @@
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
 | 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (10b478a; 1238 test, e2e 111 adım) |
 | 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ✅ Bitti (38 hesap; 072aad2: 1623 test, e2e 145 adım; danışman incelemesi) |
-| 4 | Elektronik (12) | 🔄 Sürüyor (ortak zemin 7f2836c; işçiler A–D) |
+| 4 | Elektronik (12) | ✅ Bitti (50 hesap, tüm kapsam; cd60d21: 2158 test, e2e 169 adım) |
 
 ## Hesaplar
 
@@ -23,7 +23,7 @@
 | 7.1–7.2 | Yardımcı araçlar | ✅ |
 | 2.1–2.8 | Elektrik tesisat | ✅ (2.1: katalog yolu Prysmian NYY/YXV + elle I₀; IEC 60364-5-52 Ek G yok) |
 | 6.1–6.9 | Mekatronik | ✅ |
-| 4.1–4.12 | Elektronik | ⏳ Faz 4 |
+| 4.1–4.12 | Elektronik | ✅ (4.5 özel arayüzlü: renkli bant çizimi + kod metin kutusu) |
 
 Danışman Faz 1'de şu hesapların formül gövdelerini inceledi: 1.4, 1.7, 3.3, 3.4 (aritmetik), 5.3, 7.1 (AWG), 7.2.
 Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçilerin elle hesaplanmış testlerine dayanır.
@@ -78,6 +78,13 @@ Faz 3'te danışman 2.1–2.3, 2.5, 2.7, 6.2, 6.9 gövdelerini inceledi (formül
 - 2.5 varsayılan gerilim toleransı +%6 (c_maks 1,05; CT158 örneğiyle aynı), +%10 seçilebilir; faz-toprak Dyn trafo ve PE dönüşü kabulüyle.
 - Faz 4 ortak zemini: ns/µJ/mJ/nC/µC birimleri; 4.5 için "renk-kodu" özel arayüzü (durum select'lerde, metin kutusu ayrıştırır;
   yeni girdi türü yok); select çarpımı 512'yi aşınca görünürlüğü yöneten select'ler × diğer her seçenek tek tek denenir.
+- Faz 4 standart değer yuvarlama: güvenli yön (LED ön direnci, LM317 akım direnci, bobin, kondansatör üst komşu; BJT baz
+  direnci alt komşu); kazanç/V_o/555/filtre en yakın değer; değer seride varsa kendisi. E serileri yardimci/e-serileri.ts'ten.
+- 4.6 555: compute tam ln 2 ve ln 3; 1,44 ve 1,1 yalnızca gösterilen formüllerde (veri sayfası yaklaşımı).
+- 4.9: TI SLVA477C (buck) ve SLVA372D (boost) denklem numaralarıyla; boost dalgalanma tabanı I_o·V_o/V_in,tip (Denk. 6, η'sız);
+  buck D = V_o/(V_in·η) (gövde Denk. 1; aynı notun Ek A'sı V_o·η/V_in der, çelişki referans notunda).
+- 4.12 Peukert: t = d·H·(C/(I·H))^k (kullanılabilir oran d üssün dışında); k varsayılanı 1,25 (Victron, kurşun-asit).
+- 4.10 IPC-2221: I = k·ΔT^0,44·A^0,725 (A mil²; dış 0,048, iç 0,024); IPC-2152 kapalı formu yok, yalnızca referans.
 - Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
@@ -103,5 +110,10 @@ Faz 3'te danışman 2.1–2.3, 2.5, 2.7, 6.2, 6.9 gövdelerini inceledi (formül
 - 2.5: c_min değeri CT158 (IEC 60909 2001 baskısına dayanır); 2016 baskısındaki değer doğrulanmadı.
 - 2.3: gG sigortada I_n < 16 A için I₂/I_n oranının kaynağı açılamadı (kullanıcı girdisi). Kablo reaktansı için Türk üretici tablosu bulunamadı.
 - 6.x: ISO 3408, 15552, 6432, 6020-2, 6022, 281 tam metinleri açılmadı (değerler THK/Festo/SKF kataloglarından).
+- Faz 4: kategori içi yardımcılar (temel-ortak, entegre-ortak, guc-ortak, kod-ortak, mekatronik/tahrik-ortak) num/specWriter
+  kopyalarını tekrarlar; tekilleştirilebilir. 4.10'da ρ/α tavlanmış tel değeri (config), PCB folyosu farklı olabilir.
+- Faz 4 önerileri: nA birimi, mil², 1/K, `maxExclusive`, `visibleWhen` VE koşulu, CalcFormView'de girdi gizleme (4.5'te bant
+  select'leri hem panelde hem formda), moda bağlı çıktı etiketi.
+- 4.9 kapsam dışı: diyot kaybı, ESR dalgalanması, giriş kondansatörü. 4.11: paralel R_θJA modeli yok.
 - formatNumber negatif sayıda ASCII "-" yazar ("−5 °C" yerine "-5 °C").
 - Öneriler (Faz 3 işçileri): 1/K, mm⁴, kg/m³, "milyon devir", NL hacim birimleri; eşli liste girdisi (P_i ile cos φ_i).
