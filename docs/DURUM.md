@@ -11,7 +11,7 @@
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
 | 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (10b478a; 1238 test, e2e 111 adım) |
 | 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ✅ Bitti (38 hesap; 072aad2: 1623 test, e2e 145 adım; danışman incelemesi) |
-| 4 | Elektronik (12) | ✅ Bitti (50 hesap, tüm kapsam; cd60d21: 2158 test, e2e 169 adım) |
+| 4 | Elektronik (12) | ✅ Bitti (50 hesap, tüm kapsam; c04dce2: 2173 test — veritabanı entegrasyon testleri dahil, atlanan yok; e2e 169 adım) |
 
 ## Hesaplar
 
