@@ -85,6 +85,10 @@ Faz 3'te danışman 2.1–2.3, 2.5, 2.7, 6.2, 6.9 gövdelerini inceledi (formül
   buck D = V_o/(V_in·η) (gövde Denk. 1; aynı notun Ek A'sı V_o·η/V_in der, çelişki referans notunda).
 - 4.12 Peukert: t = d·H·(C/(I·H))^k (kullanılabilir oran d üssün dışında); k varsayılanı 1,25 (Victron, kurşun-asit).
 - 4.10 IPC-2221: I = k·ΔT^0,44·A^0,725 (A mil²; dış 0,048, iç 0,024); IPC-2152 kapalı formu yok, yalnızca referans.
+- Referans olarak ders kitabı (OpenStax University Physics, CC BY-NC-SA) yalnızca bölüm/denklem numarası ve çözümlü örnek
+  sayılarıyla anılır; metin veya şekil kopyalanmaz. Atıf lisans gerektirmez; kullanıcı ticari kullanımda kaynağı değiştirmek
+  isterse 4.2/4.3 referansları üretici uygulama notlarıyla değiştirilebilir.
+- Profildeki "ondalık basamak" anlamlı basamak olarak uygulanır (KAPSAM §3.1'den bilinçli sapma); imperial tercih hesaplara uygulanır.
 - Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
@@ -96,14 +100,12 @@ Faz 3'te danışman 2.1–2.3, 2.5, 2.7, 6.2, 6.9 gövdelerini inceledi (formül
 - Hız sınırlayıcılar (auth, rapor) bellek içi ve tek süreçlidir; IP `x-forwarded-for`'dan okunur.
 - Dev veritabanında e2e test kullanıcıları birikir (e2e.*@ornek.com.tr).
 
-- Faz 2 (KAPSAM §3.1'den sapma, planlandı): profildeki "ondalık basamak" tercihi "anlamlı basamak" olarak yeniden tanımlanacak.
 - 3.5: IE verim sınıfı tablosu (AB 2019/1781 Ek I) eklenmedi; eur-lex otomatik indirmeye izin vermedi. Elle indirilip eklenmeli.
 - İçeriği açılıp doğrulanamayan referanslar: IEC 60947-4-1/-4-2, 61800-2, 60034 ailesi madde numaraları; TIA/EIA-485-A; NAMUR NE 43; ASTM B258; IEC 60063 tabloları (Vishay üzerinden); Ziegler & Nichols 1942 özgün makalesi; IEV madde numaraları.
-- Öneriler: `zaman` boyutuna yıl birimi (3.5 geri ödeme şimdilik birimsiz), 1/s boyutu (5.5 K_i), bilgi seviyesinde Check, `visibleWhen` VE koşulu, metin girdisi (5.1 proses birimi etiketi), dBm gibi gösterim eki, mekanik büyüklükleri adımlarda varsayılan birimle yazan LaTeX yardımcısı (Faz 3 öncesi).
+- Öneriler: 1/s boyutu (5.5 K_i), `visibleWhen` VE koşulu, metin girdisi (5.1 proses birimi etiketi), dBm gibi gösterim eki.
 
 - Gerçek e-posta sağlayıcısı (şimdilik konsol + `.dev-mail/`).
 - Oran sınırlayıcı istemci kaynaklı `x-forwarded-for`'a güveniyor; dağıtım ortamındaki ters vekile göre düzeltilmeli.
-- Profil tercihleri (ondalık basamak, birim sistemi) kaydediliyor ama hesap sayfalarına uygulanmıyor (Faz 2 ile birlikte).
 - Standart seti seçenekleri (`iec`, `ts`) geçici.
 - Faz 3: IEC 60364-5-52 tabloları telif nedeniyle birebir gömülemez (KAPSAM §5.1); üretici katalog değerleri veya lisans gerekir.
 - 2.2: EİTY'nin güncel birleştirilmiş metni mevzuat.gov.tr'de bulunamadı; sınırlar 1995 değişikliğinden. Elle teyit edilmeli.

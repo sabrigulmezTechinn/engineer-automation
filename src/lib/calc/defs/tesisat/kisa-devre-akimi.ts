@@ -37,7 +37,7 @@ const MESSAGES = {
   sebekeYok: "Üst gerilim şebekesinin empedansı ihmal edildi (sonsuz güçlü şebeke): sonuç güvenli tarafta (büyük) çıkar.",
   faz1:
     "Faz-toprak akımı basitleştirilmiş döngü empedansıyla hesaplandı: Dyn bağlı trafo, Z₀T = Z_T kabulü (üreticinin sıfır bileşen empedansı farklı olabilir); dönüş yalnızca PE/PEN iletkeni üzerinden (kablo zırhı ve toprak paralel yolları ihmal); Z_döngü = ⅔·Z_Q + Z_T + Z_L + Z_PE.",
-  cmin: "En küçük kısa devre akımı için c_min kullanıldı. Koruma düzeninin açma koşulunu kontrol ederken kablo direncini en yüksek işletme sıcaklığındaki değeriyle girin.",
+  cmin: "En küçük kısa devre akımı için c_min kullanıldı (değer Schneider Cahier Technique 158'den; o belge IEC 60909'un 2001 baskısına dayanır, 2016 baskısındaki değer doğrulanmadı). Koruma düzeninin açma koşulunu kontrol ederken kablo direncini en yüksek işletme sıcaklığındaki değeriyle girin.",
 } as const;
 
 const OUTPUTS: OutputSpec[] = [
