@@ -68,13 +68,13 @@ describe("varsayılan dışı birimler (runCalc)", () => {
     expect(o.dE / KWH).toBeCloseTo(4230.9213, 4);
     expect(o.dC).toBeCloseTo(14808.2244, 4);
     expect(o.geriOdeme).toBeCloseTo(2.025901, 6);
-    // Kartlar: ΔE kWh ailesinde otomatik (4231 kWh → 4,231 MWh), ΔP W'a iner, para TL'de kalır
-    expect(r.outputs.find((x) => x.key === "dE")).toMatchObject({ unit: "MWh", formatted: "4,231 MWh" });
+    // Kartlar: ΔE kWh'de sabit (autoUnit: false), ΔP W'a iner, para TL'de kalır
+    expect(r.outputs.find((x) => x.key === "dE")).toMatchObject({ unit: "kWh", formatted: "4231 kWh" });
     expect(r.outputs.find((x) => x.key === "dP")).toMatchObject({ unit: "W" });
     expect(r.outputs.find((x) => x.key === "dC")).toMatchObject({ unit: "TL" });
   });
 
-  it("küçük tasarruf kWh'de kalır; kartla adım aynı birimi kullanır", () => {
+  it("tasarruf her büyüklükte kWh'de kalır; kartla adım aynı birimi kullanır", () => {
     // Elle: ΔP = 1500·(1/0,88 − 1/0,92) = 74,11 W; 2000 sa → 148,2 kWh
     const small = run({ P: { value: "1,5", unit: "kW" }, t: { value: "2000", unit: "h" } });
     if (!small.ok) throw new Error(JSON.stringify(small));
@@ -82,8 +82,10 @@ describe("varsayılan dışı birimler (runCalc)", () => {
     expect(small.result.steps.find((s) => s.label === "Yıllık enerji tasarrufu")?.latex).toMatch(/148\{,\}2\\,\\mathrm\{kWh\}$/);
     const big = run({ P: { value: "200", unit: "kW" }, t: { value: "8000", unit: "h" } });
     if (!big.ok) throw new Error(JSON.stringify(big));
-    expect(big.outputs.find((x) => x.key === "dE")).toMatchObject({ unit: "MWh" });
-    expect(big.result.steps.find((s) => s.label === "Yıllık enerji tasarrufu")?.latex).toMatch(/\\mathrm\{MWh\}$/);
+    // Elle: ΔP = 200 000·(1/0,88 − 1/0,92) = 9881,4 W; 8000 sa → 79 051 kWh (MWh'ye geçmez)
+    expect(big.outputs.find((x) => x.key === "dE")).toMatchObject({ unit: "kWh" });
+    expect(big.outputs.find((x) => x.key === "dE")?.value).toBeCloseTo(79051.4, 1);
+    expect(big.result.steps.find((s) => s.label === "Yıllık enerji tasarrufu")?.latex).toMatch(/\\mathrm\{kWh\}$/);
   });
 
   it("yılda 8784 saati aşan süre ve %100'ü aşan verim reddedilir", () => {

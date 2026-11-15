@@ -8,7 +8,6 @@
  *
  * IE sınıfı tespiti bu sürümde yok: (EU) 2019/1781 Ek I tablosu birincil kaynaktan indirilemedi.
  */
-import { autoOutputUnit } from "@/lib/calc/auto-unit";
 import { latexAuto, latexNum, latexQty } from "@/lib/calc/latex";
 import type { CalcDefinition, Check, Step } from "@/lib/calc/types";
 import { num, optNum, qFrac } from "./ortak";
@@ -24,8 +23,8 @@ const MESSAGES = {
 } as const;
 
 const qP = (v: number) => latexAuto(v, "guc");
-/** Enerji, kartla aynı birimde (kWh varsayılan; Wh/MWh'ye otomatik geçer) */
-const qEkWh = (v: number) => latexQty(v, autoOutputUnit({ dimension: "enerji", defaultUnit: "kWh" }, v));
+/** Enerji tasarrufu kWh'de sabit (kart da autoUnit: false); TL/kWh fiyatla aynı birimde çarpılsın. */
+const qEkWh = (v: number) => latexQty(v, "kWh");
 const qTL = (v: number) => latexQty(v, "TL");
 const qPrice = (v: number) => latexQty(v, "TL_kWh");
 const qHours = (v: number) => latexQty(v, "h");
@@ -138,7 +137,15 @@ export const motorVerimiEnerjiTasarrufu: CalcDefinition = {
     { key: "P1", label: "Mevcut motorun giriş gücü", symbol: "P_1", dimension: "guc", defaultUnit: "kW" },
     { key: "P2", label: "Yeni motorun giriş gücü", symbol: "P_2", dimension: "guc", defaultUnit: "kW" },
     { key: "dP", label: "Güç farkı", symbol: "\\Delta P", dimension: "guc", defaultUnit: "kW" },
-    { key: "dE", label: "Yıllık enerji tasarrufu", symbol: "\\Delta E", dimension: "enerji", defaultUnit: "kWh" },
+    {
+      key: "dE",
+      label: "Yıllık enerji tasarrufu",
+      symbol: "\\Delta E",
+      dimension: "enerji",
+      defaultUnit: "kWh",
+      // Tasarruf kWh ile ifade edilir ve TL/kWh fiyatla çarpılır; MWh'ye otomatik geçmesin.
+      autoUnit: false,
+    },
     { key: "dC", label: "Yıllık maliyet tasarrufu", symbol: "\\Delta C", dimension: "para", defaultUnit: "TL" },
     {
       key: "geriOdeme",
