@@ -149,7 +149,7 @@ describe("better-auth + PostgreSQL", () => {
       company: "Örnek Mühendislik A.Ş.",
       jobTitle: "Elektrik Mühendisi",
       unitSystem: "si",
-      decimals: 3,
+      decimals: 4,
       standardSet: "iec",
     });
 

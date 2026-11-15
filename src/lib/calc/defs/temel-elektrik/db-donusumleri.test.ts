@@ -109,7 +109,7 @@ describe("motor üzerinden (runCalc)", () => {
     const s = defaultState(calc);
     const w = ok(runCalc(calc, { ...s, mod: { value: "guc-dbm" }, P: { value: "1", unit: "W" } }));
     expect(w.result.outputs.dBm).toBeCloseTo(30, 12);
-    expect(w.outputs[0]).toMatchObject({ unit: "dB", label: expect.stringContaining("dBm") });
+    expect(w.outputs[0]).toMatchObject({ unit: "dB", unitSymbol: "dBm", formatted: "30 dBm" });
     const mw = ok(runCalc(calc, { ...s, mod: { value: "guc-dbm" }, P: { value: "0,001", unit: "W" } }));
     expect(mw.result.outputs.dBm).toBeCloseTo(0, 12);
     const uv = ok(runCalc(calc, { ...s, mod: { value: "gerilim-dbv" }, U: { value: "1", unit: "uV" } }));
