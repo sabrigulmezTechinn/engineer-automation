@@ -1,16 +1,17 @@
 /**
  * Yönetmelik ve standart sınır değerleri (KAPSAM §5.4).
- * Bu değerler değişebilir; hesap kodunun içine gömülmez, buradan `ctx.limits` ile okunur.
- * Her değerin yanında kaynağı yazılır. Faz 1 ve sonrası hesaplar ihtiyaç duydukça alan ekler.
+ * Bu değerler değişebilir; hesap kodunun içine gömülmez, `ctx.limits` ile okunur.
+ * Her kategori kendi dosyasında (src/config/sinir/<kategori>.ts) tutulur; değerler SI'dır ve
+ * yanlarında kaynakları yazılır. Yeni kategori dosyası eklendiğinde buraya da eklenir.
  */
+import { MOTOR_SINIRLARI } from "./sinir/motor";
+import { OTOMASYON_SINIRLARI } from "./sinir/otomasyon";
+import { TEMEL_ELEKTRIK_SINIRLARI } from "./sinir/temel-elektrik";
+
 export const LIMITS = {
-  /** NAMUR NE 43: 4-20 mA sinyalinde geçerli ölçüm aralığı ve arıza bölgeleri (mA) */
-  namurNe43: {
-    olcumAlt: 3.8,
-    olcumUst: 20.5,
-    arizaAlt: 3.6,
-    arizaUst: 21.0,
-  },
+  temelElektrik: TEMEL_ELEKTRIK_SINIRLARI,
+  motor: MOTOR_SINIRLARI,
+  otomasyon: OTOMASYON_SINIRLARI,
 } as const;
 
 export type Limits = typeof LIMITS;

@@ -249,6 +249,22 @@ const ALL: UnitDef[] = [
     // RS485/UART'ta sembol başına bir bit taşındığı için baud = bit/s kabul edilir (5.7).
     { id: "Bd", symbol: "Bd", name: "baud", factor: 1 },
   ]),
+  ...group("para", [
+    { id: "TL", symbol: "TL", name: "Türk lirası", factor: 1 },
+    { id: "krs", symbol: "kr", name: "kuruş", factor: 1e-2 },
+  ]),
+  ...group("enerji_fiyati", [
+    // Kanonik birim TL/J (maliyet = fiyat · enerji düz SI çarpımı olsun); arayüzde TL/kWh kullanılır.
+    { id: "TL_kWh", symbol: "TL/kWh", name: "lira/kilovatsaat", factor: 1 / 3.6e6 },
+    { id: "krs_kWh", symbol: "kr/kWh", name: "kuruş/kilovatsaat", factor: 1e-2 / 3.6e6 },
+    { id: "TL_MWh", symbol: "TL/MWh", name: "lira/megavatsaat", factor: 1 / 3.6e9 },
+    { id: "TL_J", symbol: "TL/J", name: "lira/joule", factor: 1 },
+  ]),
+  ...group("seviye_db", [
+    // Logaritmik oran. dBm, dBV gibi referanslı seviyeler bilerek kardeş birim değildir:
+    // convert onları dB'ye eşit sayardı. Referanslar hesap içinde (1.7) ele alınır.
+    { id: "dB", symbol: "dB", name: "desibel", factor: 1 },
+  ]),
   ...group("isil_direnc", [
     { id: "K_W", symbol: "K/W", name: "kelvin/watt", factor: 1 },
     // Soğutucu veri sayfaları °C/W verir (4.11); K/W ile aynı değer.
@@ -295,6 +311,9 @@ export const SI_UNIT_IDS: Readonly<Record<Dimension, string>> = Object.freeze({
   ozdirenc: "ohm_m",
   direnc_uzunluk: "ohm_per_m",
   veri_hizi: "bit_s",
+  para: "TL",
+  enerji_fiyati: "TL_J",
+  seviye_db: "dB",
   isil_direnc: "K_W",
   isi_transfer_katsayisi: "W_m2K",
 });

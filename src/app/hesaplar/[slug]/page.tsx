@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { CalcForm } from "@/components/calc/calc-form";
+import { CustomCalc } from "@/components/calc/custom";
 import { categoryMeta } from "@/components/calc/kapsam";
 import { DisclaimerBox } from "@/components/disclaimer";
 import { Formula } from "@/components/formula";
@@ -99,7 +100,11 @@ export default async function HesapPage({ params }: PageProps<"/hesaplar/[slug]"
       <section aria-labelledby="hesaplama" className="mt-8">
         <SectionHeading id="hesaplama">Hesaplama</SectionHeading>
         <div className="mt-3">
-          <CalcForm key={def.slug} slug={def.slug} />
+          {def.customUi ? (
+            <CustomCalc key={def.slug} id={def.customUi} slug={def.slug} />
+          ) : (
+            <CalcForm key={def.slug} slug={def.slug} />
+          )}
         </div>
       </section>
 

@@ -42,6 +42,9 @@ export type Dimension =
   | "ozdirenc" // Ω·m
   | "direnc_uzunluk" // birim uzunluk başına direnç, Ω/m (kablo katalogları Ω/km verir)
   | "veri_hizi" // bit/s (RS485/Modbus)
+  | "para" // TL (fiziksel birim değil; maliyet hesapları için)
+  | "enerji_fiyati" // kanonik TL/J; arayüzde TL/kWh
+  | "seviye_db" // dB (logaritmik oran; tek birim, dönüştürülmez)
   | "isil_direnc" // K/W
   | "isi_transfer_katsayisi"; // W/(m²·K)
 

@@ -15,6 +15,7 @@ import type {
   InputSpec,
   InputState,
   NumberInputSpec,
+  NumberListInputSpec,
   OutputSpec,
   PresentedOutput,
   RunResult,
@@ -44,7 +45,8 @@ export function CalcForm({ slug }: { slug: string }) {
 // ---------------------------------------------------------------------------
 // Yardımcılar
 
-type UnitSpec = Pick<NumberInputSpec | OutputSpec, "dimension" | "units">;
+type NumericInputSpec = NumberInputSpec | NumberListInputSpec;
+type UnitSpec = Pick<NumericInputSpec | OutputSpec, "dimension" | "units">;
 
 /** Girdi/çıktı için seçilebilir birimler: tanımda `units` varsa onlar, yoksa boyutun tüm birimleri. */
 function unitOptions(spec: UnitSpec): UnitDef[] {
@@ -108,7 +110,7 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
 
   const inputUnits = useMemo(() => {
     const map = new Map<string, UnitDef[]>();
-    for (const input of def.inputs) if (input.kind === "number") map.set(input.key, unitOptions(input));
+    for (const input of def.inputs) if (input.kind !== "select") map.set(input.key, unitOptions(input));
     return map;
   }, [def]);
 
@@ -126,12 +128,12 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
   const markTouched = (key: string) =>
     setTouched((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
 
-  const setNumberValue = (spec: NumberInputSpec, value: string) => {
+  const setNumberValue = (spec: NumericInputSpec, value: string) => {
     setState((prev) => ({ ...prev, [spec.key]: { unit: spec.defaultUnit, ...prev[spec.key], value } }));
     markTouched(spec.key);
   };
 
-  const setNumberUnit = (spec: NumberInputSpec, unit: string) => {
+  const setNumberUnit = (spec: NumericInputSpec, unit: string) => {
     // Birim değişince sayı korunur: kullanıcı yazdığı değerin birimini seçer.
     setState((prev) => ({ ...prev, [spec.key]: { value: prev[spec.key]?.value ?? "", unit } }));
   };
@@ -165,7 +167,7 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
           className="mt-4 grid gap-x-4 gap-y-5 sm:grid-cols-2 lg:grid-cols-1"
         >
           {visibleInputs.map((input) =>
-            input.kind === "number" ? (
+            input.kind !== "select" ? (
               <NumberField
                 key={input.key}
                 id={fieldId(input.key)}
@@ -290,7 +292,7 @@ export function toggleSign(text: string): string {
 
 function NumberField({ id, spec, value, unit, units, error, showError, onValue, onUnit }: {
   id: string;
-  spec: NumberInputSpec;
+  spec: NumericInputSpec;
   value: string;
   unit: string;
   units: UnitDef[];
@@ -303,7 +305,10 @@ function NumberField({ id, spec, value, unit, units, error, showError, onValue, 
   const errorId = `${id}-hata`;
   const helpId = `${id}-yardim`;
   const hasUnitControl = units.length > 1 || (units.length === 1 && units[0].symbol !== "");
-  const negative = allowsNegative(spec);
+  const isList = spec.kind === "numberList";
+  // ± yalnızca tek değerde: listede işaret her elemana ayrı yazılır.
+  const negative = !isList && allowsNegative(spec);
+  const help = spec.help ?? (isList ? "Değerleri noktalı virgülle (;) ayırın." : undefined);
 
   return (
     <div>
@@ -313,14 +318,15 @@ function NumberField({ id, spec, value, unit, units, error, showError, onValue, 
           id={id}
           name={spec.key}
           type="text"
-          inputMode="decimal"
+          // Ondalık tuş takımında ";" yok: listede tam klavye açılır.
+          inputMode={isList ? "text" : "decimal"}
           autoComplete="off"
           spellCheck={false}
-          placeholder={spec.optional ? "Boş bırakılabilir" : undefined}
+          placeholder={isList ? "ör. 10; 22; 47" : spec.optional ? "Boş bırakılabilir" : undefined}
           value={value}
           onChange={(e) => onValue(e.target.value)}
           aria-invalid={visibleError ? true : undefined}
-          aria-describedby={describedBy(visibleError && errorId, spec.help && helpId)}
+          aria-describedby={describedBy(visibleError && errorId, help && helpId)}
           className={cx(
             CONTROL,
             "min-w-0 flex-1 bg-surface px-3 font-mono tabular-nums",
@@ -366,7 +372,7 @@ function NumberField({ id, spec, value, unit, units, error, showError, onValue, 
           </span>
         ) : null}
       </div>
-      <FieldMessages errorId={errorId} error={visibleError} helpId={helpId} help={spec.help} />
+      <FieldMessages errorId={errorId} error={visibleError} helpId={helpId} help={help} />
     </div>
   );
 }

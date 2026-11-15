@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { LIMITS } from "@/config/sinirlar";
-import { MESSAGES, autoOutputUnit, defaultContext, defaultState, numberToInputText, runCalc, visibleInputs } from "./engine";
+import { MESSAGES, autoOutputUnit, defaultContext, defaultState, numberToInputText, runCalc, splitList, visibleInputs } from "./engine";
 import type { CalcDefinition, CalcResult, InputState, OutputSpec, RunResult } from "./types";
 
 vi.mock("@/lib/units", () => import("@/lib/calc/test-utils/units-mock"));
@@ -405,5 +405,65 @@ describe("hiçbir zaman fırlatmaz", () => {
     });
     const f = expectFail(runCalc(def, { v: { value: "1", unit: "hayali" } }));
     expect(f.fieldErrors).toEqual({ v: MESSAGES.fieldFailed });
+  });
+});
+
+describe("numberList girdisi", () => {
+  const listDef = (over: Partial<CalcDefinition> = {}) =>
+    makeDef({
+      inputs: [
+        {
+          kind: "numberList",
+          key: "r",
+          label: "Dirençler",
+          dimension: "direnc",
+          defaultUnit: "ohm",
+          default: [10, 22.5],
+          min: 0,
+          minExclusive: true,
+          minItems: 2,
+          maxItems: 4,
+        },
+      ],
+      outputs: [{ key: "toplam", label: "Toplam", dimension: "direnc", defaultUnit: "ohm" }],
+      compute: (inputs) => {
+        const r = inputs.r as number[];
+        return { outputs: { toplam: r.reduce((a, b) => a + b, 0) }, steps: [], checks: [] };
+      },
+      ...over,
+    });
+
+  it("varsayılanı '; ' ile birleştirir ve SI dizisi olarak compute'a verir", () => {
+    const def = listDef();
+    expect(defaultState(def).r).toEqual({ value: "10; 22,5", unit: "ohm" });
+    const r = expectOk(runCalc(def, { r: { value: "1; 2,2\n4,7", unit: "kohm" } }));
+    expect(r.inputsSI.r).toEqual([1000, 2200, 4700]);
+    expect(r.result.outputs.toplam).toBeCloseTo(7900, 9);
+  });
+
+  it("boş parçaları atar, eleman sayısını ve her elemanı denetler", () => {
+    const def = listDef();
+    expect(expectOk(runCalc(def, { r: { value: " 1 ;; 2 ; ", unit: "ohm" } })).inputsSI.r).toEqual([1, 2]);
+    expect(expectFail(runCalc(def, { r: { value: "", unit: "ohm" } })).fieldErrors.r).toBe(MESSAGES.required);
+    expect(expectFail(runCalc(def, { r: { value: "5", unit: "ohm" } })).fieldErrors.r).toBe(MESSAGES.listMinItems(2));
+    expect(expectFail(runCalc(def, { r: { value: "1;2;3;4;5", unit: "ohm" } })).fieldErrors.r).toBe(MESSAGES.listMaxItems(4));
+    expect(expectFail(runCalc(def, { r: { value: "1; x", unit: "ohm" } })).fieldErrors.r).toBe(
+      MESSAGES.listItem(2, MESSAGES.invalidNumber),
+    );
+    expect(expectFail(runCalc(def, { r: { value: "1; 0", unit: "ohm" } })).fieldErrors.r).toMatch(/^2\. değer: /);
+    expect(expectFail(runCalc(def, { r: { value: "1; 2", unit: "V" } })).fieldErrors.r).toBe(MESSAGES.invalidUnit);
+  });
+
+  it("isteğe bağlı boş liste compute'a gitmez", () => {
+    const def = listDef({
+      inputs: [{ kind: "numberList", key: "r", label: "R", dimension: "direnc", defaultUnit: "ohm", optional: true }],
+      compute: (inputs) => ({ outputs: { toplam: "r" in inputs ? 1 : 0 }, steps: [], checks: [] }),
+    });
+    expect(expectOk(runCalc(def, { r: { value: "", unit: "ohm" } })).result.outputs.toplam).toBe(0);
+  });
+
+  it("splitList noktalı virgül ve satır sonuyla ayırır", () => {
+    expect(splitList("1;2\r\n3\n;4")).toEqual(["1", "2", "3", "4"]);
+    expect(splitList("  ")).toEqual([]);
   });
 });

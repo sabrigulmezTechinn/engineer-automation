@@ -14,6 +14,7 @@ import type {
   InputSpec,
   InputState,
   NumberInputSpec,
+  NumberListInputSpec,
   OutputSpec,
   PresentedOutput,
   RunResult,
@@ -32,6 +33,9 @@ export const MESSAGES = {
   minExclusive: (q: string) => `${q} değerinden büyük olmalıdır`,
   max: (q: string) => `En fazla ${q} olabilir`,
   invalidOption: "Geçersiz seçim",
+  listMinItems: (n: number) => `En az ${n} değer girin (noktalı virgülle ayırın)`,
+  listMaxItems: (n: number) => `En fazla ${n} değer girilebilir`,
+  listItem: (i: number, message: string) => `${i}. değer: ${message}`,
   fieldFailed: "Bu alan işlenemedi",
   validateFailed: "Girdiler doğrulanırken beklenmeyen bir hata oluştu",
   computeFailed: "Hesaplama sırasında beklenmeyen bir hata oluştu",
@@ -60,6 +64,11 @@ export function defaultState(def: CalcDefinition): InputState {
     if (input.kind === "number") {
       state[input.key] = {
         value: input.default !== undefined ? numberToInputText(input.default) : "",
+        unit: input.defaultUnit,
+      };
+    } else if (input.kind === "numberList") {
+      state[input.key] = {
+        value: (input.default ?? []).map(numberToInputText).join("; "),
         unit: input.defaultUnit,
       };
     } else {
@@ -103,7 +112,7 @@ export function visibleInputs(def: CalcDefinition, state: InputState): InputSpec
   return def.inputs.filter((i) => isVisible(i, 0));
 }
 
-function allowedUnits(spec: NumberInputSpec | OutputSpec): string[] {
+function allowedUnits(spec: NumberInputSpec | NumberListInputSpec | OutputSpec): string[] {
   return spec.units ?? unitsFor(spec.dimension).map((u) => u.id);
 }
 
@@ -116,22 +125,11 @@ function boundText(boundSI: number, unit: string): string {
   return formatQuantity(fromSI(boundSI, unit), unit);
 }
 
-/** Tek bir sayı girdisini doğrular; SI değeri veya hata mesajı (boş isteğe bağlı alanda null) döner. */
-function readNumber(
-  input: NumberInputSpec,
-  state: InputState,
-): { value: number } | { error: string } | null {
-  const entry = state[input.key];
-  const text = entry?.value ?? "";
-  if (text.trim() === "") {
-    return input.optional ? null : { error: MESSAGES.required };
-  }
-  const parsed = parseNumber(text);
-  if (parsed === null || !Number.isFinite(parsed)) return { error: MESSAGES.invalidNumber };
+/** Sayı ve liste girdilerinin ortak sınır alanları */
+type NumericSpec = NumberInputSpec | NumberListInputSpec;
 
-  const unit = entry?.unit ?? input.defaultUnit;
-  if (!allowedUnits(input).includes(unit)) return { error: MESSAGES.invalidUnit };
-
+/** Ayrıştırılmış tek bir değeri SI'ya çevirip integer/min/max kontrollerinden geçirir. */
+function checkValue(parsed: number, input: NumericSpec, unit: string): { value: number } | { error: string } {
   let si = toSI(parsed, unit);
   if (!Number.isFinite(si)) return { error: MESSAGES.invalidNumber };
 
@@ -151,6 +149,61 @@ function readNumber(
     return { error: MESSAGES.max(boundText(input.max, unit)) };
   }
   return { value: si };
+}
+
+/** Tek bir sayı girdisini doğrular; SI değeri veya hata mesajı (boş isteğe bağlı alanda null) döner. */
+function readNumber(
+  input: NumberInputSpec,
+  state: InputState,
+): { value: number } | { error: string } | null {
+  const entry = state[input.key];
+  const text = entry?.value ?? "";
+  if (text.trim() === "") {
+    return input.optional ? null : { error: MESSAGES.required };
+  }
+  const parsed = parseNumber(text);
+  if (parsed === null || !Number.isFinite(parsed)) return { error: MESSAGES.invalidNumber };
+
+  const unit = entry?.unit ?? input.defaultUnit;
+  if (!allowedUnits(input).includes(unit)) return { error: MESSAGES.invalidUnit };
+  return checkValue(parsed, input, unit);
+}
+
+/** Liste metnini parçalarına ayırır: noktalı virgül veya satır sonu; boş parçalar atılır. */
+export function splitList(text: string): string[] {
+  return text
+    .split(/[;\n\r]+/)
+    .map((s) => s.trim())
+    .filter((s) => s !== "");
+}
+
+/** Liste girdisini doğrular; SI değerleri veya hata mesajı (boş isteğe bağlı alanda null) döner. */
+function readNumberList(
+  input: NumberListInputSpec,
+  state: InputState,
+): { value: number[] } | { error: string } | null {
+  const entry = state[input.key];
+  const parts = splitList(entry?.value ?? "");
+  if (parts.length === 0) {
+    return input.optional ? null : { error: MESSAGES.required };
+  }
+  const unit = entry?.unit ?? input.defaultUnit;
+  if (!allowedUnits(input).includes(unit)) return { error: MESSAGES.invalidUnit };
+
+  const minItems = input.minItems ?? 1;
+  const maxItems = input.maxItems ?? 50;
+  if (parts.length < minItems) return { error: MESSAGES.listMinItems(minItems) };
+  if (parts.length > maxItems) return { error: MESSAGES.listMaxItems(maxItems) };
+
+  const values: number[] = [];
+  for (const [i, part] of parts.entries()) {
+    const parsed = parseNumber(part);
+    if (parsed === null || !Number.isFinite(parsed)) return { error: MESSAGES.listItem(i + 1, MESSAGES.invalidNumber) };
+    const r = checkValue(parsed, input, unit);
+    if ("error" in r) return { error: MESSAGES.listItem(i + 1, r.error) };
+    values.push(r.value);
+  }
+  return { value: values };
 }
 
 function failure(checks: Check[], fieldErrors: Record<string, string> = {}): RunResult {
@@ -207,7 +260,7 @@ export function runCalc(
           if (input.options.some((o) => o.value === value)) inputsSI[input.key] = value;
           else fieldErrors[input.key] = MESSAGES.invalidOption;
         } else {
-          const r = readNumber(input, state);
+          const r = input.kind === "numberList" ? readNumberList(input, state) : readNumber(input, state);
           if (r === null) continue;
           if ("error" in r) fieldErrors[input.key] = r.error;
           else inputsSI[input.key] = r.value;

@@ -64,13 +64,36 @@ export interface NumberInputSpec extends InputBase {
   optional?: boolean;
 }
 
+/**
+ * Aynı boyutta birden çok değer (ör. seri dirençler, yük listesi). Kullanıcı değerleri tek alana
+ * noktalı virgül veya satır sonuyla ayırarak yazar ("10; 22; 47"); seçilen birim hepsine uygulanır.
+ * compute'a SI değerlerden oluşan `number[]` olarak gelir.
+ */
+export interface NumberListInputSpec extends InputBase {
+  kind: "numberList";
+  dimension: Dimension;
+  defaultUnit: string;
+  units?: string[];
+  /** Varsayılan değerler, defaultUnit cinsinden */
+  default?: number[];
+  /** Her eleman için SI cinsinden sınırlar */
+  min?: number;
+  max?: number;
+  minExclusive?: boolean;
+  integer?: boolean;
+  /** En az / en fazla eleman sayısı (varsayılan 1 / 50) */
+  minItems?: number;
+  maxItems?: number;
+  optional?: boolean;
+}
+
 export interface SelectInputSpec extends InputBase {
   kind: "select";
   options: { value: string; label: string }[];
   default: string;
 }
 
-export type InputSpec = NumberInputSpec | SelectInputSpec;
+export type InputSpec = NumberInputSpec | NumberListInputSpec | SelectInputSpec;
 
 export interface OutputSpec {
   key: string;
@@ -103,8 +126,11 @@ export interface Check {
   reference?: Reference;
 }
 
-/** compute'a giden doğrulanmış girdiler: sayılar SI, select'ler string. Gizli/boş isteğe bağlı girdiler yoktur. */
-export type ComputeInputs = Record<string, number | string>;
+/**
+ * compute'a giden doğrulanmış girdiler: sayılar SI, numberList'ler SI `number[]`, select'ler string.
+ * Gizli/boş isteğe bağlı girdiler yoktur.
+ */
+export type ComputeInputs = Record<string, number | string | number[]>;
 
 export interface CalcContext {
   limits: Limits;
@@ -116,6 +142,9 @@ export interface CalcResult {
   steps: Step[];
   checks: Check[];
 }
+
+/** Genel form yerine özel arayüzle gösterilen hesaplar (src/components/calc/custom/) */
+export type CustomUiId = "birim-donusturucu";
 
 export interface CalcDefinition {
   /** KAPSAM.md numarası, ör. "1.1" */
@@ -132,6 +161,11 @@ export interface CalcDefinition {
   /** Alan bazlı doğrulamadan sonra çapraz alan kontrolleri; "hata" seviyesinde compute çalışmaz. */
   validate?: (inputs: ComputeInputs, ctx: CalcContext) => Check[];
   compute: (inputs: ComputeInputs, ctx: CalcContext) => CalcResult;
+  /**
+   * Verilirse hesap sayfası genel form yerine bu özel arayüzü gösterir. Özel arayüz de durumunu
+   * InputState olarak tutar ve sonucu runCalc ile alır (kaydetme/karşılaştırma/PDF aynı yoldan çalışsın).
+   */
+  customUi?: CustomUiId;
 }
 
 /** Kaydedilebilir, düz JSON girdi durumu. select girdilerinde unit yoktur. */

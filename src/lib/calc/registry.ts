@@ -1,9 +1,16 @@
 /**
  * Hesap kayıt defteri.
- * Yeni hesaplar `src/lib/calc/defs/<kategori>/<slug>.ts` altında tanımlanır ve DEFINITIONS'a eklenir.
+ * Yeni hesaplar `src/lib/calc/defs/<kategori>/<slug>.ts` altında tanımlanır ve o kategorinin
+ * `defs/<kategori>/index.ts` listesine eklenir; bu dosya yalnızca kategori listelerini birleştirir.
  * Modül yüklenirken tanımlar doğrulanır; hatalı tanım varsa yükleme fırlatır (geliştirmede erken yakalanır).
  */
-import { ohmYasasi } from "./defs/temel-elektrik/ohm-yasasi";
+import { ELEKTRONIK } from "./defs/elektronik";
+import { MEKATRONIK } from "./defs/mekatronik";
+import { MOTOR } from "./defs/motor";
+import { OTOMASYON } from "./defs/otomasyon";
+import { TEMEL_ELEKTRIK } from "./defs/temel-elektrik";
+import { TESISAT } from "./defs/tesisat";
+import { YARDIMCI } from "./defs/yardimci";
 import type { CalcDefinition, CategoryId, CategoryMeta } from "./types";
 
 export const CATEGORIES: CategoryMeta[] = [
@@ -45,7 +52,15 @@ export const CATEGORIES: CategoryMeta[] = [
 ];
 
 /** Tüm hesap tanımları (sırası önemsiz; allCalcs KAPSAM numarasına göre sıralar). */
-const DEFINITIONS: CalcDefinition[] = [ohmYasasi];
+const DEFINITIONS: CalcDefinition[] = [
+  ...TEMEL_ELEKTRIK,
+  ...TESISAT,
+  ...MOTOR,
+  ...ELEKTRONIK,
+  ...OTOMASYON,
+  ...MEKATRONIK,
+  ...YARDIMCI,
+];
 
 /** KAPSAM numaralarını bölüm bölüm sayısal karşılaştırır: "4.9" < "4.10". */
 export function compareCalcIds(a: string, b: string): number {
@@ -97,8 +112,20 @@ export function validateDefinitions(defs: CalcDefinition[]): string[] {
         if (!input.options.some((o) => o.value === input.default)) {
           problems.push(`${at}: varsayılan "${input.default}" seçenekler arasında değil`);
         }
-      } else if (input.units && !input.units.includes(input.defaultUnit)) {
-        problems.push(`${at}: varsayılan birim "${input.defaultUnit}" birim listesinde değil`);
+      } else {
+        if (input.units && !input.units.includes(input.defaultUnit)) {
+          problems.push(`${at}: varsayılan birim "${input.defaultUnit}" birim listesinde değil`);
+        }
+        if (input.kind === "numberList") {
+          const min = input.minItems ?? 1;
+          const max = input.maxItems ?? 50;
+          if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || min > max) {
+            problems.push(`${at}: minItems/maxItems geçersiz (${min}/${max})`);
+          }
+          if (input.default && (input.default.length < min || input.default.length > max)) {
+            problems.push(`${at}: varsayılan liste ${input.default.length} eleman; ${min}–${max} olmalı`);
+          }
+        }
       }
 
       if (input.visibleWhen) {
