@@ -243,7 +243,16 @@ export const pnomatikSilindir: CalcDefinition = {
     },
     { label: "Hava tüketimi, tek etkili", latex: "Q_N = A \\cdot s \\cdot n \\cdot \\frac{p + p_{\\text{atm}}}{p_{\\text{atm}}}" },
   ],
-  references: [REF_15552, REF_6432, REF_8778],
+  references: [
+    REF_15552,
+    REF_6432,
+    REF_8778,
+    {
+      standard: "Festo DSBC (ISO 15552) ve DSNU (ISO 6432) katalogları",
+      title: "Piston ve mil çapları; 6 bar'da teorik itme/çekme kuvvetleri",
+      note: "https://ftp.festo.com/public/PNEUMATIC/SOFTWARE_SERVICE/Documentation/2016/EN/DSBC_EN.PDF ; https://ftp.festo.com/public/PNEUMATIC/SOFTWARE_SERVICE/Documentation/2012/EN/DSNU-ISO_EN.PDF",
+    },
+  ],
   inputs: [
     {
       kind: "select",
