@@ -3,5 +3,6 @@
  * kayıt defteri (registry.ts) bu listeyi okur. Sıra önemsiz, allCalcs KAPSAM numarasına göre sıralar.
  */
 import type { CalcDefinition } from "../../types";
+import { kisaDevreAkimi } from "./kisa-devre-akimi";
 
-export const TESISAT: CalcDefinition[] = [];
+export const TESISAT: CalcDefinition[] = [kisaDevreAkimi];
