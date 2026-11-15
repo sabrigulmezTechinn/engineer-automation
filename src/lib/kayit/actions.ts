@@ -196,6 +196,8 @@ export async function projeSilAction(id: unknown): Promise<EylemSonucu> {
   } catch (error) {
     return hataSonucu(error);
   }
-  // redirect bir denetim akışı istisnası fırlatır: try dışında çağrılmalı.
+  // refresh: yönlendirme yanıtı da istemcinin dinamik veri önbelleğini geçersiz kılsın (geri tuşuyla silinen
+  // projenin bayat sayfası gösterilmesin). redirect bir denetim akışı istisnası fırlatır: try dışında çağrılmalı.
+  refresh();
   redirect("/projeler");
 }

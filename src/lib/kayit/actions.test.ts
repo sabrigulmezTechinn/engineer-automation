@@ -166,10 +166,14 @@ describe("kayıt action'ları", () => {
     m.projeSil.mockResolvedValue(undefined);
     await expect(a.projeSilAction("p1")).rejects.toMatchObject({ yol: "/projeler" });
     expect(m.projeSil).toHaveBeenCalledWith("kullanici-1", "p1");
+    // Yönlendirme yanıtı istemci önbelleğini de geçersiz kılsın (geri tuşunda bayat proje sayfası kalmasın).
+    expect(m.refresh).toHaveBeenCalledTimes(1);
 
     m.redirect.mockClear();
+    m.refresh.mockClear();
     m.projeSil.mockRejectedValue(new KayitHatasi("bulunamadi", "Proje bulunamadı."));
     expect(await a.projeSilAction("p1")).toEqual({ ok: false, hata: "Proje bulunamadı." });
     expect(m.redirect).not.toHaveBeenCalled();
+    expect(m.refresh).not.toHaveBeenCalled();
   });
 });
