@@ -1,26 +1,101 @@
 @import "tailwindcss";
 
+/*
+ * Tasarım belirteçleri. Açık/koyu tema işletim sisteminin tercihine (prefers-color-scheme) göre değişir.
+ * Bileşenler renkleri doğrudan değil, aşağıdaki anlamsal adlarla kullanır (bg-surface, text-muted, border-line…).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  color-scheme: light dark;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-muted: #eef0f3;
+  --fg: #14171c;
+  --muted: #5a6370;
+  --line: #dde1e7;
+  --line-strong: #c4cad3;
+
+  --accent: #1d5bbf;
+  --accent-hover: #174a9c;
+  --accent-fg: #ffffff;
+  --accent-soft: #e7effb;
+
+  --ok: #17663a;
+  --ok-bg: #ebf8f0;
+  --ok-line: #b6e2c6;
+  --uyari: #8a5700;
+  --uyari-bg: #fff7e3;
+  --uyari-line: #f0d38c;
+  --hata: #b42318;
+  --hata-bg: #fdf0ef;
+  --hata-line: #f3c0bb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0d1015;
+    --surface: #151920;
+    --surface-muted: #1c212a;
+    --fg: #e5e8ec;
+    --muted: #9aa3b0;
+    --line: #29303b;
+    --line-strong: #3a4250;
+
+    --accent: #72a8ff;
+    --accent-hover: #9cc1ff;
+    --accent-fg: #0a1222;
+    --accent-soft: #15233a;
+
+    --ok: #6fd99a;
+    --ok-bg: #0f2a1c;
+    --ok-line: #1f4d33;
+    --uyari: #f2c35a;
+    --uyari-bg: #2c230b;
+    --uyari-line: #5a4614;
+    --hata: #ff8f86;
+    --hata-bg: #331514;
+    --hata-line: #5e2623;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-line: var(--ok-line);
+  --color-uyari: var(--uyari);
+  --color-uyari-bg: var(--uyari-bg);
+  --color-uyari-line: var(--uyari-line);
+  --color-hata: var(--hata);
+  --color-hata-bg: var(--hata-bg);
+  --color-hata-line: var(--hata-line);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* KaTeX: kart içindeki blok formüllerde varsayılan dış boşluğu kaldır, satır taşarsa yatay kaydır. */
+.formula-display .katex-display {
+  margin: 0;
+}
+
+.formula-display > .katex-display > .katex {
+  text-align: left;
 }
