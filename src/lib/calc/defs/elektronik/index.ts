@@ -5,11 +5,14 @@
 import type { CalcDefinition } from "../../types";
 import { zamanlayici555 } from "./555-zamanlayici";
 import { bataryaOmru } from "./batarya-omru";
+import { buckBoostDonusturucu } from "./buck-boost-donusturucu";
 import { filtreKesimFrekansi } from "./filtre-kesim-frekansi";
 import { ledOnDirenci } from "./led-on-direnci";
 import { lm317AyarliRegulator } from "./lm317-ayarli-regulator";
 import { opAmpKazanci } from "./op-amp-kazanci";
 import { rcRlZamanSabiti } from "./rc-rl-zaman-sabiti";
+import { sogutucuIsilHesap } from "./sogutucu-isil-hesap";
+import { transistorBazDirenciMosfetKaybi } from "./transistor-baz-direnci-mosfet-kaybi";
 
 export const ELEKTRONIK: CalcDefinition[] = [
   ledOnDirenci,
@@ -18,5 +21,8 @@ export const ELEKTRONIK: CalcDefinition[] = [
   opAmpKazanci,
   zamanlayici555,
   lm317AyarliRegulator,
+  transistorBazDirenciMosfetKaybi,
+  buckBoostDonusturucu,
+  sogutucuIsilHesap,
   bataryaOmru,
 ];
