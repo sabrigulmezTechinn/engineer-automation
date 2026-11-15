@@ -9,7 +9,7 @@
 |---|---|---|
 | 0 | Altyapı: kullanıcı hesabı, hesap motoru, birim sistemi, formül gösterimi | ✅ Bitti (c5ddcb7) |
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
-| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | 🔄 Sırada (önce PDF denemesi) |
+| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | 🔄 Sürüyor (ortak zemin 3dad7c0; işçiler A–D) |
 | 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ⏳ |
 | 4 | Elektronik (12) | ⏳ |
 
@@ -57,6 +57,13 @@ Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçile
 - 5.5 PID: klasik Ziegler–Nichols katsayıları (PI 0,45·K_u, T_u/1,2; açık çevrim PI T_i = L/0,3). Åström & Hägglund'un değiştirilmiş PI değerleri kullanılmaz.
 - 5.7 RS485: kablo uzunluğu kılavuzu L·Bd ≤ 10⁷ (TI SLLA272D, tutucu), en çok 1200 m; sonlandırma Modbus §3.4.5'e göre 150 Ω (polarizasyonla 120 Ω + 1 nF).
 - 5.6: döngü tasarım akımı 22 mA config'ten; NE 43 sınırları config'ten.
+- PDF: pdfmake 0.3.13 + MathJax 4 (@mathjax/src 4.1.3) yol tabanlı SVG + Noto Sans (OFL); sunucuda üretilir (route handler).
+  next.config'te serverExternalPackages; yazı tipleri outputFileTracingIncludes ile dağıtıma dahil.
+- Faz 2 veri modeli: proje + kayitli_hesap (girdiler = InputState jsonb, ciktiBirimleri jsonb); proje silinince hesaplar projesiz kalır.
+  Her sorgu oturumdaki kullanıcıya göre süzülür.
+- Hesap sayfası durumu useCalcState (src/components/calc/use-calc-state.ts); CalcWorkspace kaydetme/rapor/senaryo yuvaları.
+  Profil tercihleri runSecenekleri ile motora geçer (anlamlı basamak; imperial: hp, lbf·ft, psi, °F).
+- Karşılaştırmada bir satırdaki tüm senaryolar tek birimle gösterilir.
 - Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
