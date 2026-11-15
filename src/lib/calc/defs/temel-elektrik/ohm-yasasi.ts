@@ -5,7 +5,7 @@
  * İşaret kuralı (pasif işaret yönü): doğru akımda gerilim ve akım işaretli girilebilir;
  * pasif bir dirençte ikisi aynı işaretlidir, böylece R > 0 ve P ≥ 0 olur.
  */
-import { latexOperand, latexSI } from "@/lib/calc/latex";
+import { latexAuto, latexAutoOperand } from "@/lib/calc/latex";
 import type { CalcDefinition, Check, ComputeInputs, Step } from "@/lib/calc/types";
 
 export type OhmMode = "V-I" | "V-R" | "I-R" | "P-V" | "P-I" | "P-R";
@@ -51,11 +51,11 @@ function crossChecks(inputs: ComputeInputs): Check[] {
   return [];
 }
 
-// Adım yardımcıları: q → değer + SI birimi, op → çarpım içinde (negatifse parantezli), sq → kare için her zaman parantezli
-const qV = (v: number) => latexSI(v, "gerilim");
-const qI = (v: number) => latexSI(v, "akim");
-const qR = (v: number) => latexSI(v, "direnc");
-const qP = (v: number) => latexSI(v, "guc");
+// Adım yardımcıları: q → değer + otomatik birim (kartlarla aynı kural), op → çarpım içinde (negatifse parantezli), sq → kare için her zaman parantezli
+const qV = (v: number) => latexAuto(v, "gerilim");
+const qI = (v: number) => latexAuto(v, "akim");
+const qR = (v: number) => latexAuto(v, "direnc");
+const qP = (v: number) => latexAuto(v, "guc");
 const sq = (latex: string) => `(${latex})^2`;
 /** -0 → 0: ör. 0 W / (−2 A) gösterimde "−0" olarak çıkmasın. */
 const n0 = (x: number) => (x === 0 ? 0 : x);
@@ -168,7 +168,7 @@ export const ohmYasasi: CalcDefinition = {
         }
         steps.push({
           label: "Güç",
-          latex: `P = V \\cdot I = ${latexOperand(V, "gerilim")} \\cdot ${latexOperand(I, "akim")} = ${qP(P)}`,
+          latex: `P = V \\cdot I = ${latexAutoOperand(V, "gerilim")} \\cdot ${latexAutoOperand(I, "akim")} = ${qP(P)}`,
         });
         break;
       }
@@ -188,7 +188,7 @@ export const ohmYasasi: CalcDefinition = {
         P = I * I * R;
         steps.push({
           label: "Gerilim",
-          latex: `V = I \\cdot R = ${latexOperand(I, "akim")} \\cdot ${qR(R)} = ${qV(V)}`,
+          latex: `V = I \\cdot R = ${latexAutoOperand(I, "akim")} \\cdot ${qR(R)} = ${qV(V)}`,
         });
         steps.push({ label: "Güç", latex: `P = I^2 \\cdot R = ${sq(qI(I))} \\cdot ${qR(R)} = ${qP(P)}` });
         break;

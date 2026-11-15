@@ -53,6 +53,30 @@ describe("Ohm yasası, gerçek birimlerle", () => {
     expect(autoOutputUnit({ key: "l", label: "l", dimension: "uzunluk", defaultUnit: "mm" }, 1.5)).toBe("mm");
   });
 
+  it("otomatik birim: aynı çarpanlı birimlerde varsayılan kazanır, veri hızı otomatik değişmez", () => {
+    // veri_hizi otomatik sette yok: 9600 Bd "9,6 kbit/s" olmaz
+    expect(autoOutputUnit({ dimension: "veri_hizi", defaultUnit: "Bd" }, 9600)).toBe("Bd");
+    expect(autoOutputUnit({ dimension: "veri_hizi", defaultUnit: "bit_s" }, 500)).toBe("bit_s");
+    // açıkça açılsa bile bit/s ile Bd (ikisi de 1) arasında varsayılan kazanır
+    expect(autoOutputUnit({ dimension: "veri_hizi", defaultUnit: "Bd", autoUnit: true }, 500)).toBe("Bd");
+    // mΩ/m ile Ω/km aynı çarpan (1e-3): varsayılan hangisiyse o kalır
+    expect(autoOutputUnit({ dimension: "direnc_uzunluk", defaultUnit: "ohm_per_km" }, 1.2e-3)).toBe("ohm_per_km");
+    expect(autoOutputUnit({ dimension: "direnc_uzunluk", defaultUnit: "mohm_per_m" }, 1.2e-3)).toBe("mohm_per_m");
+    expect(autoOutputUnit({ dimension: "direnc_uzunluk", defaultUnit: "ohm_per_km" }, 2)).toBe("ohm_per_m");
+  });
+
+  it("ara adımlar çıktı kartlarıyla aynı birimi kullanır", () => {
+    const r = expectOk(
+      runCalc(ohmYasasi, { mod: { value: "V-R" }, V: { value: "12", unit: "V" }, R: { value: "2,2", unit: "kohm" } }),
+    );
+    expect(r.outputs.find((o) => o.key === "I")?.unit).toBe("mA");
+    const akim = r.result.steps.find((s) => s.label === "Akım")?.latex ?? "";
+    expect(akim).toContain("2{,}2\\,\\mathrm{k}\\Omega");
+    expect(akim).toMatch(/= 5\{,\}455\\,\\mathrm\{mA\}$/);
+    const guc = r.result.steps.find((s) => s.label === "Güç")?.latex ?? "";
+    expect(guc).toMatch(/= 65\{,\}45\\,\\mathrm\{mW\}$/);
+  });
+
   it("ondalık virgülle girilen değer doğru okunur", () => {
     const r = expectOk(
       runCalc(ohmYasasi, {

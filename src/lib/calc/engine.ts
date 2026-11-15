@@ -3,8 +3,8 @@
  * Sunucu ve istemcide çalışır.
  */
 import { LIMITS } from "@/config/sinirlar";
-import { formatQuantity, fromSI, getUnit, parseNumber, toSI, unitsFor } from "@/lib/units";
-import type { Dimension } from "@/lib/units/types";
+import { formatQuantity, fromSI, parseNumber, toSI, unitsFor } from "@/lib/units";
+import { autoOutputUnit } from "./auto-unit";
 import type {
   CalcContext,
   CalcDefinition,
@@ -19,6 +19,8 @@ import type {
   RunResult,
   SelectInputSpec,
 } from "./types";
+
+export { AUTO_UNIT_DIMENSIONS, autoOutputUnit } from "./auto-unit";
 
 /** Kullanıcıya görünen motor mesajları */
 export const MESSAGES = {
@@ -153,53 +155,6 @@ function readNumber(
 
 function failure(checks: Check[], fieldErrors: Record<string, string> = {}): RunResult {
   return { ok: false, fieldErrors, checks };
-}
-
-/** autoUnit verilmemiş çıktılarda otomatik birim seçiminin açık olduğu boyutlar */
-const AUTO_UNIT_DIMENSIONS: ReadonlySet<Dimension> = new Set<Dimension>([
-  "gerilim",
-  "akim",
-  "direnc",
-  "iletkenlik",
-  "guc",
-  "reaktif_guc",
-  "gorunur_guc",
-  "enerji",
-  "yuk",
-  "frekans",
-  "kapasitans",
-  "enduktans",
-  "zaman",
-  "direnc_uzunluk",
-  "veri_hizi",
-]);
-
-/**
- * Değeri 1 ≤ |değer| < 1000 aralığında gösteren birimi seçer. Adaylar: izin verilen birimlerden
- * ofsetsiz olup çarpanı varsayılan birimin 10³ⁿ katı olanlar (ör. kWh → Wh/MWh; J aday değil).
- * Sıfır, sonlu olmayan değer veya otomatik seçimin kapalı olduğu çıktıda varsayılan birim döner.
- */
-export function autoOutputUnit(spec: OutputSpec, valueSI: number): string {
-  const enabled = spec.autoUnit ?? AUTO_UNIT_DIMENSIONS.has(spec.dimension);
-  if (!enabled || valueSI === 0 || !Number.isFinite(valueSI)) return spec.defaultUnit;
-  const base = getUnit(spec.defaultUnit);
-  if (base.offset) return spec.defaultUnit;
-  const family = allowedUnits(spec)
-    .map((id) => getUnit(id))
-    .filter((u) => {
-      if (u.offset) return false;
-      const n = Math.log10(u.factor / base.factor) / 3;
-      return Math.abs(n - Math.round(n)) < 1e-9;
-    })
-    .sort((a, b) => a.factor - b.factor);
-  if (family.length === 0) return spec.defaultUnit;
-  const abs = Math.abs(valueSI);
-  // 4 anlamlı basamağa yuvarlanmış gösterim ölçüt alınır: 0,99996 A "1000 mA" değil "1 A" olur.
-  let chosen = family[0];
-  for (const u of family) {
-    if (Number((abs / u.factor).toPrecision(4)) >= 1) chosen = u;
-  }
-  return chosen.id;
 }
 
 function presentOutputs(

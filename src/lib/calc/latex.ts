@@ -5,6 +5,7 @@
  * sonra LaTeX'e uyarlanır. Birim sembolleri dik yazılır: `\mathrm{kV}`, `\mathrm{k}\Omega`.
  */
 import { formatNumber, fromSI, getUnit, siUnit } from "@/lib/units";
+import { autoOutputUnit } from "./auto-unit";
 import type { Dimension, FormatOptions } from "@/lib/units";
 
 const SUPERSCRIPT_TO_ASCII: Record<string, string> = {
@@ -190,6 +191,20 @@ export function latexQty(valueSI: number, unitId: string, options?: FormatOption
 /** SI değeri boyutun SI birimiyle yazar; birim kimliğini sabitlemeden adım üretmek için. */
 export function latexSI(valueSI: number, dimension: Dimension, options?: FormatOptions): string {
   return latexQty(valueSI, siUnit(dimension).id, options);
+}
+
+/**
+ * SI değeri, çıktı kartlarıyla aynı kuralla otomatik seçilen birimde yazar (0,005455 A → 5,455 mA).
+ * Otomatik seçimin kapalı olduğu boyutlarda (mekanik büyüklükler) SI birimiyle yazar.
+ */
+export function latexAuto(valueSI: number, dimension: Dimension, options?: FormatOptions): string {
+  return latexQty(valueSI, autoOutputUnit({ dimension, defaultUnit: siUnit(dimension).id }, valueSI), options);
+}
+
+/** latexAuto'nun işlem içi hali: negatif değer parantezlenir. */
+export function latexAutoOperand(valueSI: number, dimension: Dimension, options?: FormatOptions): string {
+  const s = latexAuto(valueSI, dimension, options);
+  return valueSI < 0 ? `(${s})` : s;
 }
 
 /** Negatif değerler işlem içinde parantezlenir: (-2\,\mathrm{A}). */
