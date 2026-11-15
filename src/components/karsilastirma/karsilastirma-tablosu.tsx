@@ -126,7 +126,8 @@ export function KarsilastirmaTablosu({ karsilastirma, baslikId }: { karsilastirm
         aria-labelledby={baslikId}
         aria-label={baslikId ? undefined : "Karşılaştırma tablosu"}
         tabIndex={0}
-        className="overflow-x-auto rounded-md border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        // relative: hücrelerdeki sr-only (absolute) metinler kaydırma kabına bağlı kalsın; yoksa sayfayı yatay taşırırlar.
+        className="relative overflow-x-auto rounded-md border border-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <table className="w-full min-w-max border-collapse text-sm">
           <caption className="sr-only">
@@ -145,7 +146,7 @@ export function KarsilastirmaTablosu({ karsilastirma, baslikId }: { karsilastirm
                   data-durum={rozetTuru(s.durum) ?? undefined}
                   className="px-3 py-2 text-right align-bottom font-semibold"
                 >
-                  <span className="block max-w-[12rem] truncate" title={senaryoAdi(s.ad, i)}>
+                  <span className="ml-auto block max-w-[12rem] truncate" title={senaryoAdi(s.ad, i)}>
                     {senaryoAdi(s.ad, i)}
                   </span>
                   <SenaryoDurumRozeti durum={s.durum} className="mt-1" />

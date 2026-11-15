@@ -5,7 +5,7 @@
  * Durum `useTarama` hook'undadır; üst bileşen geçerli ayarı (`sonuc.ayar`) karşılaştırma raporuna iletebilir.
  * SVG metni cizgiGrafikSvg'de üretilir ve tüm metinleri kaçışlanmıştır; sayfaya o yüzden doğrudan konabilir.
  */
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { outputPrecision, visibleInputs } from "@/lib/calc/engine";
 import type { CalcDefinition, CheckLevel, InputState, NumberInputSpec, RunOptions } from "@/lib/calc/types";
 import { TARAMA_NOKTA_MAX, TARAMA_NOKTA_MIN, TaramaHatasi, taramaYap } from "@/lib/karsilastirma";
@@ -27,7 +27,7 @@ interface TaramaFormu {
 export type TaramaSonucu =
   | { durum: "bos"; mesaj: string }
   | { durum: "hata"; mesaj: string }
-  | { durum: "tamam"; ayar: TaramaAyari; seri: TaramaSerisi; svg: string };
+  | { durum: "tamam"; ayar: TaramaAyari; seri: TaramaSerisi };
 
 const VARSAYILAN_NOKTA = "20";
 
@@ -102,7 +102,7 @@ export function useTarama(def: CalcDefinition, temeller: Senaryo[], options?: Ru
     };
     try {
       const seri = taramaYap(def, temel, ayar, options);
-      return { durum: "tamam", ayar, seri, svg: cizgiGrafikSvg(seri) };
+      return { durum: "tamam", ayar, seri };
     } catch (error) {
       return {
         durum: "hata",
@@ -258,7 +258,7 @@ export function TaramaPaneli({
 
       <div aria-live="polite">
         {sonuc.durum === "tamam" ? (
-          <TaramaSonucGorunumu seri={sonuc.seri} svg={sonuc.svg} yHassasiyet={yHassasiyet} />
+          <TaramaSonucGorunumu seri={sonuc.seri} yHassasiyet={yHassasiyet} />
         ) : (
           <p
             className={cx(
@@ -274,12 +274,38 @@ export function TaramaPaneli({
   );
 }
 
-function TaramaSonucGorunumu({ seri, svg, yHassasiyet }: { seri: TaramaSerisi; svg: string; yHassasiyet?: FormatOptions }) {
+/**
+ * Kabın genişliği (10 px'e yuvarlanmış). Grafik bu genişlikte çizilir: SVG ölçeklenerek küçültülürse dar ekranda
+ * yazılar okunmaz hale gelir. ResizeObserver yoksa (eski tarayıcı, test ortamı) varsayılan genişlik kalır.
+ */
+function useKapGenisligi<T extends HTMLElement>(varsayilan: number) {
+  const ref = useRef<T>(null);
+  const [genislik, setGenislik] = useState(varsayilan);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const gozlemci = new ResizeObserver(([kayit]) => {
+      const w = Math.floor(kayit.contentRect.width / 10) * 10;
+      if (w > 0) setGenislik(w);
+    });
+    gozlemci.observe(el);
+    return () => gozlemci.disconnect();
+  }, []);
+  return [ref, genislik] as const;
+}
+
+function TaramaSonucGorunumu({ seri, yHassasiyet }: { seri: TaramaSerisi; yHassasiyet?: FormatOptions }) {
+  const [kap, genislik] = useKapGenisligi<HTMLDivElement>(640);
+  const svg = useMemo(() => {
+    const w = Math.max(280, Math.min(genislik, 960));
+    return cizgiGrafikSvg(seri, { genislik: w, yukseklik: Math.round(Math.min(340, Math.max(220, w * 0.5))) });
+  }, [seri, genislik]);
   const hesaplanmayan = seri.noktalar.filter((p) => p.y === null).length;
   const birimli = (v: string, b: string) => (b ? `${v} ${b}` : v);
   return (
     <div className="space-y-2">
       <div
+        ref={kap}
         className="overflow-hidden rounded-md border border-line bg-white [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
         // Güvenli: SVG cizgiGrafikSvg'de üretilir; tüm metin içerikleri ve öznitelikler xmlKacis ile kaçışlanır.
         dangerouslySetInnerHTML={{ __html: svg }}
@@ -291,7 +317,7 @@ function TaramaSonucGorunumu({ seri, svg, yHassasiyet }: { seri: TaramaSerisi; s
       )}
       <details className="text-sm">
         <summary className="cursor-pointer text-accent hover:underline">Değerleri tablo olarak göster</summary>
-        <div className="mt-2 max-h-72 overflow-auto rounded-md border border-line" tabIndex={0} role="region" aria-label="Tarama değerleri">
+        <div className="relative mt-2 max-h-72 overflow-auto rounded-md border border-line" tabIndex={0} role="region" aria-label="Tarama değerleri">
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 bg-surface-muted">
               <tr>
