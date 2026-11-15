@@ -3,6 +3,7 @@
  * kayıt defteri (registry.ts) bu listeyi okur. Sıra önemsiz, allCalcs KAPSAM numarasına göre sıralar.
  */
 import type { CalcDefinition } from "../../types";
+import { donguYukDirenci } from "./dongu-yuk-direnci";
 import { rs485Modbus } from "./rs485-modbus";
 
-export const OTOMASYON: CalcDefinition[] = [rs485Modbus];
+export const OTOMASYON: CalcDefinition[] = [donguYukDirenci, rs485Modbus];
