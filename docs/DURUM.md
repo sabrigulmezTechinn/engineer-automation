@@ -9,8 +9,8 @@
 |---|---|---|
 | 0 | Altyapı: kullanıcı hesabı, hesap motoru, birim sistemi, formül gösterimi | ✅ Bitti (c5ddcb7) |
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
-| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | 🔄 Sürüyor (ortak zemin 3dad7c0; işçiler A–D) |
-| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ⏳ |
+| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (df29ba7; 1236 test, e2e 111 adım) |
+| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | 🔄 Sırada |
 | 4 | Elektronik (12) | ⏳ |
 
 ## Hesaplar
@@ -33,7 +33,7 @@ Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçile
 1. Ortak zemin (ana oturum): sözleşme değişiklikleri, işçilerin çakışmayacağı dosya sahipliği.
 2. Planı danışmana göster.
 3. Paralel işçiler (Opus, ayrı worktree; `node_modules` symlink; paket kurmaz, build çalıştırmaz).
-4. Birleştir → `audit` (tsc, eslint, vitest) → ana checkout'ta `next build` → Playwright ile tarayıcı testi.
+4. Birleştir → `audit` (tsc, eslint, vitest) → ana checkout'ta `next build && next start -p 3100` → `npm run e2e` (docs/E2E.md).
 5. Son diff'i ve formül gövdelerini danışmana incelet → `DURUM.md` güncelle → sonraki faz.
 
 ## Doğruluk kuralları (her işçi brifinginde)
@@ -67,6 +67,13 @@ Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçile
 - Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
+
+- Faz 2: başkasının/olmayan proje ve `/karsilastir` "bulunamadı" ekranı HTTP 200 döner (cacheComponents akışı; noindex). Gerçek 404 için proxy'de veritabanı sorgusu gerekir.
+- Faz 2: Suspense yedeğinde girişli kullanıcı bir an "Kaydetmek için giriş yapın" ve varsayılan değerleri görebilir.
+- Faz 2: kayıtlı hesabın adını/notunu sonradan düzenleme arayüzü yok (action destekliyor); kaydedilmemiş değişiklikle sayfadan çıkışta uyarı yok.
+- Faz 2: tarama tam sayı girdilerde kesirli noktaları hesaplayamaz (null); emoji/CJK için PDF yazı tipi yok.
+- Hız sınırlayıcılar (auth, rapor) bellek içi ve tek süreçlidir; IP `x-forwarded-for`'dan okunur.
+- Dev veritabanında e2e test kullanıcıları birikir (e2e.*@ornek.com.tr).
 
 - Faz 2 (KAPSAM §3.1'den sapma, planlandı): profildeki "ondalık basamak" tercihi "anlamlı basamak" olarak yeniden tanımlanacak.
 - 3.5: IE verim sınıfı tablosu (AB 2019/1781 Ek I) eklenmedi; eur-lex otomatik indirmeye izin vermedi. Elle indirilip eklenmeli.
