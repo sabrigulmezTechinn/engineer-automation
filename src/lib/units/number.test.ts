@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { formatNumber, formatQuantity, parseNumber } from "./index";
 
+/** Beklenen metinlerde "_" yerine binlik ayırıcı (dar bölünmez boşluk, U+202F) koyar. */
+const g = (s: string) => s.replace(/_/g, " ");
+
 describe("parseNumber", () => {
   it.each<[string, number]>([
     // ondalık ayırıcı
@@ -38,6 +41,16 @@ describe("parseNumber", () => {
     ["1e+3", 1000],
     ["-2,5E2", -250],
     ["1.234,5e3", 1234500],
+    // formatNumber'ın bilimsel biçimi
+    ["1,5×10⁻⁶", 1.5e-6],
+    ["-2,5×10¹²", -2.5e12],
+    ["1×10⁹", 1e9],
+    ["1,00×10⁻⁶", 1e-6],
+    ["6,022×10²³", 6.022e23],
+    ["5×10⁻³²⁴", 5e-324],
+    ["1,5×10⁺³", 1500],
+    ["1,5 × 10⁻⁶", 1.5e-6],
+    ["−1,5×10⁻⁶", -1.5e-6],
     // boş tam/ondalık kısım
     [",5", 0.5],
     [".5", 0.5],
@@ -85,6 +98,15 @@ describe("parseNumber", () => {
     "1-2",
     "5%",
     "1_000",
+    // bozuk "×10" biçimleri
+    "×10⁶",
+    "1,5×10",
+    "1,5×10⁻",
+    "1,5×10⁻⁶⁻",
+    "1e3×10⁶",
+    "1,5×⁶",
+    "1,5×10^6",
+    "1,5×10⁹⁹⁹",
   ])("%j → null", (text) => {
     expect(parseNumber(text)).toBeNull();
   });
@@ -103,12 +125,17 @@ describe("formatNumber", () => {
     [1.5, "1,5"],
     [1.50001, "1,5"],
     [100, "100"],
-    [1234, "1.234"],
-    [1234.5, "1.235"],
-    [-1234.5, "-1.235"],
-    [12345.6, "12.350"],
-    [123456789, "123.500.000"],
-    [1e8, "100.000.000"],
+    // 4 haneli tam kısımlar gruplanmaz, 5 ve üstü U+202F ile gruplanır
+    [1234, "1234"],
+    [1234.5, "1235"],
+    [-1234.5, "-1235"],
+    [9999, "9999"],
+    [10000, g("10_000")],
+    [-12340, g("-12_340")],
+    [-12345, g("-12_350")],
+    [12345.6, g("12_350")],
+    [123456789, g("123_500_000")],
+    [1e8, g("100_000_000")],
     [1 / 3, "0,3333"],
     [2 / 3, "0,6667"],
     [0.1 + 0.2, "0,3"],
@@ -128,7 +155,7 @@ describe("formatNumber", () => {
     [5e-324, "5×10⁻³²⁴"],
     // eşik yuvarlamadan sonra uygulanır; 9'ların eldesi üssü artırır
     [999999999.9, "1×10⁹"],
-    [999949999, "999.900.000"],
+    [999949999, g("999_900_000")],
     [9.99996e-5, "0,0001"],
     [9.99996e-6, "1×10⁻⁵"],
     [9.99996e9, "1×10¹⁰"],
@@ -136,15 +163,22 @@ describe("formatNumber", () => {
     expect(formatNumber(value)).toBe(expected);
   });
 
+  it("binlik ayırıcı nokta değil, dar bölünmez boşluk (U+202F)", () => {
+    const text = formatNumber(1234567.5, { significant: 8 });
+    expect(text).toBe("1 234 567,5");
+    expect(text).not.toContain(".");
+  });
+
   it.each<[number, number, string]>([
     [3.14159, 2, "3,14"],
     [2.5, 2, "2,50"],
     [2.675, 2, "2,68"],
-    [1234.5, 0, "1.235"],
+    [1234.5, 0, "1235"],
     [0.5, 0, "1"],
     [-0.5, 0, "-1"],
-    [1234567.891, 2, "1.234.567,89"],
-    [999.995, 2, "1.000,00"],
+    [1234567.891, 2, g("1_234_567,89")],
+    [999.995, 2, "1000,00"],
+    [99999.995, 2, g("100_000,00")],
     [9.995, 2, "10,00"],
     [0, 2, "0,00"],
     [-0, 2, "0,00"],
@@ -162,15 +196,15 @@ describe("formatNumber", () => {
   });
 
   it("significant seçeneği", () => {
-    expect(formatNumber(1234.5678, { significant: 6 })).toBe("1.234,57");
+    expect(formatNumber(1234.5678, { significant: 6 })).toBe("1234,57");
     expect(formatNumber(2.675, { significant: 3 })).toBe("2,68");
     expect(formatNumber(0.000123456, { significant: 2 })).toBe("0,00012");
-    expect(formatNumber(987654, { significant: 1 })).toBe("1.000.000");
+    expect(formatNumber(987654, { significant: 1 })).toBe(g("1_000_000"));
     expect(formatNumber(1.5, { significant: 10 })).toBe("1,5");
   });
 
   it("decimals verilince significant yok sayılır", () => {
-    expect(formatNumber(1234.5678, { decimals: 1, significant: 2 })).toBe("1.234,6");
+    expect(formatNumber(1234.5678, { decimals: 1, significant: 2 })).toBe("1234,6");
   });
 
   it("geçersiz seçenekler sınırlanır", () => {
@@ -185,11 +219,62 @@ describe("formatNumber", () => {
     expect(formatNumber(Number.POSITIVE_INFINITY)).toBe("—");
     expect(formatNumber(Number.NEGATIVE_INFINITY, { decimals: 2 })).toBe("—");
   });
+});
 
-  it("çok basamaklı biçimlenmiş değerler geri okunabilir", () => {
-    // Not: tek binlik gruplu tamsayılar ("1.235") geri okunamaz; parseNumber tek noktayı ondalık sayar.
-    for (const v of [1234.5, 1234567.89, -0.0123, 12.5]) {
-      expect(parseNumber(formatNumber(v, { significant: 9 }))).toBe(v);
+describe("formatNumber → parseNumber gidiş-dönüşü", () => {
+  /** Tekrarlanabilir sözde rastgele üreteç (mulberry32) */
+  function rng(seed: number) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const fixed = [
+    0, -0, 1, -1, 0.5, 1234, 1235, 9999, 10000, 12345, -12345.678, 1234567.5, 123456789,
+    999999999, 1e9, 1.5e-6, -1.5e-6, 1e-4, 9.99e-5, 0.1 + 0.2, Math.PI, -Math.E, 6.02214076e23,
+    1.602176634e-19, 1e308, -1.5e308, Number.MIN_VALUE, Number.EPSILON, Number.MAX_SAFE_INTEGER,
+    // Number.MAX_VALUE bilerek yok: gösterim yuvarlaması onu aralık dışına taşır
+    // ("1,798×10³⁰⁸" → Infinity → null). Mühendislik değerlerinde karşılaşılmaz.
+  ];
+  const next = rng(20261115);
+  const random = Array.from({ length: 500 }, () => {
+    const sign = next() < 0.5 ? -1 : 1;
+    const exponent = Math.floor(next() * 61) - 30; // 1e-30 … 1e30
+    return sign * (1 + next() * 9) * 10 ** exponent;
+  });
+  const values = [...fixed, ...random];
+
+  // Sınırlar: yuvarlama payı (0,5 birim / 15. veya 4. basamak) + ikili gösterim için küçük pay
+  it("significant 15 ile her sonlu değer geri okunur (göreli hata ≤ 6e-15)", () => {
+    for (const x of values) {
+      const text = formatNumber(x, { significant: 15 });
+      const back = parseNumber(text);
+      expect(back, `${x} → ${JSON.stringify(text)}`).not.toBeNull();
+      const err = x === 0 ? Math.abs(back as number) : Math.abs((back as number) - x) / Math.abs(x);
+      expect(err, `${x} → ${JSON.stringify(text)} → ${back}`).toBeLessThanOrEqual(6e-15);
+    }
+  });
+
+  it("varsayılan biçim (4 anlamlı basamak) de geri okunur (göreli hata ≤ 5e-4)", () => {
+    for (const x of values) {
+      const text = formatNumber(x);
+      const back = parseNumber(text);
+      expect(back, `${x} → ${JSON.stringify(text)}`).not.toBeNull();
+      const err = x === 0 ? Math.abs(back as number) : Math.abs((back as number) - x) / Math.abs(x);
+      expect(err, `${x} → ${JSON.stringify(text)} → ${back}`).toBeLessThanOrEqual(5.001e-4);
+    }
+  });
+
+  it("sabit ondalıklı biçim geri okunur", () => {
+    for (const x of [1234.5, -98765.4321, 1e-6, 2.5e12, 0.125]) {
+      const text = formatNumber(x, { decimals: 3 });
+      const back = parseNumber(text) as number;
+      expect(Math.abs(back - x) / Math.abs(x), `${x} → ${JSON.stringify(text)}`).toBeLessThanOrEqual(5e-4);
     }
   });
 });
@@ -197,7 +282,8 @@ describe("formatNumber", () => {
 describe("formatQuantity", () => {
   it.each<[number, string, string]>([
     [1.5, "kV", "1,5 kV"],
-    [1500, "rpm", "1.500 dev/dk"],
+    [1500, "rpm", "1500 dev/dk"],
+    [12340, "W", g("12_340 W")],
     [2.5, "mm2", "2,5 mm²"],
     [25, "degC", "25 °C"],
     [10, "deltaK", "10 K"],

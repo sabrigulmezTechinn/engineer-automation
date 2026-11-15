@@ -71,6 +71,27 @@ export function convert(value: number, fromUnitId: string, toUnitId: string): nu
 }
 
 // ---------------------------------------------------------------------------
+// Ortak: üst simge rakamlar (bilimsel gösterim "1,5×10⁻⁶")
+// ---------------------------------------------------------------------------
+
+const SUPERSCRIPT: Record<string, string> = {
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+  "-": "⁻",
+};
+
+const FROM_SUPERSCRIPT: Record<string, string> = { "⁺": "+" };
+for (const [plain, sup] of Object.entries(SUPERSCRIPT)) FROM_SUPERSCRIPT[sup] = plain;
+
+// ---------------------------------------------------------------------------
 // Sayı okuma
 // ---------------------------------------------------------------------------
 
@@ -78,6 +99,8 @@ export function convert(value: number, fromUnitId: string, toUnitId: string): nu
 const DOT_GROUPED = /^\d{1,3}(?:\.\d{3})+$/;
 /** İşaret, mantis (rakam, nokta, virgül) ve isteğe bağlı üs */
 const NUMBER_SHAPE = /^([+-]?)([\d.,]*)(?:[eE]([+-]?\d+))?$/;
+/** formatNumber'ın bilimsel biçimi: mantis + "×10" + üst simge üs ("1,5×10⁻⁶") */
+const TIMES_TEN = /^(.*)×10([⁺⁻]?[⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/;
 
 /**
  * Kullanıcı girdisini sayıya çevirir. Geçersiz veya boş girdide null döner.
@@ -86,6 +109,7 @@ const NUMBER_SHAPE = /^([+-]?)([\d.,]*)(?:[eE]([+-]?\d+))?$/;
  * - Baş/son boşluk kırpılır; aradaki boşluklar (normal, NBSP, ince boşluk vb.) binlik ayırıcı
  *   sayılıp yok sayılır ("1 234,5" → 1234,5). Unicode eksi (−) "-" gibi okunur; baştaki "+" kabul edilir.
  * - Ayırıcı kuralları yalnızca mantise uygulanır; üs `[eE][+-]?rakamlar` biçimindedir ("1,5e-3", "2E6").
+ *   formatNumber'ın bilimsel biçimi de okunur: "1,5×10⁻⁶" (× ve üst simge rakamlar, isteğe bağlı ⁺/⁻).
  * - Hem "." hem "," varsa: "." binlik, "," ondalıktır ("1.234,5" → 1234,5). Virgül tek olmalı ve tüm
  *   noktalardan sonra gelmeli; noktalı kısım üçlü gruplardan oluşmalı ("1,234.5" ve "1.23,4" geçersiz).
  * - Yalnızca "," varsa: tek virgül ondalıktır ("1,5"); birden çok virgül geçersizdir ("1,2,3").
@@ -97,7 +121,15 @@ const NUMBER_SHAPE = /^([+-]?)([\d.,]*)(?:[eE]([+-]?\d+))?$/;
  */
 export function parseNumber(text: string): number | null {
   if (typeof text !== "string") return null;
-  const compact = text.replace(/\s+/g, "").replace(/−/g, "-");
+  let compact = text.replace(/\s+/g, "").replace(/−/g, "-");
+  const timesTen = TIMES_TEN.exec(compact);
+  if (timesTen) {
+    const exponent = timesTen[2]
+      .split("")
+      .map((c) => FROM_SUPERSCRIPT[c])
+      .join("");
+    compact = `${timesTen[1]}e${exponent}`;
+  }
   const match = NUMBER_SHAPE.exec(compact);
   if (!match) return null;
   const [, sign, mantissa, exponent] = match;
@@ -161,23 +193,14 @@ function roundDigits(d: Digits, keep: number): Digits {
   return { digits: head.join("").replace(/0+$/, ""), exp: d.exp };
 }
 
-function groupThousands(intPart: string): string {
-  return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
+/** Binlik ayırıcı: dar bölünmez boşluk (ISO 80000-1). Nokta kullanılmaz; parseNumber tek noktayı ondalık okur. */
+const GROUP_SEPARATOR = " ";
 
-const SUPERSCRIPT: Record<string, string> = {
-  "0": "⁰",
-  "1": "¹",
-  "2": "²",
-  "3": "³",
-  "4": "⁴",
-  "5": "⁵",
-  "6": "⁶",
-  "7": "⁷",
-  "8": "⁸",
-  "9": "⁹",
-  "-": "⁻",
-};
+/** Tam kısmı üçlü gruplar; 4 haneye kadar gruplanmaz ("1235", "12 345"). */
+function groupThousands(intPart: string): string {
+  if (intPart.length <= 4) return intPart;
+  return intPart.replace(/\B(?=(\d{3})+(?!\d))/g, GROUP_SEPARATOR);
+}
 
 function superscript(n: number): string {
   return String(n)
@@ -191,7 +214,9 @@ function clampInt(v: number, min: number, max: number): number {
 }
 
 /**
- * Sayıyı Türkçe biçimde metne çevirir: ondalık virgül, binlik nokta ("1.234,5"). NaN/Infinity → "—".
+ * Sayıyı Türkçe biçimde metne çevirir: ondalık virgül, binlik ayırıcı dar bölünmez boşluk (U+202F,
+ * ISO 80000-1). 4 haneli tam kısımlar gruplanmaz: 1235 → "1235", 1234567,5 → "1 234 567,5".
+ * NaN/Infinity → "—".
  *
  * - Varsayılan: 4 anlamlı basamak (`significant`), sondaki gereksiz sıfırlar atılır (1,5 → "1,5").
  * - `decimals` verilirse sabit ondalık basamak (1,5 → "1,50"); `significant` yok sayılır.
@@ -200,8 +225,7 @@ function clampInt(v: number, min: number, max: number): number {
  *   modda da geçerlidir; `decimals` verilmişse mantise uygulanır (1e-6 → "1,00×10⁻⁶", "0,00" değil).
  * - Sıfıra yuvarlanan negatif değerler ve -0 işaretsiz yazılır ("0", "0,00").
  *
- * Gösterim içindir; çıktıyı giriş alanına geri yazmayın: parseNumber tek noktayı ondalık okur,
- * bu yüzden 1235 → "1.235" → 1,235 olur.
+ * Çıktı parseNumber ile geri okunabilir: gruplama boşlukları yok sayılır, "×10⁻⁶" okunur.
  */
 export function formatNumber(value: number, options?: FormatOptions): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "—";

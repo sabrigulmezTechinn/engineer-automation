@@ -8,7 +8,8 @@
  *
  * Kimlik kuralları (kimlikler kayıtlı hesaplarda saklanır; değiştirilmez, silinmez):
  * - Yalnızca ASCII harf, rakam ve "_": µ → "u", ² → "2", ³ → "3", Ω → "ohm", ° → "deg".
- * - Çarpım bitişik yazılır ("Nm", "kgm2"); bölme ve ayırıcı "_" ile yazılır ("m_s", "L_min", "ohm_mm2_m").
+ * - Çarpım bitişik yazılır ("Nm", "kgm2"); bölme "_" ile yazılır ("m_s", "L_min", "K_W").
+ *   İstisna: özdirençte okunurluk için "ohm_m" (Ω·m) ve "ohm_mm2_m" (Ω·mm²/m); buradaki ilk "_" çarpımdır.
  * - Kimlikler büyük/küçük harf duyarlıdır (SI önekleri gibi): "mW" ≠ "MW", "mohm" ≠ "Mohm", "ms" ≠ "mS".
  * - Bir kimlik yalnızca bir boyutta bulunur: gram "g", yerçekimi ivmesi "gn"; mutlak sıcaklık "K"/"degC",
  *   sıcaklık farkı "deltaK"/"deltaDegC".
