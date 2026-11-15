@@ -111,8 +111,12 @@ export function formatNumber(value: number, options?: FormatOptions): string {
       .join("");
     return `${mant}×10${exp}`;
   }
-  return String(Number(value.toPrecision(sig))).replace(".", ",");
+  // Gerçek sistem gibi tam sayı basamakları atılmaz.
+  const intDigits = Math.floor(Math.log10(abs)) + 1;
+  return String(Number(value.toPrecision(Math.min(21, Math.max(sig, intDigits))))).replace(".", ",");
 }
+
+export const MONEY_FORMAT: FormatOptions = { decimals: 2 };
 
 /** Sembolsüz ("" veya "-"), önde (%), bitişik (°) ve boşluklu yerleşim. */
 export function formatQuantity(value: number, unitId: string, options?: FormatOptions): string {

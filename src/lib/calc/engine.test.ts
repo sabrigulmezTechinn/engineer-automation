@@ -475,8 +475,8 @@ describe("çıktı hassasiyeti", () => {
       compute: () => ({ outputs: { toplam: 17971.2 }, steps: [], checks: [] }),
     });
   // units-mock binlik gruplama yapmaz; gruplama gerçek birim sisteminin testlerinde denetlenir.
-  it("varsayılan 4 anlamlı basamak, significant ve integer seçenekleri", () => {
-    expect(expectOk(runCalc(def({}), state())).outputs[0].formattedValue).toBe("17970");
+  it("varsayılan 4 anlamlı basamak (tam sayı kısmı korunur), significant ve integer seçenekleri", () => {
+    expect(expectOk(runCalc(def({}), state())).outputs[0].formattedValue).toBe("17971"); // tam sayı basamakları atılmaz
     expect(expectOk(runCalc(def({ significant: 6 }), state())).outputs[0].formattedValue).toBe("17971,2");
     expect(expectOk(runCalc(def({ integer: true }), state())).outputs[0].formattedValue).toBe("17971");
   });

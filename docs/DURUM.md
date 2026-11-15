@@ -8,8 +8,8 @@
 | Faz | İçerik | Durum |
 |---|---|---|
 | 0 | Altyapı: kullanıcı hesabı, hesap motoru, birim sistemi, formül gösterimi | ✅ Bitti (c5ddcb7) |
-| 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | 🔄 Sürüyor |
-| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ⏳ |
+| 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
+| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | 🔄 Sırada (önce PDF denemesi) |
 | 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ⏳ |
 | 4 | Elektronik (12) | ⏳ |
 
@@ -17,11 +17,16 @@
 
 | No | Hesap | Durum |
 |---|---|---|
-| 1.1 | Ohm yasası ve güç | ✅ |
-| 1.2–1.7 | Temel elektrik | 🔄 Faz 1 işçisi A |
-| 3.1–3.5 | Motor ve sürücü | 🔄 Faz 1 işçisi B |
-| 5.1–5.7 | Otomasyon ve PLC | 🔄 Faz 1 işçisi C |
-| 7.1–7.2 | Yardımcı araçlar | 🔄 Faz 1 işçisi D |
+| 1.1–1.7 | Temel elektrik | ✅ |
+| 3.1–3.5 | Motor ve sürücü | ✅ (3.5'te IE sınıfı tespiti yok) |
+| 5.1–5.7 | Otomasyon ve PLC | ✅ |
+| 7.1–7.2 | Yardımcı araçlar | ✅ |
+| 2.1–2.8 | Elektrik tesisat | ⏳ Faz 3 |
+| 6.1–6.9 | Mekatronik | ⏳ Faz 3 |
+| 4.1–4.12 | Elektronik | ⏳ Faz 4 |
+
+Danışman Faz 1'de şu hesapların formül gövdelerini inceledi: 1.4, 1.7, 3.3, 3.4 (aritmetik), 5.3, 7.1 (AWG), 7.2.
+Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçilerin elle hesaplanmış testlerine dayanır.
 
 ## Çalışma düzeni (her faz)
 
@@ -48,8 +53,18 @@
 - 4-20 mA döngü tasarım akımı 22 mA (config, girdi olarak değiştirilebilir); NE 43 arıza eşiği ≥ 21 mA ayrı değer.
 - Bilinmeyen hesap adresi `src/proxy.ts` ile gerçek 404 döner (cacheComponents akışı yüzünden sayfadaki notFound 200 bırakıyordu).
 - Liste girdileri `numberList` türüyle (";" ile ayrılmış); özel arayüzlü hesaplar `customUi` ile, ama durumlarını yine `InputState` + `runCalc` ile tutarlar.
+- Sayı biçimi: varsayılan 4 anlamlı basamak, ama tam sayı basamakları hiç atılmaz (17 786,56 → 17 787); para (TL) iki ondalık. Çıktı başına `significant` / `integer` seçenekleri.
+- 5.5 PID: klasik Ziegler–Nichols katsayıları (PI 0,45·K_u, T_u/1,2; açık çevrim PI T_i = L/0,3). Åström & Hägglund'un değiştirilmiş PI değerleri kullanılmaz.
+- 5.7 RS485: kablo uzunluğu kılavuzu L·Bd ≤ 10⁷ (TI SLLA272D, tutucu), en çok 1200 m; sonlandırma Modbus §3.4.5'e göre 150 Ω (polarizasyonla 120 Ω + 1 nF).
+- 5.6: döngü tasarım akımı 22 mA config'ten; NE 43 sınırları config'ten.
+- Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
+
+- Faz 2 (KAPSAM §3.1'den sapma, planlandı): profildeki "ondalık basamak" tercihi "anlamlı basamak" olarak yeniden tanımlanacak.
+- 3.5: IE verim sınıfı tablosu (AB 2019/1781 Ek I) eklenmedi; eur-lex otomatik indirmeye izin vermedi. Elle indirilip eklenmeli.
+- İçeriği açılıp doğrulanamayan referanslar: IEC 60947-4-1/-4-2, 61800-2, 60034 ailesi madde numaraları; TIA/EIA-485-A; NAMUR NE 43; ASTM B258; IEC 60063 tabloları (Vishay üzerinden); Ziegler & Nichols 1942 özgün makalesi; IEV madde numaraları.
+- Öneriler: `zaman` boyutuna yıl birimi (3.5 geri ödeme şimdilik birimsiz), 1/s boyutu (5.5 K_i), bilgi seviyesinde Check, `visibleWhen` VE koşulu, metin girdisi (5.1 proses birimi etiketi), dBm gibi gösterim eki, mekanik büyüklükleri adımlarda varsayılan birimle yazan LaTeX yardımcısı (Faz 3 öncesi).
 
 - Gerçek e-posta sağlayıcısı (şimdilik konsol + `.dev-mail/`).
 - Oran sınırlayıcı istemci kaynaklı `x-forwarded-for`'a güveniyor; dağıtım ortamındaki ters vekile göre düzeltilmeli.

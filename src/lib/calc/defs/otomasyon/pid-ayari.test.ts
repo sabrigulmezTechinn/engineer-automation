@@ -1,7 +1,7 @@
 /**
  * PID ayarı (5.5) testleri. Gerçek birim sistemiyle çalışır.
  *
- * Katsayılar: klasik Ziegler–Nichols (Ogata, Modern Control Engineering, Tablo 8-1/8-2).
+ * Katsayılar: klasik Ziegler–Nichols; doğrulanan kaynaklar pid-ayari.ts başında (Wikipedia, MTU CM416, picuino).
  * Örnekler: Åström & Hägglund, "Advanced PID Control" (ISA, 2006), §6.2 (PID; klasik tabloyla aynı):
  * - Örnek 6.1 (basamak yanıtı): a = 0,218, L = 0,806 → PID: K = 5,50, T_i = 1,61, T_d = 0,403.
  * - Örnek 6.2 (frekans yanıtı): K_u = 8, T_u = 2π/√3 = 3,63 → PID: K = 4,8, T_i = 1,81.

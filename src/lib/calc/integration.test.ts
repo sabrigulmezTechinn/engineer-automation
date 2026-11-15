@@ -7,10 +7,11 @@
  * garanti ettiği şeyler denetlenir.
  */
 import { describe, expect, it } from "vitest";
-import { getUnit, siUnit } from "@/lib/units";
+import { formatQuantity, getUnit, siUnit } from "@/lib/units";
 import { autoOutputUnit, defaultState, runCalc } from "./engine";
 import { allCalcs } from "./registry";
 import { ohmYasasi } from "./defs/temel-elektrik/ohm-yasasi";
+import { latexQty } from "./latex";
 import { renderStrict } from "./test-utils/katex";
 import type { InputState, RunResult } from "./types";
 
@@ -120,5 +121,14 @@ describe("kayıtlı hesapların birim kimlikleri", () => {
         expect(() => siUnit(spec.dimension), where).not.toThrow();
       }
     }
+  });
+});
+
+describe("sayı biçimi, gerçek katalogla", () => {
+  it("tam sayı basamakları atılmaz, para iki ondalıkla yazılır", () => {
+    expect(formatQuantity(17786.5612, "TL")).toBe("17\u202f786,56 TL");
+    expect(formatQuantity(456.25, "TL")).toBe("456,25 TL");
+    expect(formatQuantity(12345.6, "W")).toBe("12\u202f346 W");
+    expect(latexQty(17786.5612, "TL")).toBe("17\\,786{,}56\\,\\mathrm{TL}");
   });
 });

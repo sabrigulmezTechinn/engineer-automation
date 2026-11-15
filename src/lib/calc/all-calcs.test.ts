@@ -11,8 +11,21 @@ import { getUnit } from "@/lib/units";
 import { defaultState, runCalc } from "./engine";
 import { allCalcs } from "./registry";
 import { renderStrict } from "./test-utils/katex";
+import type { CalcDefinition, InputState } from "./types";
 
 const calcs = allCalcs();
+
+/** Select girdilerinin tüm değer kombinasyonları (en fazla 512); her biri InputState parçası. */
+function selectCombinations(def: CalcDefinition): InputState[] {
+  let combos: InputState[] = [{}];
+  for (const input of def.inputs) {
+    if (input.kind !== "select") continue;
+    const next: InputState[] = [];
+    for (const c of combos) for (const o of input.options) next.push({ ...c, [input.key]: { value: o.value } });
+    combos = next.slice(0, 512);
+  }
+  return combos;
+}
 
 describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name, def) => {
   it("varsayılan girdilerle geçerli sonuç üretir", () => {
@@ -26,6 +39,20 @@ describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name,
     for (const f of def.formulas) expect(() => renderStrict(f.latex), f.latex).not.toThrow();
     const r = runCalc(def, defaultState(def));
     if (r.ok) for (const s of r.result.steps) expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+  });
+
+  it("tüm seçim kombinasyonlarında çalışır; başarılı her kombinasyonun adımları KaTeX strict'ten geçer", () => {
+    const combos = selectCombinations(def);
+    let okCount = 0;
+    for (const combo of combos) {
+      const state = { ...defaultState(def), ...combo };
+      const r = runCalc(def, state);
+      if (!r.ok) continue;
+      okCount++;
+      expect(r.result.checks.filter((c) => c.level === "hata"), JSON.stringify(combo)).toEqual([]);
+      for (const s of r.result.steps) expect(() => renderStrict(s.latex), `${JSON.stringify(combo)}: ${s.latex}`).not.toThrow();
+    }
+    expect(okCount, "en az bir kombinasyon geçerli sonuç vermeli").toBeGreaterThan(0);
   });
 
   it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {

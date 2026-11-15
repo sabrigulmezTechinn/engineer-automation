@@ -4,7 +4,7 @@
  * Sayılar birim sisteminin `formatNumber` biçimiyle (Türkçe, ondalık virgül) yazılır,
  * sonra LaTeX'e uyarlanır. Birim sembolleri dik yazılır: `\mathrm{kV}`, `\mathrm{k}\Omega`.
  */
-import { formatNumber, fromSI, getUnit, siUnit } from "@/lib/units";
+import { MONEY_FORMAT, formatNumber, fromSI, getUnit, siUnit } from "@/lib/units";
 import { autoOutputUnit } from "./auto-unit";
 import type { Dimension, FormatOptions } from "@/lib/units";
 
@@ -174,8 +174,8 @@ export function latexUnit(unitId: string): string {
  * Ör. latexQty(1500, "kV") → "1{,}5\,\mathrm{kV}", yüzde → "\%50", açı → "45^\circ".
  */
 export function latexQty(valueSI: number, unitId: string, options?: FormatOptions): string {
-  const symbol = getUnit(unitId).symbol;
-  const num = latexNum(fromSI(valueSI, unitId), options);
+  const { symbol, dimension } = getUnit(unitId);
+  const num = latexNum(fromSI(valueSI, unitId), options ?? (dimension === "para" ? MONEY_FORMAT : undefined));
   if (NO_SYMBOLS.has(symbol)) return num;
   const unit = latexUnitSymbol(symbol);
   if (PREFIX_SYMBOLS.has(symbol)) {

@@ -2,10 +2,15 @@
  * KAPSAM 5.5 — PID ayarı (Ziegler–Nichols).
  *
  * KAYNAKLAR:
- *   - Klasik Ziegler–Nichols kuralları (1942): K. Ogata, "Modern Control Engineering", Tablo 8-1 (basamak yanıtı:
- *     P 1/a; PI 0,9/a, T_i = L/0,3; PID 1,2/a, 2L, 0,5L) ve Tablo 8-2 (kapalı çevrim: P 0,5·K_u; PI 0,45·K_u,
- *     T_i = T_u/1,2; PID 0,6·K_u, 0,5·T_u, 0,125·T_u). Mühendislik pratiğinde ve ders kitaplarında bilinen
- *     değerler bunlar olduğu için kullanılır.
+ *   - Klasik Ziegler–Nichols kuralları (1942). Mühendislik pratiğinde ve ders kitaplarında bilinen değerler
+ *     bunlar olduğu için kullanılır. Açılıp doğrulanan kaynaklar:
+ *       Kapalı çevrim (P 0,5·K_u; PI 0,45·K_u, T_i = T_u/1,2; PID 0,6·K_u, 0,5·T_u, 0,125·T_u):
+ *         https://en.wikipedia.org/wiki/Ziegler%E2%80%93Nichols_method (tablo) ve
+ *         https://pages.mtu.edu/~tbco/cm416/zn.html (K_u/2, K_u/2,2 ve P_u/1,2, K_u/1,7 · P_u/2 · P_u/8).
+ *       Açık çevrim (K_o = T/(K·L) = 1/a; P K_o; PI 0,9·K_o, K_i = 0,27·K_o/L → T_i = L/0,3;
+ *         PID 1,2·K_o, K_i = 0,6·K_o/L → T_i = 2L, K_d = 0,6·K_o·L → T_d = 0,5L):
+ *         https://www.picuino.com/en/control-ziegler-nichols.html
+ *     Ogata, "Modern Control Engineering" bu kuralları tablo halinde verir ancak bu çalışmada açılmadı.
  *   - K. J. Åström, T. Hägglund, "Advanced PID Control", ISA, 2006, §6.2: a = K·L/T tanımı, Örnek 6.1/6.2
  *     (PID; klasik tabloyla aynı) ve beklenen kapalı çevrim periyodu T_p (P ve PID için). Åström & Hägglund
  *     PI için değiştirilmiş katsayılar (0,4·K_u, 0,8·T_u; 3L) verir; burada klasik değerler tercih edildi ve
@@ -34,7 +39,7 @@ interface Rule {
   tp?: number;
 }
 
-/** Klasik Ziegler–Nichols (Ogata Tablo 8-1/8-2); T_p: Åström & Hägglund (2006) Tablo 6.1/6.2 */
+/** Klasik Ziegler–Nichols (kaynaklar dosya başında); T_p: Åström & Hägglund (2006) Tablo 6.1/6.2 */
 export const ZN_RULES: Record<PidYontem, Record<PidTip, Rule>> = {
   kapali: {
     P: { kp: 0.5, tp: 1.0 },
@@ -48,10 +53,10 @@ export const ZN_RULES: Record<PidYontem, Record<PidTip, Rule>> = {
   },
 };
 
-const OGATA: Reference = {
-  standard: "Ogata, Modern Control Engineering",
-  title: "Ziegler–Nichols ayar kuralları",
-  clause: "Tablo 8-1 ve 8-2",
+const ZN_KLASIK: Reference = {
+  standard: "Ziegler & Nichols (1942)",
+  title: "Optimum Settings for Automatic Controllers, Trans. ASME 64:759–768",
+  note: "Klasik tablo; özgün makale açılmadı. Kapalı çevrim değerleri Wikipedia (Ziegler–Nichols method) ve Michigan Tech CM416 ders notundan, açık çevrim değerleri picuino.com Ziegler–Nichols sayfasından doğrulandı.",
 };
 
 const ASTROM: Reference = {
@@ -99,7 +104,7 @@ export const pidAyari: CalcDefinition = {
     },
   ],
   references: [
-    { ...OGATA, note: "Ziegler & Nichols (1942), Trans. ASME 64:759–768 klasik kuralları." },
+    ZN_KLASIK,
     {
       ...ASTROM,
       note: "a = K·L/T tanımı, örnekler ve beklenen kapalı çevrim periyodu (P, PID). PI için değiştirilmiş katsayılar (0,4·K_u, 0,8·T_u; 3L) önerir; burada klasik değerler kullanılır.",
@@ -272,7 +277,7 @@ export const pidAyari: CalcDefinition = {
       steps.push({ label: "Beklenen kapalı çevrim periyodu", latex: `T_p = ${n(rule.tp)} \\cdot ${baseSym} = ${n(rule.tp)} \\cdot ${qt(base)} = ${qt(Tp)}` });
     }
 
-    const checks: Check[] = [{ level: "uyari", message: MESSAGES.aggressive, reference: OGATA }];
+    const checks: Check[] = [{ level: "uyari", message: MESSAGES.aggressive, reference: ZN_KLASIK }];
     return { outputs, steps, checks };
   },
 };

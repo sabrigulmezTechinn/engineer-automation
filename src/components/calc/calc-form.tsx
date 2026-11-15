@@ -6,13 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cx } from "@/components/ui/cx";
-import { defaultState, runCalc } from "@/lib/calc/engine";
+import { defaultState, runCalc, visibleInputs as resolveVisibleInputs } from "@/lib/calc/engine";
 import { getCalc } from "@/lib/calc/registry";
 import type {
   CalcDefinition,
   Check,
   CheckLevel,
-  InputSpec,
   InputState,
   NumberInputSpec,
   NumberListInputSpec,
@@ -78,15 +77,6 @@ function selectValue(def: CalcDefinition, state: InputState, key: string): strin
   return spec?.default;
 }
 
-/** visibleWhen koşulu: ilgili select girdisi belirtilen değerde(lerde) mi? */
-function isVisible(def: CalcDefinition, state: InputState, input: InputSpec): boolean {
-  if (!input.visibleWhen) return true;
-  const { key, equals } = input.visibleWhen;
-  const current = selectValue(def, state, key);
-  if (current === undefined) return false;
-  return Array.isArray(equals) ? equals.includes(current) : current === equals;
-}
-
 /** useId çıktısını HTML kimliği ve bağlantı parçası olarak güvenle kullanılabilir hale getirir. */
 function safeIdPart(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
@@ -148,7 +138,8 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
     setTouched(new Set());
   };
 
-  const visibleInputs = def.inputs.filter((input) => isVisible(def, state, input));
+  // Motorun çözümü: visibleWhen zincirlerini de izler (denetleyici gizliyse bağımlı da gizli).
+  const visibleInputs = resolveVisibleInputs(def, state);
   const labelOf = (key: string) => def.inputs.find((i) => i.key === key)?.label ?? key;
 
   return (

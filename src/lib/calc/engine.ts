@@ -3,7 +3,7 @@
  * Sunucu ve istemcide çalışır.
  */
 import { LIMITS } from "@/config/sinirlar";
-import { formatNumber, formatQuantity, fromSI, parseNumber, toSI, unitsFor, type FormatOptions } from "@/lib/units";
+import { MONEY_FORMAT, formatNumber, formatQuantity, fromSI, parseNumber, toSI, unitsFor, type FormatOptions } from "@/lib/units";
 import { autoOutputUnit } from "./auto-unit";
 import type {
   CalcContext,
@@ -214,6 +214,7 @@ function failure(checks: Check[], fieldErrors: Record<string, string> = {}): Run
 function outputPrecision(spec: OutputSpec): FormatOptions | undefined {
   if (spec.integer) return { decimals: 0 };
   if (spec.significant !== undefined) return { significant: spec.significant };
+  if (spec.dimension === "para") return MONEY_FORMAT;
   return undefined;
 }
 

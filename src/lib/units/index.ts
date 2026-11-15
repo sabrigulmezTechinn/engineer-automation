@@ -244,7 +244,10 @@ export function formatNumber(value: number, options?: FormatOptions): string {
   let rounded: Digits;
   let scientific: boolean;
   if (decimals === undefined) {
-    rounded = roundDigits(exact, significant);
+    // Tam sayı basamakları hiçbir zaman atılmaz: 17 786,56 → "17 787" (4 anlamlı basamakta "17 790" olurdu).
+    // Bilimsel gösterim bölgesinde (≥ 10⁹) anlamlı basamak kuralı geçerlidir.
+    const effective = exact.exp < 9 ? Math.max(significant, exact.exp + 1) : significant;
+    rounded = roundDigits(exact, effective);
     scientific = rounded.exp >= 9 || rounded.exp <= -5;
   } else {
     const plain = roundDigits(exact, exact.exp + 1 + decimals);
@@ -289,9 +292,13 @@ const ATTACHED_SYMBOLS = new Set(["°", "′"]);
  * - Sembolü "-" olan birimlerde (boyutsuz, kesir) yalnızca sayı yazılır.
  * - Değer NaN/Infinity ise yalnızca "—" döner. Bilinmeyen birimde hata fırlatır.
  */
+/** Para birimlerinin varsayılan biçimi */
+export const MONEY_FORMAT: FormatOptions = { decimals: 2 };
+
 export function formatQuantity(value: number, unitId: string, options?: FormatOptions): string {
-  const { symbol } = getUnit(unitId);
-  const num = formatNumber(value, options);
+  const { symbol, dimension } = getUnit(unitId);
+  // Para birimleri varsayılan olarak iki ondalıkla yazılır (17 786,56 TL).
+  const num = formatNumber(value, options ?? (dimension === "para" ? MONEY_FORMAT : undefined));
   if (num === "—" || symbol === "-") return num;
   if (PREFIX_SYMBOLS.has(symbol)) {
     return num.charAt(0) === "-" ? `-${symbol}${num.slice(1)}` : `${symbol}${num}`;
