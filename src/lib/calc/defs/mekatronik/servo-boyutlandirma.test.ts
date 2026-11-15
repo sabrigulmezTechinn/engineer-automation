@@ -87,7 +87,7 @@ describe("atalet oranı kontrolü", () => {
     const w = r.checks.filter((c) => c.level === "uyari");
     expect(w).toHaveLength(1);
     expect(w[0].message).toMatch(/20.*10/);
-    expect(w[0].reference?.note).toContain("thk.com");
+    expect(w[0].reference?.title).toBe("Studying the Driving Motor");
     expect(def.compute(BASE, ctx).checks.every((c) => c.level === "ok")).toBe(true);
   });
 

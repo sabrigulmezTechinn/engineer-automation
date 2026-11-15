@@ -24,7 +24,7 @@ const MESSAGES = {
   nonInteger: (n: string) =>
     `Adım/devir tam sayı değil (${n}): adım açısı ve mikroadım bölmesi motor/sürücü veri sayfasıyla uyumlu olmalıdır.`,
   assumptions:
-    "Hızlanma sıfırdan doğrusal rampa kabul edildi (başlangıç darbe hızı 0). Gerekli tork, motorun hız–tork (pull-out) eğrisinde çalışma devrinde sağlanmalıdır; mikroadımda adım başına tork azalır.",
+    "Hızlanma sıfırdan doğrusal rampa kabul edildi (başlangıç darbe hızı 0). Gerekli tork, motorun hız–tork eğrisinde çalışma devrinde sağlanmalıdır (THK).",
 } as const;
 
 const INPUTS: InputSpec[] = [
@@ -146,7 +146,6 @@ const INPUTS: InputSpec[] = [
     symbol: "T_L",
     dimension: "tork",
     defaultUnit: "Nm",
-    units: ["Nm", "mNm", "Ncm", "kgfcm"],
     default: 0.2,
     min: 0,
   },
@@ -205,8 +204,8 @@ const OUTPUTS: OutputSpec[] = [
   { key: "dx", label: "Doğrusal çözünürlük", symbol: "\\Delta x", dimension: "uzunluk", defaultUnit: "um", units: ["um", "mm"], significant: 6 },
   { key: "v", label: "Doğrusal hız", symbol: "v", dimension: "hiz", defaultUnit: "mm_s" },
   { key: "alfa", label: "Açısal ivme", symbol: "\\alpha", dimension: "acisal_ivme", defaultUnit: "rad_s2" },
-  { key: "Ta", label: "Hızlanma torku", symbol: "T_a", dimension: "tork", defaultUnit: "Nm", units: ["Nm", "mNm", "Ncm", "kgfcm"] },
-  { key: "TM", label: "Gerekli motor torku", symbol: "T_M", dimension: "tork", defaultUnit: "Nm", units: ["Nm", "mNm", "Ncm", "kgfcm"] },
+  { key: "Ta", label: "Hızlanma torku", symbol: "T_a", dimension: "tork", defaultUnit: "Nm" },
+  { key: "TM", label: "Gerekli motor torku", symbol: "T_M", dimension: "tork", defaultUnit: "Nm" },
 ];
 
 const qi = specWriter(INPUTS);

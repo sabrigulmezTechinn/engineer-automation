@@ -8,7 +8,8 @@ export const MEKATRONIK_TAHRIK_SINIRLARI = {
    * 6.2 Vidalı mil: THK bilyalı vida seçim kriterleri (üretici kataloğu, kamuya açık).
    * - Kritik devir, denklem (7): N₁ = 60·λ₁²/(2π·ℓb²) · √(E·10³·I/(γ·A)) · 0,8
    *   https://www.thk.com/eu/en/products/ball_screw/selection/0007/
-   * - Burkulma yükü, denklem (5): P₁ = η₁·π²·E·I/ℓa² · 0,5
+   * - Burkulma yükü, denklem (5): P₁ = η₁·π²·E·I/ℓa² · 0,5 (THK'deki η₁ yataklama katsayısıdır; verimle
+   *   karışmasın diye hesapta n_b ile gösterilir)
    *   İzin verilen çekme/basma yükü, denklem (6): P₂ = σ·(π/4)·d₁²
    *   https://www.thk.com/eu/en/products/ball_screw/selection/0006/
    * Katalog değerleri mm–N–kg biriminde verilir; burada SI'ya çevrilmiştir (E: 2,06×10⁵ N/mm² = 2,06×10¹¹ Pa,
@@ -22,18 +23,18 @@ export const MEKATRONIK_TAHRIK_SINIRLARI = {
     /** İzin verilen çekme/basma gerilmesi, Pa (denklem 6) */
     izinGerilme: 147e6,
     /** Kritik devir sonucuna uygulanan emniyet katsayısı (denklem 7) */
-    kritikDevirKatsayisi: 0.8,
+    kritikDevirEmniyet: 0.8,
     /** Burkulma yükü sonucuna uygulanan emniyet katsayısı (denklem 5) */
-    burkulmaKatsayisi: 0.5,
+    burkulmaEmniyet: 0.5,
     /** Kritik devir için yataklama katsayısı λ₁ (denklem 7 tablosu) */
-    lambda1: {
+    kritikYataklama: {
       "sabit-serbest": 1.875,
       "destekli-destekli": 3.142,
       "sabit-destekli": 3.927,
       "sabit-sabit": 4.73,
     },
-    /** Burkulma için yataklama katsayısı η₁ (denklem 5 tablosu; THK destekli–destekli değeri vermez) */
-    eta1: {
+    /** Burkulma için yataklama katsayısı n_b (THK'de η₁; denklem 5 tablosu; THK destekli–destekli değeri vermez) */
+    burkulmaYataklama: {
       "sabit-serbest": 0.25,
       "sabit-destekli": 2,
       "sabit-sabit": 4,
@@ -64,5 +65,5 @@ export const MEKATRONIK_TAHRIK_SINIRLARI = {
   },
 } as const;
 
-export type VidaYataklamaKritik = keyof typeof MEKATRONIK_TAHRIK_SINIRLARI.vidaliMil.lambda1;
-export type VidaYataklamaBurkulma = keyof typeof MEKATRONIK_TAHRIK_SINIRLARI.vidaliMil.eta1;
+export type VidaYataklamaKritik = keyof typeof MEKATRONIK_TAHRIK_SINIRLARI.vidaliMil.kritikYataklama;
+export type VidaYataklamaBurkulma = keyof typeof MEKATRONIK_TAHRIK_SINIRLARI.vidaliMil.burkulmaYataklama;

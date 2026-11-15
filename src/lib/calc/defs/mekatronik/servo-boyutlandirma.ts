@@ -159,7 +159,6 @@ const INPUTS: InputSpec[] = [
   },
 ];
 
-const T_UNITS = ["Nm", "mNm", "Ncm", "kgfcm"];
 
 const OUTPUTS: OutputSpec[] = [
   {
@@ -173,12 +172,12 @@ const OUTPUTS: OutputSpec[] = [
   { key: "oran", label: "Atalet oranı (yük/motor)", symbol: "k", dimension: "boyutsuz", defaultUnit: "unitless" },
   { key: "nYuk", label: "Yük devri", symbol: "n_{\\text{yük}}", dimension: "acisal_hiz", defaultUnit: "rpm" },
   { key: "alfaA", label: "Hızlanmada açısal ivme", symbol: "\\alpha_a", dimension: "acisal_ivme", defaultUnit: "rad_s2" },
-  { key: "TLm", label: "Motora yansıyan yük torku", symbol: "T_{L,m}", dimension: "tork", defaultUnit: "Nm", units: T_UNITS },
-  { key: "Ta", label: "Hızlanma (atalet) torku", symbol: "T_a", dimension: "tork", defaultUnit: "Nm", units: T_UNITS },
-  { key: "T1", label: "Hızlanmada motor torku (tepe)", symbol: "T_1", dimension: "tork", defaultUnit: "Nm", units: T_UNITS },
-  { key: "T2", label: "Sabit hızda motor torku", symbol: "T_2", dimension: "tork", defaultUnit: "Nm", units: T_UNITS },
-  { key: "T3", label: "Yavaşlamada motor torku", symbol: "T_3", dimension: "tork", defaultUnit: "Nm", units: T_UNITS },
-  { key: "Trms", label: "Efektif (RMS) tork", symbol: "T_{\\text{rms}}", dimension: "tork", defaultUnit: "Nm", units: T_UNITS },
+  { key: "TLm", label: "Motora yansıyan yük torku", symbol: "T_{L,m}", dimension: "tork", defaultUnit: "Nm" },
+  { key: "Ta", label: "Hızlanma (atalet) torku", symbol: "T_a", dimension: "tork", defaultUnit: "Nm" },
+  { key: "T1", label: "Hızlanmada motor torku (tepe)", symbol: "T_1", dimension: "tork", defaultUnit: "Nm" },
+  { key: "T2", label: "Sabit hızda motor torku", symbol: "T_2", dimension: "tork", defaultUnit: "Nm" },
+  { key: "T3", label: "Yavaşlamada motor torku", symbol: "T_3", dimension: "tork", defaultUnit: "Nm" },
+  { key: "Trms", label: "Efektif (RMS) tork", symbol: "T_{\\text{rms}}", dimension: "tork", defaultUnit: "Nm" },
   { key: "Ptepe", label: "Tepe mil gücü", symbol: "P_{\\text{tepe}}", dimension: "guc", defaultUnit: "kW" },
 ];
 

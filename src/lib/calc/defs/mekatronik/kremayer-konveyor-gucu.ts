@@ -21,15 +21,16 @@ const WHERE = "kremayer-konveyor-gucu";
 
 const MESSAGES = {
   rackAssumption:
-    "Referans çap d₀ = m·z standart (kaydırmasız) düz dişli için geçerlidir. Verim dişli kavramasındaki kayıpları kapsar.",
+    "Düz dişli pinyon: referans çap d₀ = m·z. Verim dişli kavramasındaki kayıpları kapsar.",
   conveyorSimplified:
-    "Basitleştirilmiş yöntem: tüm hareket dirençleri tek bir eşdeğer sürtünme katsayısıyla (μ) temsil edilir. DIN 22101'in ayrıntılı direnç ve kalkış hesabı uygulanmamıştır; bant konveyör tasarımında standarda veya üreticiye başvurun.",
+    "Basitleştirilmiş yöntem: tüm hareket dirençleri tek bir eşdeğer sürtünme katsayısıyla (μ) temsil edilir. DIN 22101'in ayrıntılı hesap yöntemi uygulanmamıştır; bant konveyör tasarımında standarda veya üreticiye başvurun.",
 } as const;
 
+/** Başlık ve baskı DIN Media katalog sayfasından: https://www.dinmedia.de/de/norm/din-22101/145598666 */
 const DIN_22101: Reference = {
   standard: "DIN 22101:2011-12",
   title: "Stetigförderer — Gurtförderer für Schüttgüter — Grundlagen für die Berechnung und Auslegung",
-  note: "Bant konveyörlerin hesap ve boyutlandırma esasları. Bu hesap standardın yöntemini uygulamaz; basitleştirilmiş yöntemdir. Standardın metni açılmadı; başlık DIN Media katalog sayfasından (https://www.dinmedia.de/de/norm/din-22101/145598666).",
+  note: "Bant konveyörlerin hesap ve boyutlandırma esasları. Bu hesap standardın yöntemini uygulamaz; basitleştirilmiş yöntemdir. Standardın metni açılmadı (telifli).",
 };
 
 const ETA_UNITS = ["percent", "fraction"];

@@ -12,7 +12,8 @@
  * - Hızlanma torku: T_ivme = J·α, α = ω/t (sıfırdan doğrusal rampa). Motor ataleti dahil değildir (6.4).
  * - Hızlanmadaki eksenel yük (burkulma kontrolü için, THK örneğindeki gibi): F_maks = F + m·a, a = v/t
  * - Kritik devir (THK denklem 7): N₁ = 0,8·(λ₁²/ℓb²)·√(E·I/(ρ·A)) [rad/s], I = π·d₁⁴/64, A = π·d₁²/4
- * - Burkulma (THK denklem 5): P₁ = 0,5·η₁·π²·E·I/ℓa²; izin verilen çekme/basma (denklem 6): P₂ = σ·π·d₁²/4
+ * - Burkulma (THK denklem 5): P₁ = 0,5·n_b·π²·E·I/ℓa² (n_b: THK'de η₁ olarak gösterilen yataklama katsayısı;
+ *   verimle karışmasın diye n_b); izin verilen çekme/basma (denklem 6): P₂ = σ·π·d₁²/4
  * Burkulma ve kritik devir için yataklama ayrı seçilir: THK örneğinde burkulma somun–yatak açıklığında
  * (sabit–sabit), kritik devir yataklar arasında (sabit–destekli) değerlendirilir. DN değeri sınırı (N₂) modele
  * özgü olduğundan hesaplanmaz.
@@ -39,7 +40,7 @@ const MESSAGES = {
   axialOk: (f: string, p: string) =>
     `Hızlanmadaki eksenel yük (${f}) burkulma ve çekme/basma sınırlarının küçüğünün (${p}) altında.`,
   assumptions:
-    "Motor–mil doğrudan bağlı; ön yük torku ve motor ataleti dahil değil (servo seçimi için 6.4). Hızlanma sıfırdan doğrusal rampa kabul edildi. DN değerine göre izin verilen devir (N₂) modele özgüdür, üretici tablosundan ayrıca kontrol edilmelidir. Dikey eksende geri tahrik torku yükü düşürmeye çalışır; fren gerekir.",
+    "Motor–mil doğrudan bağlı; ön yük torku ve motor ataleti dahil değil (servo seçimi için 6.4). Hızlanma sıfırdan doğrusal rampa kabul edildi. DN değerine göre izin verilen devir (N₂) modele özgüdür, üretici tablosundan ayrıca kontrol edilmelidir. Geri tahrik torku, eksenel yükün mili döndürmeye çalıştığı torktur; dikey eksende yükü tutmak için dikkate alınır.",
 } as const;
 
 const KRITIK_OPTIONS: { value: VidaYataklamaKritik; label: string }[] = [
@@ -281,9 +282,9 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
   const lb = num(inputs, "lb", WHERE);
   const yatakKritik = inputs.yatakKritik as VidaYataklamaKritik;
   const yatakBurkulma = inputs.yatakBurkulma as VidaYataklamaBurkulma;
-  const lambda1 = k.lambda1[yatakKritik];
-  const eta1Yatak = k.eta1[yatakBurkulma];
-  if (lambda1 === undefined || eta1Yatak === undefined) throw new Error(`${WHERE}: bilinmeyen yataklama`);
+  const lambda1 = k.kritikYataklama[yatakKritik];
+  const nb = k.burkulmaYataklama[yatakBurkulma];
+  if (lambda1 === undefined || nb === undefined) throw new Error(`${WHERE}: bilinmeyen yataklama`);
 
   const steps: Step[] = [];
 
@@ -364,8 +365,8 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
   const I = (Math.PI * d1 ** 4) / 64;
   const A = (Math.PI * d1 ** 2) / 4;
   const E = k.elastisiteModulu;
-  const N1 = k.kritikDevirKatsayisi * (lambda1 ** 2 / lb ** 2) * Math.sqrt((E * I) / (k.yogunluk * A));
-  const P1 = k.burkulmaKatsayisi * ((eta1Yatak * Math.PI ** 2 * E * I) / la ** 2);
+  const N1 = k.kritikDevirEmniyet * (lambda1 ** 2 / lb ** 2) * Math.sqrt((E * I) / (k.yogunluk * A));
+  const P1 = k.burkulmaEmniyet * ((nb * Math.PI ** 2 * E * I) / la ** 2);
   const P2 = k.izinGerilme * A;
   steps.push(
     {
@@ -374,11 +375,11 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
     },
     {
       label: "İzin verilen devir — kritik devir (THK denklem 7)",
-      latex: `N_1 = ${qNum(k.kritikDevirKatsayisi)} \\cdot \\frac{\\lambda_1^2}{\\ell_b^2} \\sqrt{\\frac{E \\cdot I}{\\rho \\cdot A}} = ${qNum(k.kritikDevirKatsayisi)} \\cdot \\frac{${qNum(lambda1)}^2}{(${qi("lb", lb)})^2} \\sqrt{\\frac{${qPa(E)} \\cdot ${qMm4(I)}}{${qRho(k.yogunluk)} \\cdot ${latexQty(A, "mm2")}}} = ${qOmega(N1)} = ${qo("N1", N1)}`,
+      latex: `N_1 = ${qNum(k.kritikDevirEmniyet)} \\cdot \\frac{\\lambda_1^2}{\\ell_b^2} \\sqrt{\\frac{E \\cdot I}{\\rho \\cdot A}} = ${qNum(k.kritikDevirEmniyet)} \\cdot \\frac{${qNum(lambda1)}^2}{(${qi("lb", lb)})^2} \\sqrt{\\frac{${qPa(E)} \\cdot ${qMm4(I)}}{${qRho(k.yogunluk)} \\cdot ${latexQty(A, "mm2")}}} = ${qOmega(N1)} = ${qo("N1", N1)}`,
     },
     {
       label: "Burkulma yükü (THK denklem 5)",
-      latex: `P_1 = ${qNum(k.burkulmaKatsayisi)} \\cdot \\frac{\\eta_1 \\cdot \\pi^2 \\cdot E \\cdot I}{\\ell_a^2} = ${qNum(k.burkulmaKatsayisi)} \\cdot \\frac{${qNum(eta1Yatak)} \\cdot \\pi^2 \\cdot ${qPa(E)} \\cdot ${qMm4(I)}}{(${qi("la", la)})^2} = ${qo("P1", P1)}`,
+      latex: `P_1 = ${qNum(k.burkulmaEmniyet)} \\cdot \\frac{n_b \\cdot \\pi^2 \\cdot E \\cdot I}{\\ell_a^2} = ${qNum(k.burkulmaEmniyet)} \\cdot \\frac{${qNum(nb)} \\cdot \\pi^2 \\cdot ${qPa(E)} \\cdot ${qMm4(I)}}{(${qi("la", la)})^2} = ${qo("P1", P1)}`,
     },
     {
       label: "İzin verilen çekme/basma yükü (THK denklem 6)",
@@ -421,24 +422,23 @@ export const vidaliMil: CalcDefinition = {
     },
     { label: "Hızlanma torku", latex: "T_{\\text{ivme}} = J \\cdot \\alpha, \\qquad \\alpha = \\frac{\\omega}{t}" },
     {
-      label: "Kritik devir (THK, 0,8 emniyetli; mm ve dev/dk ile)",
-      latex:
-        "N_1 = \\frac{60 \\lambda_1^2}{2\\pi \\ell_b^2} \\sqrt{\\frac{E \\cdot 10^3 \\cdot I}{\\gamma \\cdot A}} \\cdot 0{,}8 = \\lambda_2 \\frac{d_1}{\\ell_b^2} \\cdot 10^7",
+      label: "Kritik devirden izin verilen devir (THK denklem 7, 0,8 emniyetli; SI, rad/s)",
+      latex: "N_1 = 0{,}8 \\cdot \\frac{\\lambda_1^2}{\\ell_b^2} \\sqrt{\\frac{E \\cdot I}{\\rho \\cdot A}}, \\qquad I = \\frac{\\pi d_1^4}{64}, \\quad A = \\frac{\\pi d_1^2}{4}",
     },
     {
-      label: "Burkulma yükü (THK, 0,5 emniyetli; mm ve N ile)",
-      latex: "P_1 = \\frac{\\eta_1 \\pi^2 E I}{\\ell_a^2} \\cdot 0{,}5 = \\eta_2 \\frac{d_1^4}{\\ell_a^2} \\cdot 10^4",
+      label: "Burkulma yükü (THK denklem 5, 0,5 emniyetli; n_b yataklama katsayısı)",
+      latex: "P_1 = 0{,}5 \\cdot \\frac{n_b \\cdot \\pi^2 \\cdot E \\cdot I}{\\ell_a^2}",
     },
     { label: "İzin verilen çekme/basma yükü", latex: "P_2 = \\sigma \\cdot \\frac{\\pi}{4} d_1^2" },
   ],
   references: [
     {
-      standard: "ISO 3408-1:2006",
+      standard: "ISO 3408-1",
       title: "Ball screws — Part 1: Vocabulary and designation",
       note: "Bilyalı vida terimleri ve gösterimi. Kritik devir ve burkulma bu standarttan değil, üretici kataloğundan (THK) alınmıştır.",
     },
     {
-      standard: "ISO 3408-5:2006",
+      standard: "ISO 3408-5",
       title: "Ball screws — Part 5: Static and dynamic axial load ratings and operational life",
       note: "Yük sayıları ve ömür hesabı bu standarttadır; bu hesapta ömür hesaplanmaz.",
     },
