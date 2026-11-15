@@ -34,10 +34,12 @@ export type Egri = "B" | "C" | "D";
 const WHERE = "sigorta-salter-secimi";
 
 const MESSAGES = {
-  noRating: (tip: string, ib: string, iz: string) =>
-    `${tip} serisinde I_b ≤ I_n ≤ I_z ve I₂ ≤ 1,45·I_z koşullarını birlikte sağlayan anma akımı yok (I_b = ${ib}, I_z = ${iz}): kablo kesitini büyütün veya I₂'si daha küçük bir koruma seçin.`,
-  seriesTooSmall: (tip: string, max: string, ib: string) =>
-    `${tip} serisinin en büyük değeri (${max}) tasarım akımından (${ib}) küçük.`,
+  noRating: (seri: string, ib: string, iz: string) =>
+    `${seri} içinde I_b ≤ I_n ≤ I_z ve I₂ ≤ 1,45·I_z koşullarını birlikte sağlayan anma akımı yok (I_b = ${ib}, I_z = ${iz}): kablo kesitini büyütün veya I₂'si daha küçük bir koruma seçin.`,
+  seriesTooSmall: (seri: string, max: string, ib: string) =>
+    `${seri} en büyük değeri (${max}) tasarım akımından (${ib}) küçük.`,
+  nhOnly:
+    "Önerilen gG serisi yalnızca NH bıçaklı sigortalarındır; başka gövdelerin (ör. D tipi) anma akımları için 'Denetlenecek anma akımı' alanını kullanın.",
   instantaneous: (egri: string, lo: string, hi: string) =>
     `${egri} eğrisi anlık açma bölgesi ${lo} – ${hi}: yol alma ve ani akımlar alt sınırın altında kalmalı; devre sonundaki en küçük kısa devre akımı üst sınırı aşmalıdır (anlık açmanın kesinleşmesi için).`,
   noIrRange: (ib: string, iz: string) =>
@@ -49,6 +51,12 @@ const TIP_ADI: Record<KorumaTipi, string> = {
   mcb: "Minyatür devre kesici",
   gG: "gG sigorta",
   kompakt: "Kompakt şalter",
+};
+
+/** Önerinin yapıldığı anma akımı serisinin adı (config'teki kaynaklar) */
+const SERI_ADI: Record<"mcb" | "gG", string> = {
+  mcb: "MCB serisi (Lovato P1MB…P)",
+  gG: "NH gG sigorta serisi (Legrand F00189EN)",
 };
 
 const OUT = {
@@ -111,9 +119,9 @@ function computeSeries(inputs: ComputeInputs, ctx: CalcContext, tip: "mcb" | "gG
     if (In === undefined) {
       const max = series[series.length - 1];
       const message = lte(Ib, max)
-        ? MESSAGES.noRating(TIP_ADI[tip], akimMetni(Ib), akimMetni(Iz))
-        : MESSAGES.seriesTooSmall(TIP_ADI[tip], akimMetni(max), akimMetni(Ib));
-      checks.push({ level: "uyari", message, reference: REF_IEC_60364_4_43 });
+        ? MESSAGES.noRating(SERI_ADI[tip], akimMetni(Ib), akimMetni(Iz))
+        : MESSAGES.seriesTooSmall(SERI_ADI[tip], akimMetni(max), akimMetni(Ib));
+      checks.push({ level: "uyari", message: tip === "gG" ? `${message} ${MESSAGES.nhOnly}` : message, reference: REF_IEC_60364_4_43 });
       steps.push({
         label: "İzin verilen en büyük I₂",
         latex: `I_{2,\\text{maks}} = ${latexNum(k145)} \\cdot I_z = ${latexNum(k145)} \\cdot ${qI(Iz)} = ${qI(k145 * Iz)}`,
@@ -121,7 +129,7 @@ function computeSeries(inputs: ComputeInputs, ctx: CalcContext, tip: "mcb" | "gG
       return { outputs, steps, checks };
     }
     steps.push({
-      label: `Seriden seçim (${seriesText(series)} A)`,
+      label: `Seriden seçim — ${SERI_ADI[tip]}: ${seriesText(series)} A`,
       latex: `I_n = \\min\\left\\{ I_n \\in \\text{seri} \\mid I_b \\leq I_n \\leq I_z,\\ I_2 \\leq 1{,}45 \\cdot I_z \\right\\} = ${qI(In)}`,
     });
   }
@@ -233,7 +241,7 @@ export const sigortaSalterSecimi: CalcDefinition = {
       min: 0,
       minExclusive: true,
       optional: true,
-      help: "Boş bırakılırsa seriden koşulları sağlayan en küçük anma akımı önerilir; girilirse bu değer denetlenir.",
+      help: "Boş bırakılırsa seriden (MCB: Lovato P1MB…P; gG: NH bıçaklı sigorta, Legrand) koşulları sağlayan en küçük anma akımı önerilir. Seride olmayan bir değer (ör. D tipi 20 A gG) girilirse o denetlenir.",
       visibleWhen: { key: "koruma", equals: ["mcb", "gG"] },
     },
     {

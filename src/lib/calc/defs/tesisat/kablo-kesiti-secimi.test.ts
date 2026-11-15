@@ -86,6 +86,8 @@ describe("(a) katalog yolu", () => {
     expect(r.outputs.kesit).toBeCloseTo(25e-6, 12);
     expect(r.outputs.I0).toBe(145);
     expect(r.outputs.Iz).toBeCloseTo(107.39513, 4);
+    // Toprakta katalog değerleri 0,7 yük faktörü içindir: bilgi notu
+    expect(r.checks.some((c) => /0,7 yük faktörü \(çevrimsel yük\)/.test(c.message))).toBe(true);
   });
 
   it("katalogdaki en büyük kesit yetmezse uyarı, kesit çıktısı yok", () => {
@@ -120,6 +122,9 @@ describe("(b) I₀ elle", () => {
     expect(r.outputs.I2sinir).toBeCloseTo(97.178851, 5);
     expect(r.outputs).not.toHaveProperty("kesit");
     expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    // Kompakt şalterde koruma akımı I_r diye adlandırılır
+    expect(r.checks.some((c) => /I_b ≤ I_r ≤ I_z/.test(c.message))).toBe(true);
+    expect(r.steps.some((s) => s.latex.includes("I_r = 60"))).toBe(true);
   });
 
   it("referans sıcaklığı elle verilebilir (25 °C → k_t = √(30/45))", () => {

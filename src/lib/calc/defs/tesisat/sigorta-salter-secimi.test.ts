@@ -76,6 +76,16 @@ describe("gG sigorta (IEC 60269)", () => {
   it("I_b 22 A, I_z 25 A: MCB 25 A seçerken gG'de 25 A'nın I₂'si (40 A) 36,25 A'yı aşar → uygun değer yok", () => {
     const r = def.compute({ Ib: 22, Iz: 25, koruma: "gG" }, ctx);
     expect(r.outputs).not.toHaveProperty("In");
+    // Seri yalnızca NH: kullanıcı başka gövdeye yönlendirilir
+    expect(r.checks[0].message).toMatch(/NH bıçaklı/);
+  });
+
+  it("seride olmayan 20 A (ör. D tipi) denetlenebilir: I_b 18 A, I_z 24 A → I₂ = 32 A ≤ 34,8 A", () => {
+    // Elle: I₂ = 1,6·20 = 32; 1,45·24 = 34,8; 18 ≤ 20 ≤ 24
+    const r = def.compute({ Ib: 18, Iz: 24, koruma: "gG", InSecim: 20 }, ctx);
+    expect(r.outputs.In).toBe(20);
+    expect(r.outputs.I2).toBeCloseTo(32, 9);
+    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
   });
 
   it("I_n = 16 A sınırı 1,6 bandına dahil (Enel Tablo 6: 16 ≤ I_n)", () => {

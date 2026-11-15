@@ -104,10 +104,13 @@ export const TESISAT_KABLO_SINIRLARI = {
     gGI2KatsayisiAltSinir: 16,
     /**
      * gG bıçaklı (NH) sigorta anma akımları serisi, A: Legrand teknik şartname F00189EN/06 (güncelleme 15.07.2024)
-     * "Industrial blade-type cartridge fuses gG type", 2.1 Rated currents:
+     * "Industrial blade-type cartridge fuses gG type", 2.1 Rated currents (sayfa görüntüsünden okundu):
      * https://assets.legrand.com/pim/NP-FT-GT/F00189EN-06.pdf
+     * Tabloda "(1) non-standardised over-calibration" işaretli 1250 A alınmadı (200 A boy 0'da işaretli, boy 1 ve 2'de
+     * standart). Yalnızca NH serisidir: D tipi (DIAZED/NEOZED) gibi gövdelerin 20 A gibi değerleri bu listede yok;
+     * hesapta kullanıcı kendi anma akımını denetletebilir.
      */
-    gGAnmaAkimlari: [16, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250],
+    gGAnmaAkimlari: [16, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000],
     /**
      * Kompakt şalter (IEC 60947-2): geleneksel açmama akımı 1,05×, geleneksel açma akımı 1,3× (süre 1 sa).
      * Schneider Electric SSS FA369327 "Standard IEC 60947-2: … Conventional tripping current 1.3 x In":

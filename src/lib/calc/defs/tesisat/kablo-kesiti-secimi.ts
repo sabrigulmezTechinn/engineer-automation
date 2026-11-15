@@ -68,6 +68,8 @@ const MESSAGES = {
   refTooHigh: (ref: string, max: string) =>
     `Referans ortam sıcaklığı (${ref}) yalıtkanın en yüksek işletme sıcaklığından (${max}) küçük olmalıdır.`,
   catalog: (k: KabloKatalogu) => `Katalog: ${k.ad} (${k.sayfa}). ${k.referansNotu}`,
+  buriedLoadFactor:
+    "Toprakta katalog değerleri 0,7 yük faktörü (çevrimsel yük) içindir: sürekli yükte, katalogdaki veya standarttaki düzeltmeyi toprak düzeltme katsayısına (k_ρ) katın.",
   noSize: (s: string, iz: string) =>
     `Katalogdaki en büyük kesit (${s}, I_z = ${iz}) bile koşulları sağlamıyor: paralel kablo, farklı döşeme veya daha yüksek sıcaklık sınıflı (XLPE) kablo düşünün.`,
   manual:
@@ -214,6 +216,7 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
     const rows = catalog.satirlar.map(katalogSatiriSI);
     const chosen = rows.find((r) => kabloKosullariSaglaniyor(Ib, r[doseme] * k, In, I2, k145));
     checks.push({ level: "ok", message: MESSAGES.catalog(catalog), reference: REF_PRYSMIAN });
+    if (doseme === "toprak") checks.push({ level: "ok", message: MESSAGES.buriedLoadFactor, reference: REF_PRYSMIAN });
     if (!chosen) {
       const last = rows[rows.length - 1];
       checks.push({
@@ -241,9 +244,10 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
     checks.push({ level: "ok", message: MESSAGES.manual, reference: REF_60364_5_52 });
   }
 
-  steps.push(...koordinasyonAdimlari({ Ib, Iz, In, k2, k145 }));
+  const sembol = koruma === "kompakt" ? "I_r" : "I_n";
+  steps.push(...koordinasyonAdimlari({ Ib, Iz, In, k2, k145, sembol }));
   checks.push(
-    ...koordinasyonKontrolleri({ Ib, Iz, In, I2, I2Bilinmiyor: koruma === "gG" && I2 === undefined, k145 }),
+    ...koordinasyonKontrolleri({ Ib, Iz, In, I2, I2Bilinmiyor: koruma === "gG" && I2 === undefined, k145, sembol }),
   );
   if (I2 !== undefined) outputs.I2 = I2;
   if (koruma !== "yok") outputs.I2sinir = k145 * Iz;
@@ -357,14 +361,14 @@ export const kabloKesitiSecimi: CalcDefinition = {
     {
       kind: "number",
       key: "kToprak",
-      label: "Toprak ısıl direnci katsayısı",
+      label: "Toprak düzeltme katsayısı (ısıl direnç, yük faktörü)",
       symbol: "k_\\rho",
       dimension: "boyutsuz",
       defaultUnit: "unitless",
       default: 1,
       min: 0,
       minExclusive: true,
-      help: "Katalog değerleri 1 K·m/W toprak ısıl direnci içindir; farklı toprak için standarttaki veya katalogdaki tablodan alın.",
+      help: "Prysmian katalog değerleri 1 K·m/W toprak ısıl direnci ve 0,7 yük faktörü içindir. Toprak ısıl direnci farklıysa veya yük sürekliyse (yük faktörü 1), katalogdaki veya standarttaki düzeltme tablolarından aldığınız katsayıların çarpımını girin. Elle girilen I₀'da kendi verinizin referans koşullarına göre düzeltin.",
       visibleWhen: { key: "doseme", equals: "toprak" },
     },
     {
