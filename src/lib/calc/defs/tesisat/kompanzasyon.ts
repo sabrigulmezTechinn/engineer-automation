@@ -43,7 +43,8 @@ const OUTPUTS: OutputSpec[] = [
   { key: "Q1", label: "Mevcut reaktif güç", symbol: "Q_1", dimension: "reaktif_guc", defaultUnit: "kvar" },
   { key: "S1", label: "Mevcut görünür güç", symbol: "S_1", dimension: "gorunur_guc", defaultUnit: "kVA" },
   { key: "S2", label: "Hedefteki görünür güç", symbol: "S_2", dimension: "gorunur_guc", defaultUnit: "kVA" },
-  { key: "C", label: "Gerekli kapasite (üçgen bağlı, faz başına)", symbol: "C_{\\Delta}", dimension: "kapasitans", defaultUnit: "uF" },
+  // Kondansatör katalogları faz başına kapasiteyi µF verir (ör. 3×66 µF); otomatik birim mF'ye geçmesin.
+  { key: "C", label: "Gerekli kapasite (üçgen bağlı, faz başına)", symbol: "C_{\\Delta}", dimension: "kapasitans", defaultUnit: "uF", autoUnit: false },
 ];
 
 const S = (key: string) => specOf(OUTPUTS, key);
