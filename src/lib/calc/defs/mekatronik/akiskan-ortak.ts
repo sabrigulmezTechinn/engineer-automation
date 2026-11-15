@@ -3,12 +3,8 @@
  */
 import type { ComputeInputs } from "@/lib/calc/types";
 
-/** Zorunlu sayı girdisi; yoksa programlama hatasıdır (motor doğrulamadan geçmiş girdi verir). */
-export function num(inputs: ComputeInputs, key: string, where: string): number {
-  const v = inputs[key];
-  if (typeof v !== "number") throw new Error(`${where}: "${key}" sayı değil`);
-  return v;
-}
+/** Mekatronik kategorisinde tek kopya: tahrik-ortak.ts */
+export { G_N, num } from "./tahrik-ortak";
 
 /** İsteğe bağlı veya gizli olabilen sayı girdisi; yoksa undefined. */
 export function optNum(inputs: ComputeInputs, key: string): number | undefined {
@@ -20,6 +16,3 @@ export function optNum(inputs: ComputeInputs, key: string): number | undefined {
 export function daireAlani(D: number): number {
   return (Math.PI * D * D) / 4;
 }
-
-/** Standart yerçekimi ivmesi g_n, m/s² (tanım gereği tam; birim kataloğundaki "gn" ile aynı) */
-export const G_N = 9.80665;
