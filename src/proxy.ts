@@ -44,7 +44,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // /hesaplar/:slug → hesap varlık kontrolü. Diğerleri giriş gerektiren yollar (/profil, /projeler ve
+  // /hesaplar/:slug → hesap varlık kontrolü. Diğerleri giriş gerektiren yollar (/profil, /projeler, /karsilastir ve
   // alt sayfaları; `:path*` yolun kendisini de kapsar); yeni korumalı sayfa eklendiğinde buraya da ekleyin.
-  matcher: ["/hesaplar/:slug", "/profil/:path*", "/projeler/:path*"],
+  matcher: ["/hesaplar/:slug", "/profil/:path*", "/projeler/:path*", "/karsilastir"],
 };
