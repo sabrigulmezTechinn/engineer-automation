@@ -6,6 +6,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
+import { renderStrict } from "@/lib/calc/test-utils/katex";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
 import type { ComputeInputs, InputState, RunResult } from "@/lib/calc/types";
 import { sogutucuIsilHesap as def } from "./sogutucu-isil-hesap";
 
@@ -59,8 +61,8 @@ describe("gereken soğutucu (R_θsa)", () => {
     const r = def.compute({ ...BASE, Rja: 5 }, ctx);
     expect(r.outputs.TjJA).toBeCloseTo(K(90), 10);
     const c = r.checks.find((x) => x.message.includes("Soğutucusuz"));
-    expect(c?.level).toBe("ok");
     expect(c?.message).toMatch(/soğutucu gerekmeyebilir/);
+    expect(c?.level).not.toBe("uyari");
   });
 });
 
@@ -123,6 +125,12 @@ describe("doğrulama ve birimler", () => {
     if (!r.ok) expect(r.checks[0].level).toBe("hata");
   });
 
+  it("mutlak sıfırın altındaki sıcaklık alan hatası verir (−300 °C)", () => {
+    const r = run({ Ta: { value: "-300", unit: "degC" } });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fieldErrors).toHaveProperty("Ta");
+  });
+
   it("pmax modunda toplam ısıl direnç 0 → hata", () => {
     const r = run({
       mod: { value: "pmax" },
@@ -150,5 +158,25 @@ describe("doğrulama ve birimler", () => {
     const tj = ok(run({ mod: { value: "tj" } }, { Tj: "K" }));
     expect(tj.outputs.find((o) => o.key === "Tj")).toMatchObject({ unit: "K", formatted: "373,2 K" });
     expect(tj.outputs.find((o) => o.key === "Tc")).toMatchObject({ unit: "degC", formatted: "85 °C" });
+  });
+});
+
+describe("dal adımları (varsayılan/seçim kombinasyonu dışı) KaTeX strict ve PDF MathJax'ten geçer", () => {
+  const CASES: [string, ComputeInputs][] = [
+    ["rsa + R_θJA", { ...BASE, Rja: 5 }],
+    ["rsa, soğutucu yetmez", { ...BASE, P: 50, Rja: 40 }],
+    ["rsa, tam sıfır", { ...BASE, P: 42.5 }],
+    ["tj + R_θJA", { ...BASE, mod: "tj", Rja: 40 }],
+    ["tj, negatif pay", { ...BASE, mod: "tj", Rsa: 8 }],
+    ["pmax + R_θJA, −20 °C", { ...BASE, mod: "pmax", Ta: K(-20), Rja: 40 }],
+    ["tj, −20 °C", { ...BASE, mod: "tj", Ta: K(-20) }],
+  ];
+  it.each(CASES)("%s", async (_name, inputs) => {
+    const r = def.compute(inputs, ctx);
+    expect(r.steps.length).toBeGreaterThan(0);
+    for (const st of r.steps) {
+      expect(() => renderStrict(st.latex), st.latex).not.toThrow();
+      expect((await latexToSvg(st.latex)).hata, st.latex).toBe(false);
+    }
   });
 });

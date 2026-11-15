@@ -11,6 +11,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
+import { renderStrict } from "@/lib/calc/test-utils/katex";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
 import type { ComputeInputs, InputState, RunResult } from "@/lib/calc/types";
 import { transistorBazDirenciMosfetKaybi as def } from "./transistor-baz-direnci-mosfet-kaybi";
 
@@ -174,5 +176,20 @@ describe("MOSFET kayıpları", () => {
       }),
     );
     expect(e.result.outputs.Psw).toBeCloseTo(2.19442, 9);
+  });
+});
+
+describe("dal adımları (varsayılan/seçim kombinasyonu dışı) KaTeX strict ve PDF MathJax'ten geçer", () => {
+  const CASES: [string, ComputeInputs][] = [
+    ["BJT, E96 tam standart değer", { ...BJT, seri: "E96" }],
+    ["MOSFET, enerji yöntemi (Wolfspeed)", { ...MOS, yontem: "enerji", Eon: 17.162e-6, Eoff: 4.7822e-6 }],
+  ];
+  it.each(CASES)("%s", async (_name, inputs) => {
+    const r = def.compute(inputs, ctx);
+    expect(r.steps.length).toBeGreaterThan(0);
+    for (const st of r.steps) {
+      expect(() => renderStrict(st.latex), st.latex).not.toThrow();
+      expect((await latexToSvg(st.latex)).hata, st.latex).toBe(false);
+    }
   });
 });

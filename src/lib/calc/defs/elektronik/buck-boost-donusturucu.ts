@@ -319,8 +319,8 @@ function compute(inp: ComputeInputs, ctx: CalcContext) {
   } else {
     IL = (Io * v.o) / v.tip;
     steps.push({
-      label: "Ortalama bobin akımı, tipik V_in'de (dalgalanma tabanı; SLVA372D Denk. 6)",
-      latex: `I_L = \\frac{I_o}{1 - D_{tip}} = I_o \\cdot \\frac{V_o}{V_{in}} = ${q("Io", Io)} \\cdot \\frac{${q(k.o, v.o)}}{${q(k.tip, v.tip)}} = ${q("IL", IL)}`,
+      label: "Ortalama bobin akımı, tipik V_in'de, ideal (η'sız; dalgalanma tabanı, SLVA372D Denk. 6)",
+      latex: `I_L = I_o \\cdot \\frac{V_o}{V_{in}} = ${q("Io", Io)} \\cdot \\frac{${q(k.o, v.o)}}{${q(k.tip, v.tip)}} = ${q("IL", IL)}`,
     });
   }
   const dIh = r * IL;

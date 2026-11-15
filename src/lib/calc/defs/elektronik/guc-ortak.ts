@@ -148,7 +148,7 @@ export const REF = {
   tiKapi: {
     standard: "TI SLUA618A",
     title: "Fundamentals of MOSFET and IGBT Gate Driver Circuits",
-    clause: "Bölüm 2.7, Denk. (9)",
+    clause: "Bölüm 2.7 (Power Losses), Denk. (9)",
     note: "P_GATE = V_DRV·Q_G·f_DRV; bu güç MOSFET'te değil, kapı sürme devresinde (sürücü çıkış direnci, kapı dirençleri) harcanır.",
   },
   vishay608: {
@@ -169,7 +169,8 @@ export const REF = {
     clause: "Denk. (1), (5), (6); Bölüm 1 ve 2.2",
     note:
       "T_J ≅ T_A + (R_θJC + R_θ(CS) + R_θ(SA))·P (Denk. 5), R_θJC, R_θJA'ya göre küçükken en doğrudur; ısının bir kısmı " +
-      "kart üzerinden de aktığı için bu seri model tutucudur (Denk. 6 paralel yol). R_θJA belirli bir test kartında ölçülür; " +
-      "T_J = T_A + R_θJA·P ile sistem tahmini (Denk. 1) yaklaşıktır.",
+      "kart üzerinden de aktığı için bu seri model tutucudur (Denk. 6 paralel yol). R_θJA belirli bir test kartında ölçülür ve " +
+      "paketleri karşılaştırmak içindir; belge T_J = T_A + R_θJA·P ile sistemdeki jonksiyon sıcaklığını tahmin etmeyi yanlış " +
+      "kullanım olarak niteler (Denk. 1). Soğutucusuz karşılaştırma burada yalnızca kaba bir ön kontroldür.",
   },
 } satisfies Record<string, Reference>;

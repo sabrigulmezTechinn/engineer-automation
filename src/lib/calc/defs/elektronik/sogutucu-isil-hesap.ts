@@ -57,6 +57,7 @@ const inputs: InputSpec[] = [
     defaultUnit: "degC",
     units: TEMP_UNITS,
     default: 40,
+    min: 0,
     help: "Soğutucunun R_θsa değerinin tanımlandığı ortam sıcaklığı (kutu içi sıcaklık).",
   },
   {
@@ -68,6 +69,7 @@ const inputs: InputSpec[] = [
     defaultUnit: "degC",
     units: TEMP_UNITS,
     default: 125,
+    min: 0,
     help: "Veri sayfasındaki T_j(max) ya da tasarım payı bırakılmış daha düşük bir değer.",
   },
   {
@@ -162,9 +164,9 @@ const MESSAGES = {
     "Gereken R_θsa sıfır: yalnızca sıfır dirençli ideal bir soğutucu yeterdi; uygulanabilir bir soğutucu yok. Gücü veya R_θjc + R_θcs'yi azaltın.",
   rsaOk: (rsa: string) => `R_θsa değeri en çok ${rsa} olan bir soğutucu seçin (soğutucu veri sayfasındaki hava koşuluna dikkat edin).`,
   jaEnough: (tj: string) =>
-    `Soğutucusuz jonksiyon sıcaklığı yaklaşık ${tj}, sınırın altında; soğutucu gerekmeyebilir. ` +
-    "R_θJA standart test kartında ölçüldüğünden kendi kartınızda doğrulayın.",
-  jaNotEnough: (tj: string) => `Soğutucusuz jonksiyon sıcaklığı yaklaşık ${tj}, sınırın üstünde; soğutucu gerekli.`,
+    `Soğutucusuz jonksiyon sıcaklığı R_θJA ile kabaca ${tj}, sınırın altında; soğutucu gerekmeyebilir. ` +
+    "R_θJA standart bir test kartında ölçülür ve sistem tahmini için güvenilir değildir; kendi kartınızda ölçerek doğrulayın.",
+  jaNotEnough: (tj: string) => `Soğutucusuz jonksiyon sıcaklığı R_θJA ile kabaca ${tj}, sınırın üstünde; soğutucu gerekli.`,
   seriesModel:
     "Seri model ısının baskılı devre kartı üzerinden akan kısmını yok sayar; sonuç tutucudur. R_θjc, R_θJA'ya göre küçük olduğunda en doğrudur.",
 } as const;
@@ -262,7 +264,7 @@ export const sogutucuIsilHesap: CalcDefinition = {
           out.TjJA = TjJA;
           checks.push(
             TjJA <= Tjmax
-              ? { level: "ok", message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
+              ? { level: BILGI, message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
               : { level: BILGI, message: MESSAGES.jaNotEnough(t("TjJA", TjJA)), reference: REF.tiIsil },
           );
         } else {
@@ -325,7 +327,7 @@ export const sogutucuIsilHesap: CalcDefinition = {
       out.TjJA = TjJA;
       checks.push(
         TjJA <= Tjmax
-          ? { level: "ok", message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
+          ? { level: BILGI, message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
           : { level: BILGI, message: MESSAGES.jaNotEnough(t("TjJA", TjJA)), reference: REF.tiIsil },
       );
     }

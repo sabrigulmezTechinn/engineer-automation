@@ -12,6 +12,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
+import { renderStrict } from "@/lib/calc/test-utils/katex";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
 import type { ComputeInputs, InputState, RunResult } from "@/lib/calc/types";
 import { buckBoostDonusturucu as def } from "./buck-boost-donusturucu";
 
@@ -192,13 +194,16 @@ describe("boost", () => {
     expect(r.checks.some((c) => c.level === "uyari" && c.message.includes("en çok 911,9 mA"))).toBe(true);
   });
 
-  it("CCM sınırı aralığın içindeki tepe noktasında: V_in 4–10 V, V_o 12 V, η = 1 → V_in = 8 V'ta", () => {
-    // Elle: x = V_in/V_o; I_o,sınır ∝ x²(1 − x), tepe x = 2/3 → V_in = 8 V. L_std ile:
-    // D = 1/3, ΔI_L(8 V) = 8·(1/3)/(f_s·L_std); I_o,sınır = (2/3)·ΔI_L/2
+  it("CCM sınırı aralığın içindeki tepe noktasında: V_in 4/6/10 V → 12 V, η = 1 → V_in = 8 V'ta 0,177778 A", () => {
+    // Elle: I_L = 1·12/6 = 2 A; ΔI_h = 0,6 A; L = 6·(12 − 6)/(0,6·500e3·12) = 36/3,6e6 = 10 µH → E6'da tam standart (10 µH)
+    // I_o,sınır(V) ∝ x²(1 − x), x = V_in/V_o; tepe x = 2/3 → V_in = 8 V (aralık içinde)
+    // V_in = 8 V: D = 1/3; ΔI_L = 8·(1/3)/(500e3·10e-6) = 0,533333 A; I_o,sınır = (2/3)·0,533333/2 = 0,177778 A
+    // Uçlar daha küçük: 4 V → (1/3)·(4·(2/3)/5)/2 = 0,088889 A; 10 V → (5/6)·(10·(1/6)/5)/2 = 0,138889 A
     const r = def.compute(boost({ boostVinMin: 4, boostVin: 6, boostVinMaks: 10 }), ctx);
-    const Lstd = r.outputs.Lstd;
-    const expected = ((2 / 3) * ((8 * (1 / 3)) / (500e3 * Lstd))) / 2;
-    expect(r.outputs.IoSinir).toBeCloseTo(expected, 12);
+    expect(r.outputs.L).toBeCloseTo(10e-6, 15);
+    expect(r.outputs.Lstd).toBeCloseTo(10e-6, 15);
+    expect(r.steps.some((s) => s.latex.includes("E6 serisinde standart değer"))).toBe(true);
+    expect(r.outputs.IoSinir).toBeCloseTo(0.177778, 6);
     expect(r.steps.some((s) => s.latex.includes("V_{in} = 8\\,\\mathrm{V}"))).toBe(true);
   });
 
@@ -234,5 +239,22 @@ describe("motor üzerinden (runCalc)", () => {
     );
     expect(r.result.outputs.L).toBeCloseTo(8.101852e-6, 11);
     expect(r.result.outputs.Cmin).toBeCloseTo(58.333333e-6, 10);
+  });
+});
+
+describe("dal adımları (varsayılan/seçim kombinasyonu dışı) KaTeX strict ve PDF MathJax'ten geçer", () => {
+  const CASES: [string, ComputeInputs][] = [
+    ["buck + I_LIM", buck({ buckVinMin: 10.8, buckVinMaks: 13.2, Io: 1, eta: 0.9, ILIM: 5 })],
+    ["buck, DCM", buck({ buckVinMaks: 24, Io: 1, r: 2 })],
+    ["boost + I_LIM, η 0,9", boost({ boostVinMin: 4.5, boostVinMaks: 5.5, eta: 0.9, ILIM: 3 })],
+    ["boost, iç tepe, tam standart L", boost({ boostVinMin: 4, boostVin: 6, boostVinMaks: 10 })],
+  ];
+  it.each(CASES)("%s", async (_name, inputs) => {
+    const r = def.compute(inputs, ctx);
+    expect(r.steps.length).toBeGreaterThan(0);
+    for (const st of r.steps) {
+      expect(() => renderStrict(st.latex), st.latex).not.toThrow();
+      expect((await latexToSvg(st.latex)).hata, st.latex).toBe(false);
+    }
   });
 });
