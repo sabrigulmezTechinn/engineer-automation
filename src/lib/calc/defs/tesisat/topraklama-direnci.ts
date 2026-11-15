@@ -396,14 +396,14 @@ export const topraklamaDirenci: CalcDefinition = {
     const tip = inputs.tip as TopraklayiciTipi;
     const rho = num(inputs, "rho", WHERE);
     const steps: Step[] = [];
-    const checks: Check[] = [{ level: "ok", message: MESSAGES.homojen }];
+    const checks: Check[] = [{ level: "bilgi", message: MESSAGES.homojen }];
     const outputs: Record<string, number> = {};
     let R: number;
 
     if (tip === "cubuk" || tip === "paralel") {
       const r1 = rod(inputs, rho);
       steps.push(r1.step);
-      checks.push({ level: "ok", message: inputs.formul === "yonetmelik" ? MESSAGES.yonetmelik : MESSAGES.dwight });
+      checks.push({ level: "bilgi", message: inputs.formul === "yonetmelik" ? MESSAGES.yonetmelik : MESSAGES.dwight });
       if (tip === "paralel") {
         const n = num(inputs, "n", WHERE);
         const eta = num(inputs, "eta", WHERE);
@@ -413,7 +413,7 @@ export const topraklamaDirenci: CalcDefinition = {
           label: "Paralel çubuklar",
           latex: `R_n = \\frac{R_1}{n \\cdot \\eta} = \\frac{${qR(r1.R)}}{${qNum(n)} \\cdot ${qNum(eta)}} = ${qR(R)}`,
         });
-        checks.push({ level: "ok", message: MESSAGES.paralel });
+        checks.push({ level: "bilgi", message: MESSAGES.paralel });
       } else {
         R = r1.R;
       }
@@ -425,7 +425,7 @@ export const topraklamaDirenci: CalcDefinition = {
         label: "Şerit topraklayıcı (Ek-K)",
         latex: `R = \\frac{\\rho}{\\pi L} \\ln\\frac{2L}{d} = \\frac{${qRho(rho)}}{\\pi \\cdot ${qM(L)}} \\ln\\frac{2 \\cdot ${qM(L)}}{${qMm(d)}} = ${qR(R)}`,
       });
-      checks.push({ level: "ok", message: MESSAGES.serit });
+      checks.push({ level: "bilgi", message: MESSAGES.serit });
     } else if (tip === "halka") {
       const L = num(inputs, "Lyatay", WHERE);
       const d = num(inputs, "dYatay", WHERE);
@@ -439,7 +439,7 @@ export const topraklamaDirenci: CalcDefinition = {
           latex: `R = \\frac{\\rho}{\\pi^2 D} \\ln\\frac{2\\pi D}{d} = \\frac{${qRho(rho)}}{\\pi^2 \\cdot ${qM(D)}} \\ln\\frac{2\\pi \\cdot ${qM(D)}}{${qMm(d)}} = ${qR(R)}`,
         },
       );
-      checks.push({ level: "ok", message: MESSAGES.halka });
+      checks.push({ level: "bilgi", message: MESSAGES.halka });
     } else if (tip === "gozlu" || tip === "levhaDaire") {
       const D = num(inputs, tip === "gozlu" ? "Dgozlu" : "Dlevha", WHERE);
       R = rho / (2 * D);
@@ -447,7 +447,7 @@ export const topraklamaDirenci: CalcDefinition = {
         label: tip === "gozlu" ? "Gözlü topraklayıcı (Ek-K)" : "Daire levha, yatay (Ek-T)",
         latex: `R = \\frac{\\rho}{2D} = \\frac{${qRho(rho)}}{2 \\cdot ${qM(D)}} = ${qR(R)}`,
       });
-      checks.push({ level: "ok", message: tip === "gozlu" ? MESSAGES.gozlu : MESSAGES.levhaDaire });
+      checks.push({ level: "bilgi", message: tip === "gozlu" ? MESSAGES.gozlu : MESSAGES.levhaDaire });
     } else if (tip === "levhaKare") {
       const Sk = num(inputs, "Slevha", WHERE);
       R = rho / (2.2 * Sk);
@@ -455,7 +455,7 @@ export const topraklamaDirenci: CalcDefinition = {
         label: "Kare levha, yüzeyde (Ek-T)",
         latex: `R = \\frac{\\rho}{2{,}2 \\cdot S} = \\frac{${qRho(rho)}}{2{,}2 \\cdot ${qM(Sk)}} = ${qR(R)}`,
       });
-      checks.push({ level: "ok", message: MESSAGES.levhaKare });
+      checks.push({ level: "bilgi", message: MESSAGES.levhaKare });
     } else {
       throw new Error(`${WHERE}: bilinmeyen topraklayıcı tipi "${String(tip)}"`);
     }

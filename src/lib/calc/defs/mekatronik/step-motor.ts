@@ -311,7 +311,7 @@ function compute(inputs: ComputeInputs) {
     },
   );
   Object.assign(outputs, { alfa, Ta, TM });
-  checks.push({ level: "ok", message: MESSAGES.assumptions });
+  checks.push({ level: "bilgi", message: MESSAGES.assumptions });
   return { outputs, steps, checks };
 }
 

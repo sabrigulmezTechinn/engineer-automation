@@ -147,7 +147,10 @@ const mocks = vi.hoisted(() => {
               reference: { standard: "IEC 60050", clause: "Bölüm 131" },
             },
           ]
-        : [{ level: "ok" as const, message: "Değer sınır içinde." }];
+        : [
+            { level: "ok" as const, message: "Değer sınır içinde." },
+            { level: "bilgi" as const, message: "Direnç sıcaklıkla değişmez kabul edildi." },
+          ];
     const inputsSI: ComputeInputs = { ...si, bilinmeyen: mode };
     return {
       ok: true,
@@ -336,6 +339,9 @@ describe("<CalcForm>", () => {
     render(<CalcForm slug="ohm-deneme" />);
     const okItem = document.querySelector('[data-level="ok"]') as HTMLElement;
     expect(okItem.textContent).toContain("Uygun:");
+    const info = document.querySelector('[data-level="bilgi"]') as HTMLElement;
+    expect(info.textContent).toContain("Bilgi:");
+    expect(info.textContent).not.toContain("Uygun:");
 
     fireEvent.change(screen.getByLabelText("Gerilim"), { target: { value: "120" } });
     const warn = document.querySelector('[data-level="uyari"]') as HTMLElement;

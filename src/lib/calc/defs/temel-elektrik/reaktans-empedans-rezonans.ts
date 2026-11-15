@@ -188,7 +188,7 @@ export const reaktansEmpedansRezonans: CalcDefinition = {
       if (L === undefined) omitted.push("L (XL = 0)");
       if (C === undefined) omitted.push("C (XC = 0)");
       if (R === undefined) omitted.push("R (R = 0)");
-      checks.push({ level: "ok", message: MESSAGES.series(omitted) });
+      checks.push({ level: "bilgi", message: MESSAGES.series(omitted) });
     }
 
     if (L !== undefined && C !== undefined) {

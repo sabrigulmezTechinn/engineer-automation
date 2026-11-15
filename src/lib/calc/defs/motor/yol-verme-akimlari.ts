@@ -202,7 +202,7 @@ export const yolVermeAkimlari: CalcDefinition = {
           { label: "Yıldız bağlı kalkış akımı", latex: `I_Y = \\frac{I_D}{3} = \\frac{${qI(ID)}}{3} = ${qI(ID / 3)}` },
           { label: "Yıldız bağlı kalkış torku", latex: `T_Y = \\frac{T_D}{3} = \\frac{${qT(TD)}}{3} = ${qT(TD / 3)}` },
         );
-        checks.push({ level: "ok", message: MESSAGES.starDelta });
+        checks.push({ level: "bilgi", message: MESSAGES.starDelta });
         break;
       case "ototrafo": {
         const x = num(inputs, "x", WHERE);
@@ -237,7 +237,7 @@ export const yolVermeAkimlari: CalcDefinition = {
             latex: `T \\approx \\left(\\frac{I_s}{I_D}\\right)^2 \\cdot T_D = \\left(\\frac{${qI(Is)}}{${qI(ID)}}\\right)^2 \\cdot ${qT(TD)} = ${qT(rT * TD)}`,
           },
         );
-        checks.push({ level: "ok", message: MESSAGES.softApprox });
+        checks.push({ level: "bilgi", message: MESSAGES.softApprox });
         break;
       }
       default:

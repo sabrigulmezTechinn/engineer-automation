@@ -37,12 +37,16 @@ export class TaramaHatasi extends Error {
 // ---------------------------------------------------------------------------
 // Ortak yardımcılar
 
-const SEVIYE_SIRASI: Record<CheckLevel, number> = { ok: 0, uyari: 1, hata: 2 };
+const SEVIYE_SIRASI: Record<CheckLevel, number> = { bilgi: -1, ok: 0, uyari: 1, hata: 2 };
 
-/** Kontrollerin en kötü seviyesi ("hata" > "uyari" > "ok"); kontrol yoksa null. */
+/**
+ * Kontrollerin en kötü seviyesi ("hata" > "uyari" > "ok"); hüküm yoksa null.
+ * "bilgi" notları hüküm değildir, sayılmaz: yalnızca notu olan senaryo "Uygun" ya da "Bilgi" diye işaretlenmez.
+ */
 export function enKotuSeviye(kontroller: readonly Check[]): CheckLevel | null {
   let enKotu: CheckLevel | null = null;
   for (const k of kontroller) {
+    if (k.level === "bilgi") continue;
     if (enKotu === null || SEVIYE_SIRASI[k.level] > SEVIYE_SIRASI[enKotu]) enKotu = k.level;
   }
   return enKotu;

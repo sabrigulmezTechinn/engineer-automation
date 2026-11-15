@@ -226,7 +226,7 @@ export const ohmYasasi: CalcDefinition = {
           label: "Akım (pozitif kök)",
           latex: `I = \\sqrt{\\frac{P}{R}} = \\sqrt{\\frac{${qP(P)}}{${qR(R)}}} = ${qI(I)}`,
         });
-        checks.push({ level: "ok", message: MESSAGES.positiveRoot });
+        checks.push({ level: "bilgi", message: MESSAGES.positiveRoot });
         break;
       }
       default:

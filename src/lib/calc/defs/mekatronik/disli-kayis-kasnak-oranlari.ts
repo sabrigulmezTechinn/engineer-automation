@@ -290,7 +290,7 @@ function computeGear(inputs: ComputeInputs) {
   steps.push(...speedSteps(i, w1, w2, T1, T2, etaTop, "\\eta_{\\text{top}}"));
   steps.push(...powerSteps(T1, w1, P1, P2, etaTop, "\\eta_{\\text{top}}"));
 
-  const checks: Check[] = [{ level: "ok", message: MESSAGES.gearAssumption }];
+  const checks: Check[] = [{ level: "bilgi", message: MESSAGES.gearAssumption }];
   return { outputs: { i, n2: w2, T2, etaTop, P1, P2 }, steps, checks };
 }
 
@@ -341,7 +341,7 @@ function computeBelt(inputs: ComputeInputs) {
       latex: `L_{\\text{tam}} = \\sqrt{4C^2 - (D - d)^2} + \\frac{d_1\\theta_1 + d_2\\theta_2}{2} = \\sqrt{4 \\cdot (${qi("C", C)})^2 - (${qi("d1", D - d)})^2} + \\frac{${qi("d1", d1)} \\cdot ${qRad(theta1)} + ${qi("d2", d2)} \\cdot ${qRad(theta2)}}{2} = ${qo("Ltam", Ltam)}`,
     },
   ];
-  const checks: Check[] = [{ level: "ok", message: MESSAGES.beltAssumption }];
+  const checks: Check[] = [{ level: "bilgi", message: MESSAGES.beltAssumption }];
   return { outputs: { i, n2: w2, T2, P1, P2, v, theta1, theta2, L, Ltam }, steps, checks };
 }
 

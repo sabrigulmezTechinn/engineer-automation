@@ -174,8 +174,8 @@ export const seriParalel: CalcDefinition = {
     }
 
     const checks: Check[] = [];
-    if (bilesen === "bobin") checks.push({ level: "ok", message: MESSAGES.mutual });
-    if (bilesen === "kondansator" && baglanti === "seri") checks.push({ level: "ok", message: MESSAGES.seriesCaps });
+    if (bilesen === "bobin") checks.push({ level: "bilgi", message: MESSAGES.mutual });
+    if (bilesen === "kondansator" && baglanti === "seri") checks.push({ level: "bilgi", message: MESSAGES.seriesCaps });
 
     const label = `${baglanti === "seri" ? "Seri" : "Paralel"} eşdeğer (${n} eleman)`;
     return { outputs: { [info.output]: result }, steps: [{ label, latex }], checks };

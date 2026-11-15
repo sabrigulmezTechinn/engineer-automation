@@ -187,7 +187,7 @@ export const motorVerimiEnerjiTasarrufu: CalcDefinition = {
     if (dC <= 0) {
       checks.push({ level: "uyari", message: MESSAGES.noSaving });
     } else if (dK === undefined) {
-      checks.push({ level: "ok", message: MESSAGES.noPriceDifference });
+      checks.push({ level: "bilgi", message: MESSAGES.noPriceDifference });
     } else {
       const years = dK / dC;
       // ΔC yıllık tasarruftur; süre SI'da (s) döner, yıl = 365 gün.

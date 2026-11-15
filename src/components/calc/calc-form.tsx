@@ -499,6 +499,7 @@ function FailedSummary({ errors, labelOf, hrefOf }: {
 
 const LEVELS: Record<CheckLevel, { label: string; box: string; text: string; icon: string }> = {
   ok: { label: "Uygun", box: "border-ok-line bg-ok-bg", text: "text-ok", icon: "M5 12.5l4.5 4.5L19 7.5" },
+  bilgi: { label: "Bilgi", box: "border-line bg-surface-muted", text: "text-accent", icon: "M12 11v6M12 7.2v.3" },
   uyari: {
     label: "Uyarı",
     box: "border-uyari-line bg-uyari-bg",

@@ -284,7 +284,7 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
       reference: lim.ref,
     },
   ];
-  if (rStep) checks.push({ level: "ok", message: MESSAGES.materialNote, reference: REF_NBS });
+  if (rStep) checks.push({ level: "bilgi", message: MESSAGES.materialNote, reference: REF_NBS });
   return { outputs, steps, checks };
 }
 

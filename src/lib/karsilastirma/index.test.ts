@@ -253,6 +253,12 @@ describe("enKotuSeviye", () => {
     expect(enKotuSeviye([{ level: "uyari", message: "" }, { level: "ok", message: "" }])).toBe("uyari");
     expect(enKotuSeviye([{ level: "ok", message: "" }, { level: "hata", message: "" }, { level: "uyari", message: "" }])).toBe("hata");
   });
+
+  it("bilgi notları hüküm sayılmaz", () => {
+    expect(enKotuSeviye([{ level: "bilgi", message: "" }])).toBeNull();
+    expect(enKotuSeviye([{ level: "bilgi", message: "" }, { level: "ok", message: "" }])).toBe("ok");
+    expect(enKotuSeviye([{ level: "uyari", message: "" }, { level: "bilgi", message: "" }])).toBe("uyari");
+  });
 });
 
 describe("taramaYap", () => {

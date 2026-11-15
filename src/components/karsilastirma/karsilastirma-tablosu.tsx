@@ -17,6 +17,8 @@ type RozetTuru = CheckLevel | "hesaplanamadi";
 
 const ROZET: Record<RozetTuru, { metin: string; sinif: string; ikon: string }> = {
   ok: { metin: "Uygun", sinif: "border-ok-line bg-ok-bg text-ok", ikon: "M5 12.5l4.5 4.5L19 7.5" },
+  // enKotuSeviye "bilgi"yi hüküm saymaz; tür bütünlüğü için.
+  bilgi: { metin: "Bilgi", sinif: "border-line bg-surface-muted text-accent", ikon: "M12 11v6M12 7.2v.3" },
   uyari: { metin: "Uyarı", sinif: "border-uyari-line bg-uyari-bg text-uyari", ikon: "M12 7.5v6M12 17.2v.3" },
   hata: { metin: "Hata", sinif: "border-hata-line bg-hata-bg text-hata", ikon: "M7 7l10 10M17 7L7 17" },
   hesaplanamadi: { metin: "Hesaplanamadı", sinif: "border-hata-line bg-hata-bg text-hata", ikon: "M7 7l10 10M17 7L7 17" },
@@ -201,7 +203,7 @@ function KontrolOzeti({ karsilastirma }: { karsilastirma: Karsilastirma }) {
   const maddeler: { anahtar: string; ad: string; kontrol: Check }[] = [];
   for (const [i, s] of karsilastirma.senaryolar.entries()) {
     for (const [j, kontrol] of s.durum.kontroller.entries()) {
-      if (kontrol.level === "ok") continue;
+      if (kontrol.level !== "uyari" && kontrol.level !== "hata") continue;
       maddeler.push({ anahtar: `${s.id}-${j}`, ad: senaryoAdi(s.ad, i), kontrol });
     }
   }

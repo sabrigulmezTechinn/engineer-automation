@@ -328,8 +328,8 @@ export const vakumVantuz: CalcDefinition = {
     }
 
     checks.push(
-      { level: "ok", message: MESSAGES.sGuide(nText(sinir.kritikYuzey, 2), nText(sinir.dondurme, 2)), reference: REF_CAP },
-      { level: "ok", message: MESSAGES.theoretical },
+      { level: "bilgi", message: MESSAGES.sGuide(nText(sinir.kritikYuzey, 2), nText(sinir.dondurme, 2)), reference: REF_CAP },
+      { level: "bilgi", message: MESSAGES.theoretical },
     );
 
     return { outputs, steps, checks };

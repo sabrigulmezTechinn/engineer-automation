@@ -126,9 +126,15 @@ export interface Step {
   latex: string;
 }
 
-export type CheckLevel = "ok" | "uyari" | "hata";
+/**
+ * - "ok": bir koşulun SAĞLANDIĞI hüküm (yeşil, "Uygun").
+ * - "bilgi": hüküm olmayan not — kabul, yöntem, kullanıcıya hatırlatma (nötr, "Bilgi").
+ * - "uyari": standart/yönetmelik sınırı aşımı veya dikkat gerektiren durum.
+ * - "hata": hesap yapılamaz (validate) ya da sonuç geçersiz.
+ */
+export type CheckLevel = "ok" | "bilgi" | "uyari" | "hata";
 
-/** Standart sınırına göre durum göstergesi veya fiziksel anlamsızlık uyarısı */
+/** Standart sınırına göre durum göstergesi, bilgi notu veya fiziksel anlamsızlık uyarısı */
 export interface Check {
   level: CheckLevel;
   message: string;

@@ -238,7 +238,7 @@ export const acGuc: CalcDefinition = {
     return {
       outputs,
       steps,
-      checks: [{ level: "ok", message: faz === "3" ? MESSAGES.assumptions3 : MESSAGES.assumptions1 }],
+      checks: [{ level: "bilgi", message: faz === "3" ? MESSAGES.assumptions3 : MESSAGES.assumptions1 }],
     };
   },
 };

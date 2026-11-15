@@ -205,7 +205,7 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
     // Kabloya bağlı koşulların hepsi birlikte: I_z ≥ I_b, I_z ≥ I_n, I_z ≥ I₂/1,45
     const terms = [Ib, ...(In !== undefined ? [In] : []), ...(I2 !== undefined ? [I2 / k145] : [])];
     const Igerekli = Math.max(...terms);
-    const termLatex = ["I_b", ...(In !== undefined ? ["I_n"] : []), ...(I2 !== undefined ? ["I_2/1{,}45"] : [])];
+    const termLatex = ["I_b", ...(In !== undefined ? ["I_n"] : []), ...(I2 !== undefined ? [`I_2/${latexNum(k145)}`] : [])];
     const termValues = [qI(Ib), ...(In !== undefined ? [qI(In)] : []), ...(I2 !== undefined ? [qI(I2 / k145)] : [])];
     const maxOf = (xs: string[]) => (xs.length > 1 ? `\\max\\left(${xs.join(",\\ ")}\\right)` : xs[0]);
     steps.push({
@@ -215,8 +215,8 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
 
     const rows = catalog.satirlar.map(katalogSatiriSI);
     const chosen = rows.find((r) => kabloKosullariSaglaniyor(Ib, r[doseme] * k, In, I2, k145));
-    checks.push({ level: "ok", message: MESSAGES.catalog(catalog), reference: REF_PRYSMIAN });
-    if (doseme === "toprak") checks.push({ level: "ok", message: MESSAGES.buriedLoadFactor, reference: REF_PRYSMIAN });
+    checks.push({ level: "bilgi", message: MESSAGES.catalog(catalog), reference: REF_PRYSMIAN });
+    if (doseme === "toprak") checks.push({ level: "bilgi", message: MESSAGES.buriedLoadFactor, reference: REF_PRYSMIAN });
     if (!chosen) {
       const last = rows[rows.length - 1];
       checks.push({
@@ -241,7 +241,7 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
       label: "Düzeltilmiş akım taşıma kapasitesi",
       latex: `I_z = I_0 \\cdot k = ${qI(I0)} \\cdot ${qK(k)} = ${qI(Iz)}`,
     });
-    checks.push({ level: "ok", message: MESSAGES.manual, reference: REF_60364_5_52 });
+    checks.push({ level: "bilgi", message: MESSAGES.manual, reference: REF_60364_5_52 });
   }
 
   const sembol = koruma === "kompakt" ? "I_r" : "I_n";

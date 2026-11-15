@@ -122,7 +122,7 @@ export type TaramaApi = ReturnType<typeof useTarama>;
 const CONTROL =
   "h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-fg focus:border-accent focus:ring-2 focus:ring-accent/25 focus:outline-none";
 
-const SEVIYE_METNI: Record<CheckLevel, string> = { ok: "Uygun", uyari: "Uyarı", hata: "Hata" };
+const SEVIYE_METNI: Record<CheckLevel, string> = { ok: "Uygun", bilgi: "Bilgi", uyari: "Uyarı", hata: "Hata" };
 
 function Alan({ id, etiket, children, className }: { id: string; etiket: string; children: ReactNode; className?: string }) {
   return (

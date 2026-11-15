@@ -13,7 +13,7 @@ import { defaultState } from "@/lib/calc/engine";
 import { allCalcs, getCalc } from "@/lib/calc/registry";
 import type { CalcDefinition, InputState } from "@/lib/calc/types";
 import type { Karsilastirma, TaramaSerisi } from "@/lib/karsilastirma/types";
-import { esitliktenBol, hesapRaporuPdf, karsilastirmaRaporuPdf, projeRaporuPdf } from "./belgeler";
+import { enKotuSeviye, esitliktenBol, hesapRaporuPdf, karsilastirmaRaporuPdf, projeRaporuPdf } from "./belgeler";
 import { KISA_SORUMLULUK_REDDI, PLATFORM_ADI, TAM_SORUMLULUK_REDDI, TELIF_NOTU } from "./metinler";
 import { hesapRaporuOlustur } from "./model";
 import { YEDEK_UNICODE_ARALIKLARI, yedekFontMu } from "./pdf";
@@ -399,5 +399,13 @@ describe("yazı tipi kapsamı", () => {
       }
     }
     expect([...eksik.entries()]).toEqual([]);
+  });
+});
+
+describe("enKotuSeviye (rapor özeti)", () => {
+  it("bilgi notları hüküm sayılmaz: yalnız notu olan rapor \"Uygun\" görünmez", () => {
+    expect(enKotuSeviye([{ level: "bilgi", message: "" }])).toBeNull();
+    expect(enKotuSeviye([{ level: "bilgi", message: "" }, { level: "ok", message: "" }])).toBe("ok");
+    expect(enKotuSeviye([{ level: "bilgi", message: "" }, { level: "uyari", message: "" }])).toBe("uyari");
   });
 });

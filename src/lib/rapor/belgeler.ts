@@ -53,6 +53,7 @@ const RENK = {
 
 const SEVIYE_RENK: Record<CheckLevel, { metin: string; zemin: string; cizgi: string }> = {
   ok: { metin: "#17663a", zemin: "#ebf8f0", cizgi: "#b6e2c6" },
+  bilgi: { metin: "#1d5bbf", zemin: "#f3f6fb", cizgi: "#c9d7ee" },
   uyari: { metin: "#8a5700", zemin: "#fff7e3", cizgi: "#f0d38c" },
   hata: { metin: "#b42318", zemin: "#fdf0ef", cizgi: "#f3c0bb" },
 };
@@ -133,11 +134,11 @@ function bolum(baslik: string, ilk: Parca, sinir: number, stil: "bolum" | "altBo
   return ilk.tahmin + 40 <= sinir ? [{ unbreakable: true, stack: [b, ilk.dugum] }] : [b, ilk.dugum];
 }
 
-/** "hata" > "uyari" > "ok"; kontrol yoksa null */
+/** "hata" > "uyari" > "ok"; hüküm yoksa null. "bilgi" notları hüküm değildir, sayılmaz. */
 export function enKotuSeviye(kontroller: readonly Check[]): CheckLevel | null {
   if (kontroller.some((c) => c.level === "hata")) return "hata";
   if (kontroller.some((c) => c.level === "uyari")) return "uyari";
-  return kontroller.length > 0 ? "ok" : null;
+  return kontroller.some((c) => c.level === "ok") ? "ok" : null;
 }
 
 /** Bir hesap raporunun tek satırlık durumu (özet tabloları için) */

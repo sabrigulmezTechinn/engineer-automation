@@ -266,7 +266,7 @@ function compute(inputs: ComputeInputs) {
   } else {
     checks.push({ level: "ok", message: MESSAGES.ratioOk(fmtRatio(oran), fmtRatio(oranMaks)) });
   }
-  checks.push({ level: "ok", message: MESSAGES.assumptions });
+  checks.push({ level: "bilgi", message: MESSAGES.assumptions });
 
   return { outputs: { JLy, Jtop, oran, nYuk, alfaA, TLm, Ta, T1, T2, T3, Trms, Ptepe }, steps, checks };
 }

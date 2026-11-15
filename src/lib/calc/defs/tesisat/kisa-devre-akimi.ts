@@ -379,7 +379,7 @@ export const kisaDevreAkimi: CalcDefinition = {
     const uk = num(inputs, "uk", WHERE);
     const Pk = optNum(inputs, "PkrT");
     const steps: Step[] = [];
-    const checks: Check[] = [{ level: "ok", message: MESSAGES.method }];
+    const checks: Check[] = [{ level: "bilgi", message: MESSAGES.method }];
     const outputs: Record<string, number> = {};
 
     // Trafo
@@ -403,7 +403,7 @@ export const kisaDevreAkimi: CalcDefinition = {
         latex: `R_T = \\frac{P_{krT} \\cdot U_{rT}^2}{S_{rT}^2} = \\frac{${qP(Pk)} \\cdot (${qU(UrT)})^2}{(${qSt(SrT)})^2} = ${qZ(RT)}`,
       });
     } else {
-      checks.push({ level: "ok", message: MESSAGES.noR });
+      checks.push({ level: "bilgi", message: MESSAGES.noR });
     }
     steps.push({
       label: "Trafo reaktansı",
@@ -423,7 +423,7 @@ export const kisaDevreAkimi: CalcDefinition = {
         label: "Düzeltilmiş trafo empedansı",
         latex: `R_{TK} = K_T \\cdot R_T = ${qZ(KT * RT)} \\qquad X_{TK} = K_T \\cdot X_T = ${qZ(KT * XT)}`,
       });
-      checks.push({ level: "ok", message: MESSAGES.kt(KT, cMaks) });
+      checks.push({ level: "bilgi", message: MESSAGES.kt(KT, cMaks) });
     }
     const RTK = KT * RT;
     const XTK = KT * XT;
@@ -449,7 +449,7 @@ export const kisaDevreAkimi: CalcDefinition = {
         },
       );
     } else {
-      checks.push({ level: "ok", message: MESSAGES.sebekeYok });
+      checks.push({ level: "bilgi", message: MESSAGES.sebekeYok });
     }
 
     // Kablo
@@ -529,15 +529,15 @@ export const kisaDevreAkimi: CalcDefinition = {
           latex: `I''_{k1} = \\frac{c \\cdot U_n}{\\sqrt{3} \\cdot |Z_{\\text{döngü}}|} = \\frac{${qNum(c)} \\cdot ${qU(Un)}}{\\sqrt{3} \\cdot ${qZ(Z1)}} = ${qI(Ik1)}`,
         },
       );
-      checks.push({ level: "ok", message: MESSAGES.faz1 });
+      checks.push({ level: "bilgi", message: MESSAGES.faz1 });
     }
-    if (inputs.hesap === "cmin") checks.push({ level: "ok", message: MESSAGES.cmin });
+    if (inputs.hesap === "cmin") checks.push({ level: "bilgi", message: MESSAGES.cmin });
 
     // Kesme kapasitesi ve dinamik dayanım en büyük kısa devre akımına (c_maks) göre seçilir; c_min veya özel c ile
     // hesaplanan akım bu seçim için belirleyici değildir.
     if (inputs.hesap === "cmaks") {
       checks.push({
-        level: "ok",
+        level: "bilgi",
         message: `Seçilecek koruma düzeninin kesme kapasitesi ${qText(S("Ik3"), Ik3)} değerinden, baraların dinamik dayanımı ${qText(S("ip"), ip)} darbe akımından küçük olmamalıdır.`,
       });
     }

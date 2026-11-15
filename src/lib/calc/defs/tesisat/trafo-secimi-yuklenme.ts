@@ -310,7 +310,7 @@ export const trafoSecimiYuklenme: CalcDefinition = {
         latex: `I_n = \\frac{S_n}{\\sqrt{3} \\cdot U} = ${qI(In)} \\qquad I = \\frac{S}{\\sqrt{3} \\cdot U} = ${qI(Iyuk)}`,
       },
     );
-    checks.push({ level: "ok", message: MESSAGES.chosen(qText(S_("Sn"), Sn), qText(S_("beta"), beta)) });
+    checks.push({ level: "bilgi", message: MESSAGES.chosen(qText(S_("Sn"), Sn), qText(S_("beta"), beta)) });
 
     if (inputs.kayip === "var") {
       const P0 = num(inputs, "P0", WHERE);
@@ -334,9 +334,9 @@ export const trafoSecimiYuklenme: CalcDefinition = {
           latex: `E_{\\text{kayıp}} = P_{\\text{kayıp}} \\cdot t = ${qP(Pkayip)} \\cdot ${qT(t)} = ${latexSpec(S_("E"), E)}`,
         },
       );
-      checks.push({ level: "ok", message: MESSAGES.loss });
+      checks.push({ level: "bilgi", message: MESSAGES.loss });
     }
-    checks.push({ level: "ok", message: MESSAGES.ambient });
+    checks.push({ level: "bilgi", message: MESSAGES.ambient });
 
     return { outputs, steps, checks };
   },

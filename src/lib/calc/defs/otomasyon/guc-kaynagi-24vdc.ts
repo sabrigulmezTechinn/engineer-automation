@@ -247,11 +247,11 @@ export const gucKaynagi24Vdc: CalcDefinition = {
         label: "Kaynağın yüklenmesi",
         latex: `\\frac{I_e}{I_{kaynak}} = \\frac{${qI(iEs)}}{${latexQty(iKaynak, "A")}} = ${latexQty(iEs / iKaynak, "percent")}`,
       });
-      checks.push({ level: "ok", message: MESSAGES.tipikDeger });
+      checks.push({ level: "bilgi", message: MESSAGES.tipikDeger });
     }
 
     if (inputs.uYuk === undefined) {
-      checks.push({ level: "ok", message: MESSAGES.tolerans(fV(uMin), fV(uMax)), reference: REF_61131 });
+      checks.push({ level: "bilgi", message: MESSAGES.tolerans(fV(uMin), fV(uMax)), reference: REF_61131 });
     } else {
       const uYuk = num(inputs, "uYuk");
       const tol = 1e-9 * u;

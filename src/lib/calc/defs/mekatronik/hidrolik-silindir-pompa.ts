@@ -258,7 +258,7 @@ export const hidrolikSilindirPompa: CalcDefinition = {
           : { level: "ok", message: MESSAGES.withinSeries(ref.standard, barText(pn)), reference: ref },
       );
     }
-    checks.push({ level: "ok", message: MESSAGES.assumptions });
+    checks.push({ level: "bilgi", message: MESSAGES.assumptions });
 
     return { outputs: { A, Ar, phi, Fitme, Fcekme, vitme, vcekme, Phid, Pmotor }, steps, checks };
   },

@@ -18,6 +18,7 @@ export const TAM_SORUMLULUK_REDDI =
 /** Kontrol seviyelerinin etiketleri (hesap sayfasındaki durum listesiyle aynı) */
 export const SEVIYE_ETIKETI: Record<CheckLevel, string> = {
   ok: "Uygun",
+  bilgi: "Bilgi",
   uyari: "Uyarı",
   hata: "Hata",
 };

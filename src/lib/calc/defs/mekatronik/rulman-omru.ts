@@ -271,7 +271,7 @@ export const rulmanOmru: CalcDefinition = {
         label: "Eşdeğer dinamik yük",
         latex: `P = X \\cdot F_r + Y \\cdot F_a = ${latexNum(X)} \\cdot ${qF(Fr)} + ${latexNum(Y)} \\cdot ${qF(Fa)} = ${qF(P)}`,
       });
-      checks.push({ level: "ok", message: MESSAGES.xyNote });
+      checks.push({ level: "bilgi", message: MESSAGES.xyNote });
     }
     const nRpm = fromSI(omega, "rpm");
     steps.push(
@@ -296,7 +296,7 @@ export const rulmanOmru: CalcDefinition = {
         },
       );
     }
-    checks.push({ level: "ok", message: MESSAGES.aIso, reference: REF_281 });
+    checks.push({ level: "bilgi", message: MESSAGES.aIso, reference: REF_281 });
 
     return { outputs, steps, checks };
   },

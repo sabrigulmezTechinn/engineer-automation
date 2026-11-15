@@ -342,12 +342,12 @@ export const kompanzasyon: CalcDefinition = {
     );
 
     const checks: Check[] = [
-      { level: "ok", message: MESSAGES.kurulu(describePicks(picks), qText(S("Qk"), Qk)) },
-      { level: "ok", message: MESSAGES.assumption },
+      { level: "bilgi", message: MESSAGES.kurulu(describePicks(picks), qText(S("Qk"), Qk)) },
+      { level: "bilgi", message: MESSAGES.assumption },
     ];
 
     if (sinif === "muaf") {
-      checks.push({ level: "ok", message: MESSAGES.muaf, reference: REF_EPDK });
+      checks.push({ level: "bilgi", message: MESSAGES.muaf, reference: REF_EPDK });
     } else {
       const lim = limitsFor(sinif, ctx.limits);
       // Hedef
@@ -371,7 +371,7 @@ export const kompanzasyon: CalcDefinition = {
           : { level: "uyari", message: MESSAGES.kuruluFail(karK, pct(Math.abs(tk)), pct(limK)), reference: REF_EPDK },
       );
       // Mevcut durum (bilgi)
-      checks.push({ level: "ok", message: MESSAGES.mevcut(pct(t1), pct(lim.enduktif), t1 > lim.enduktif), reference: REF_EPDK });
+      checks.push({ level: "bilgi", message: MESSAGES.mevcut(pct(t1), pct(lim.enduktif), t1 > lim.enduktif), reference: REF_EPDK });
     }
 
     return { outputs, steps, checks };

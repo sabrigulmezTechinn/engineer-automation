@@ -176,7 +176,7 @@ function computeAwg(inputs: ComputeInputs): { outputs: Record<string, number>; s
     if (clamped === "buyuk") checks.push({ level: "uyari", message: MESSAGES.awgTooLarge, reference: NBS100 });
     if (clamped === "kucuk") checks.push({ level: "uyari", message: MESSAGES.awgTooSmall });
     checks.push({
-      level: "ok",
+      level: "bilgi",
       message: MESSAGES.awgNearest(
         awgLabel(n),
         buyuk !== undefined ? awgLabel(buyuk) : undefined,

@@ -287,7 +287,7 @@ function computeRack(inputs: ComputeInputs) {
       latex: `P = T \\cdot \\omega = ${qo("T", T)} \\cdot ${qOmega(omega)} = ${qo("P", P)}`,
     },
   );
-  const checks: Check[] = [{ level: "ok", message: MESSAGES.rackAssumption }];
+  const checks: Check[] = [{ level: "bilgi", message: MESSAGES.rackAssumption }];
   return { outputs: { d0, F, T, v, P }, steps, checks };
 }
 
@@ -326,7 +326,7 @@ function computeConveyor(inputs: ComputeInputs) {
       latex: `T_{\\text{tambur}} = F_{\\text{ivme}} \\cdot \\frac{D}{2} = ${qo("Fivme", Fivme)} \\cdot \\frac{${qi("Dtambur", D)}}{2} = ${qo("Ttambur", Ttambur)}, \\qquad \\omega_{\\text{tambur}} = \\frac{2v}{D} = ${qOmega(omegaT)} = ${qo("nTambur", omegaT)}`,
     },
   ];
-  const checks: Check[] = [{ level: "ok", message: MESSAGES.conveyorSimplified, reference: DIN_22101 }];
+  const checks: Check[] = [{ level: "bilgi", message: MESSAGES.conveyorSimplified, reference: DIN_22101 }];
   return { outputs: { Fsabit, Fivme, Psabit, Ptepe, Ttambur, nTambur: omegaT }, steps, checks };
 }
 

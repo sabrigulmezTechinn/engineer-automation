@@ -131,7 +131,7 @@ function birimli(deger: string, birimSembolu: string): string {
   return birimSembolu ? `${deger} ${birimSembolu}` : deger;
 }
 
-const SEVIYE_ADI: Record<CheckLevel, string> = { ok: "uygun", uyari: "uyarı", hata: "hata" };
+const SEVIYE_ADI: Record<CheckLevel, string> = { ok: "uygun", bilgi: "bilgi", uyari: "uyarı", hata: "hata" };
 
 /** Nokta işareti. Seviye rengin yanında şekille de ayrılır: normal daire, uyarı üçgen, hata kare. */
 function isaret(x: number, y: number, tur: "normal" | "uyari" | "hata", ipucu?: string): string {

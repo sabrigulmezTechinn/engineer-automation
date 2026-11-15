@@ -137,7 +137,7 @@ export const enerjiMaliyeti: CalcDefinition = {
       steps,
       checks: [
         {
-          level: "ok",
+          level: "bilgi",
           message:
             "Güç ve birim fiyat sabit kabul edildi. Kademeli tarife, zaman dilimli fiyat, reaktif enerji ve sabit bedeller hesaba katılmadı.",
         },

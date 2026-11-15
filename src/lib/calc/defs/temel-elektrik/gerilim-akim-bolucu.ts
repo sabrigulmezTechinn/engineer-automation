@@ -189,7 +189,7 @@ export const gerilimAkimBolucu: CalcDefinition = {
     Object.assign(outputs, { Vo, Id, P1, P2 });
 
     if (typeof inputs.RL !== "number") {
-      checks.push({ level: "ok", message: MESSAGES.unloaded });
+      checks.push({ level: "bilgi", message: MESSAGES.unloaded });
       return { outputs, steps, checks };
     }
 
@@ -225,7 +225,7 @@ export const gerilimAkimBolucu: CalcDefinition = {
       });
       outputs.dusus = dusus;
     }
-    checks.push({ level: "ok", message: MESSAGES.loadedRating });
+    checks.push({ level: "bilgi", message: MESSAGES.loadedRating });
     return { outputs, steps, checks };
   },
 };

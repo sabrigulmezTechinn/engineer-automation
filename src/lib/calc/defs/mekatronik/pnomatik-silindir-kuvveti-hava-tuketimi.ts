@@ -212,15 +212,15 @@ function catalogCheck(D: number, d: number | undefined, ctx: CalcContext): Check
         .filter((k) => k.standart === std)
         .map((k) => formatNumber(fromSI(k.D, "mm")))
         .join(", ");
-    return { level: "ok", message: MESSAGES.notInCatalog(join("ISO 6432"), join("ISO 15552")) };
+    return { level: "bilgi", message: MESSAGES.notInCatalog(join("ISO 6432"), join("ISO 15552")) };
   }
   const reference = hit.standart === "ISO 15552" ? REF_15552 : REF_6432;
-  if (d === undefined) return { level: "ok", message: MESSAGES.catalogBoreOnly(mmText(D), hit.standart), reference };
+  if (d === undefined) return { level: "bilgi", message: MESSAGES.catalogBoreOnly(mmText(D), hit.standart), reference };
   if (same(hit.d, d)) {
     return { level: "ok", message: MESSAGES.catalogMatch(mmText(D), mmText(d), hit.standart, hit.katalog), reference };
   }
   return {
-    level: "ok",
+    level: "bilgi",
     message: MESSAGES.catalogRodDiffers(mmText(D), hit.standart, hit.katalog, mmText(hit.d), mmText(d)),
     reference,
   };
@@ -336,7 +336,7 @@ export const pnomatikSilindir: CalcDefinition = {
               latex: `F_{\\text{itme}} = p \\cdot A \\cdot \\eta - F_{\\text{yay}} = ${qp(p)} \\cdot ${qA(A)} \\cdot ${latexNum(eta)} - ${qF(Fyay)} = ${qF(Fitme)}`,
             },
       );
-      if (Fyay === undefined) checks.push({ level: "ok", message: MESSAGES.noSpring });
+      if (Fyay === undefined) checks.push({ level: "bilgi", message: MESSAGES.noSpring });
       checks.push(catalogCheck(D, undefined, ctx));
     }
 
@@ -360,7 +360,7 @@ export const pnomatikSilindir: CalcDefinition = {
       const reference = D <= 0.025 + 1e-9 ? REF_6432 : REF_15552;
       checks.push({ level: "uyari", message: MESSAGES.pressureOverSeries, reference });
     }
-    checks.push({ level: "ok", message: MESSAGES.assumptions, reference: REF_8778 });
+    checks.push({ level: "bilgi", message: MESSAGES.assumptions, reference: REF_8778 });
 
     return { outputs, steps, checks };
   },

@@ -396,7 +396,7 @@ function compute(inputs: ComputeInputs, ctx: CalcContext) {
   if (Fmaks > P1) checks.push({ level: "uyari", message: MESSAGES.overBuckling(fText, tOut("P1", P1)), reference: REF.thkIzinYuk });
   if (Fmaks > P2) checks.push({ level: "uyari", message: MESSAGES.overYield(fText, tOut("P2", P2)), reference: REF.thkIzinYuk });
   if (Fmaks <= P1 && Fmaks <= P2) checks.push({ level: "ok", message: MESSAGES.axialOk(fText, tOut("P1", Math.min(P1, P2))) });
-  checks.push({ level: "ok", message: MESSAGES.assumptions });
+  checks.push({ level: "bilgi", message: MESSAGES.assumptions });
 
   return {
     outputs: { T, Tgeri, n: omega, v, Jyuk, Js, J, alfa, Tivme, Thiz, Fmaks, N1, P1, P2 },

@@ -306,7 +306,7 @@ export const rs485Modbus: CalcDefinition = {
     if (cerceve === "8N1") {
       checks.push({ level: "uyari", message: MESSAGES.noParity, reference: { ...MODBUS, clause: "§2.5.1" } });
     }
-    if (fixed) checks.push({ level: "ok", message: MESSAGES.fixedTimers, reference: { ...MODBUS, clause: "§2.5.1.1" } });
+    if (fixed) checks.push({ level: "bilgi", message: MESSAGES.fixedTimers, reference: { ...MODBUS, clause: "§2.5.1.1" } });
     if (L !== undefined) {
       const lText = formatQuantity(L, "m");
       const limText = formatQuantity(lGuide, "m");
@@ -319,7 +319,7 @@ export const rs485Modbus: CalcDefinition = {
     if (nDev !== undefined && nDev > MAX_DEVICES) {
       checks.push({ level: "uyari", message: MESSAGES.devicesOver(nDev), reference: { ...MODBUS, clause: "§3.4.1" } });
     }
-    checks.push({ level: "ok", message: MESSAGES.termination, reference: { ...MODBUS, clause: "§3.4.5" } });
+    checks.push({ level: "bilgi", message: MESSAGES.termination, reference: { ...MODBUS, clause: "§3.4.5" } });
 
     return {
       outputs: {

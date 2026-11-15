@@ -246,7 +246,7 @@ export const panoIsiHesabi: CalcDefinition = {
     const Qs = k * A * dTizin;
     const Qnet = P - Qs;
     const outputs: Record<string, number> = { A, dT, TiDogal, Qs };
-    const checks: Check[] = [{ level: "ok", message: MESSAGES.method }];
+    const checks: Check[] = [{ level: "bilgi", message: MESSAGES.method }];
     const tiText = qText(S("TiDogal"), TiDogal);
     const tmaxText = qText(S("TiDogal"), Ti);
 
@@ -282,9 +282,9 @@ export const panoIsiHesabi: CalcDefinition = {
           label: "Gerekli fan debisi",
           latex: `\\dot{V} = f \\cdot \\frac{P_{\\text{kayıp}} - Q_S}{T_i - T_u} = ${qFcat(f)} \\cdot \\frac{${qP(Qnet)}}{${qDT(dTizin)}} = ${latexSpec(S("V"), V)}`,
         });
-        checks.push({ level: "ok", message: MESSAGES.fanBound(qText(S("V"), Vbound)) });
+        checks.push({ level: "bilgi", message: MESSAGES.fanBound(qText(S("V"), Vbound)) });
       } else {
-        checks.push({ level: "ok", message: MESSAGES.noFan(qText(S("TiDogal"), Tu), tmaxText) });
+        checks.push({ level: "bilgi", message: MESSAGES.noFan(qText(S("TiDogal"), Tu), tmaxText) });
       }
     }
 
@@ -295,7 +295,7 @@ export const panoIsiHesabi: CalcDefinition = {
       Tu > l.ortamMaks
         ? { level: "uyari", message: MESSAGES.above61439(tC(Tu), tC(l.ortamMaks)), reference: REF_61439 }
         : {
-            level: "ok",
+            level: "bilgi",
             message: MESSAGES.info61439(tC(l.ortamMaks), tC(l.ortam24sOrt), tC(l.ortamMin), dK(l.ucArtis), dK(l.metalYuzeyArtis)),
             reference: REF_61439,
           },

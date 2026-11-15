@@ -90,7 +90,7 @@ function computeBreaker(inputs: ComputeInputs, ctx: CalcContext, Ib: number, Iz:
       label: "Uygun ayar akımı aralığı",
       latex: `I_b \\leq I_r \\leq \\min\\left(I_z,\\ \\frac{1{,}45 \\cdot I_z}{k_2}\\right): \\quad ${qI(Ib)} \\leq I_r \\leq \\min\\left(${qI(Iz)},\\ \\frac{${latexNum(k145)} \\cdot ${qI(Iz)}}{${latexNum(k2)}}\\right) = ${qI(IrMax)}`,
     });
-    checks.push({ level: "ok", message: MESSAGES.irRange(akimMetni(Ib), akimMetni(IrMax)), reference: REF_IEC_60947_2 });
+    checks.push({ level: "bilgi", message: MESSAGES.irRange(akimMetni(Ib), akimMetni(IrMax)), reference: REF_IEC_60947_2 });
   } else {
     checks.push({ level: "uyari", message: MESSAGES.noIrRange(akimMetni(Ib), akimMetni(Iz)), reference: REF_IEC_60364_4_43 });
   }
@@ -153,7 +153,7 @@ function computeSeries(inputs: ComputeInputs, ctx: CalcContext, tip: "mcb" | "gG
       latex: `I_m = ${latexNum(band.min)} \\cdot I_n \\ldots ${latexNum(band.max)} \\cdot I_n = ${qI(ImMin)} \\ldots ${qI(ImMax)}`,
     });
     checks.push({
-      level: "ok",
+      level: "bilgi",
       message: MESSAGES.instantaneous(egri, akimMetni(ImMin), akimMetni(ImMax)),
       reference: REF_IEC_60898_1,
     });

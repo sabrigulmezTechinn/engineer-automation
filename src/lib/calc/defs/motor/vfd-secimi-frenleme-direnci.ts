@@ -74,7 +74,7 @@ function computeDrive(inputs: ComputeInputs) {
       latex: `I_{\\text{sürücü}} \\geq \\max\\left(I_n,\\ \\frac{I_{\\text{kısa}}}{k_{\\text{aşırı}}}\\right) = \\max\\left(${qI(In)},\\ ${qI(Ireq)}\\right) = ${qI(Imin)}`,
     },
   ];
-  const checks: Check[] = [{ level: "ok", message: Ireq > In ? MESSAGES.overloadGoverns : MESSAGES.nominalGoverns }];
+  const checks: Check[] = [{ level: "bilgi", message: Ireq > In ? MESSAGES.overloadGoverns : MESSAGES.nominalGoverns }];
   return { outputs: { IsurucuMin: Imin }, steps, checks };
 }
 
@@ -130,11 +130,11 @@ function computeBrake(inputs: ComputeInputs) {
         latex: `\\bar{P}_{\\text{fren}} = \\frac{E_{\\text{fren}}}{t} = \\frac{${qE(Efren)}}{${qt(t)}} = ${qP(Port)}`,
       },
     );
-    checks.push({ level: "ok", message: MESSAGES.mechAssumption });
+    checks.push({ level: "bilgi", message: MESSAGES.mechAssumption });
   } else {
     Pfren = num(inputs, "Pfren", WHERE);
     Port = Pfren;
-    checks.push({ level: "ok", message: MESSAGES.directAssumption });
+    checks.push({ level: "bilgi", message: MESSAGES.directAssumption });
   }
 
   const Rmaks = (Udc * Udc) / Pfren;
@@ -159,7 +159,7 @@ function computeBrake(inputs: ComputeInputs) {
 
   const rmaxText = qRText(Rmaks);
   if (Rmin === undefined) {
-    checks.push({ level: "ok", message: MESSAGES.rangeNoRmin });
+    checks.push({ level: "bilgi", message: MESSAGES.rangeNoRmin });
   } else if (Rmin > Rmaks) {
     checks.push({
       level: "uyari",

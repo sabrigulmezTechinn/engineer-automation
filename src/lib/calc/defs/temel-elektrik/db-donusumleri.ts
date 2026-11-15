@@ -210,7 +210,7 @@ export const dbDonusumleri: CalcDefinition = {
         const L = n0(20 * Math.log10(r));
         steps.push({ label: "Seviye farkı", latex: `L = 20 \\log_{10}\\frac{U_2}{U_1} = 20 \\log_{10} ${arg(latexNum(r))} = ${qDb(L, DB)}` });
         outputs.L = L;
-        checks.push({ level: "ok", message: MESSAGES.fieldRatio });
+        checks.push({ level: "bilgi", message: MESSAGES.fieldRatio });
         break;
       }
       case "db-guc": {
@@ -225,7 +225,7 @@ export const dbDonusumleri: CalcDefinition = {
         const r = 10 ** (L / 20);
         steps.push({ label: "Gerilim/akım oranı", latex: `\\frac{U_2}{U_1} = 10^{L/20} = ${exp(L, 20)} = ${latexNum(r)}` });
         outputs.oranV = r;
-        checks.push({ level: "ok", message: MESSAGES.fieldRatio });
+        checks.push({ level: "bilgi", message: MESSAGES.fieldRatio });
         break;
       }
       case "guc-dbm": {
@@ -262,7 +262,7 @@ export const dbDonusumleri: CalcDefinition = {
           latex: `L_{\\mathrm{dB\\mu V}} = 20 \\log_{10}\\frac{U}{1\\,\\mu\\mathrm{V}} = 20 \\log_{10}\\frac{${qU}}{1\\,\\mu\\mathrm{V}} = ${qDb(dBuV, DBUV)}`,
         });
         Object.assign(outputs, { dBV, dBuV });
-        checks.push({ level: "ok", message: MESSAGES.voltageLevel });
+        checks.push({ level: "bilgi", message: MESSAGES.voltageLevel });
         break;
       }
       case "dbv-gerilim": {
@@ -278,7 +278,7 @@ export const dbDonusumleri: CalcDefinition = {
           latex: `L_{\\mathrm{dB\\mu V}} = L_{\\mathrm{dBV}} + 120 = ${latexNum(L)} + 120 = ${qDb(dBuV, DBUV)}`,
         });
         Object.assign(outputs, { U, dBuV });
-        checks.push({ level: "ok", message: MESSAGES.voltageLevel });
+        checks.push({ level: "bilgi", message: MESSAGES.voltageLevel });
         break;
       }
       case "dbuv-gerilim": {
@@ -294,7 +294,7 @@ export const dbDonusumleri: CalcDefinition = {
           latex: `L_{\\mathrm{dBV}} = L_{\\mathrm{dB\\mu V}} - 120 = ${latexNum(L)} - 120 = ${qDb(dBV, DBV)}`,
         });
         Object.assign(outputs, { U, dBV });
-        checks.push({ level: "ok", message: MESSAGES.voltageLevel });
+        checks.push({ level: "bilgi", message: MESSAGES.voltageLevel });
         break;
       }
       default:
