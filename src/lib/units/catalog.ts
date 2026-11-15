@@ -99,6 +99,8 @@ const ALL: UnitDef[] = [
     { id: "Hz", symbol: "Hz", name: "hertz", factor: 1 },
     { id: "kHz", symbol: "kHz", name: "kilohertz", factor: 1e3 },
     { id: "MHz", symbol: "MHz", name: "megahertz", factor: 1e6 },
+    // Pnömatik/hidrolik çevrim sayısı, darbe/dakika (6.6): Hz'in 10³ⁿ kardeşi değildir, otomatik seçilmez.
+    { id: "per_min", symbol: "1/dk", name: "çevrim/dakika", factor: 1 / 60 },
   ]),
   ...group("kapasitans", [
     { id: "pF", symbol: "pF", name: "pikofarad", factor: 1e-12 },

@@ -11,7 +11,7 @@ import { formatQuantity, getUnit, siUnit } from "@/lib/units";
 import { autoOutputUnit, defaultState, runCalc } from "./engine";
 import { allCalcs } from "./registry";
 import { ohmYasasi } from "./defs/temel-elektrik/ohm-yasasi";
-import { latexQty } from "./latex";
+import { latexQty, latexSpec, latexSpecOperand } from "./latex";
 import { renderStrict } from "./test-utils/katex";
 import type { InputState, RunResult } from "./types";
 
@@ -130,5 +130,14 @@ describe("sayı biçimi, gerçek katalogla", () => {
     expect(formatQuantity(456.25, "TL")).toBe("456,25 TL");
     expect(formatQuantity(12345.6, "W")).toBe("12\u202f346 W");
     expect(latexQty(17786.5612, "TL")).toBe("17\\,786{,}56\\,\\mathrm{TL}");
+  });
+});
+
+describe("latexSpec: adımlarda kartla aynı birim", () => {
+  it("mekanik büyüklük varsayılan birimde, elektrik büyüklüğü otomatik önekle", () => {
+    expect(latexSpec({ dimension: "basinc", defaultUnit: "bar" }, 6e5)).toBe("6\\,\\mathrm{bar}");
+    expect(latexSpec({ dimension: "uzunluk", defaultUnit: "mm" }, 1.5)).toBe("1500\\,\\mathrm{mm}");
+    expect(latexSpec({ dimension: "akim", defaultUnit: "A" }, 0.005)).toBe("5\\,\\mathrm{mA}");
+    expect(latexSpecOperand({ dimension: "kuvvet", defaultUnit: "N" }, -12)).toBe("(-12\\,\\mathrm{N})");
   });
 });

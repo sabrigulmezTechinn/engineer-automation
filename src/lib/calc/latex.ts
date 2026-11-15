@@ -6,6 +6,7 @@
  */
 import { MONEY_FORMAT, formatNumber, fromSI, getUnit, siUnit } from "@/lib/units";
 import { autoOutputUnit } from "./auto-unit";
+import type { OutputSpec } from "./types";
 import type { Dimension, FormatOptions } from "@/lib/units";
 
 const SUPERSCRIPT_TO_ASCII: Record<string, string> = {
@@ -199,6 +200,29 @@ export function latexSI(valueSI: number, dimension: Dimension, options?: FormatO
  */
 export function latexAuto(valueSI: number, dimension: Dimension, options?: FormatOptions): string {
   return latexQty(valueSI, autoOutputUnit({ dimension, defaultUnit: siUnit(dimension).id }, valueSI), options);
+}
+
+/**
+ * Bir girdi/çıktı tanımına göre yazar: kartlarla aynı kural (autoOutputUnit). Otomatik seçimin kapalı olduğu
+ * boyutlarda (mekanik: uzunluk, basınç, tork…) tanımın `defaultUnit`'i kullanılır — ör. "6 bar" kartının yanında
+ * adımda "600000 Pa" değil "6 bar" yazar. Girdiler için de kullanılabilir (girdinin varsayılan birimiyle).
+ */
+export function latexSpec(
+  spec: Pick<OutputSpec, "dimension" | "defaultUnit" | "units" | "autoUnit">,
+  valueSI: number,
+  options?: FormatOptions,
+): string {
+  return latexQty(valueSI, autoOutputUnit(spec, valueSI), options);
+}
+
+/** latexSpec'in işlem içi hali: negatif değer parantezlenir. */
+export function latexSpecOperand(
+  spec: Pick<OutputSpec, "dimension" | "defaultUnit" | "units" | "autoUnit">,
+  valueSI: number,
+  options?: FormatOptions,
+): string {
+  const s = latexSpec(spec, valueSI, options);
+  return valueSI < 0 ? `(${s})` : s;
 }
 
 /** latexAuto'nun işlem içi hali: negatif değer parantezlenir. */
