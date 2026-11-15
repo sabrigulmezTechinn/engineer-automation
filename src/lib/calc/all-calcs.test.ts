@@ -18,6 +18,12 @@ const calcs = allCalcs();
 
 const KOMBINASYON_MAX = 512;
 
+/**
+ * Kombinasyon testlerinin süre sınırı (ms). Çok seçimli hesaplarda (ör. 4.5 renk bantları) yüzlerce kombinasyon KaTeX ve
+ * MathJax'ten geçer; tam paket yük altındayken varsayılan 5 s'ye yaklaşıyordu (4.5: ~2,5 s).
+ */
+const KOMBINASYON_TEST_SURESI = 30_000;
+
 /** Verilen select girdilerinin tüm değer kombinasyonları (en fazla KOMBINASYON_MAX). */
 function product(selects: SelectInputSpec[]): InputState[] {
   let combos: InputState[] = [{}];
@@ -77,7 +83,7 @@ describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name,
       for (const s of r.result.steps) expect(() => renderStrict(s.latex), `${JSON.stringify(combo)}: ${s.latex}`).not.toThrow();
     }
     expect(okCount, "en az bir kombinasyon geçerli sonuç vermeli").toBeGreaterThan(0);
-  });
+  }, KOMBINASYON_TEST_SURESI);
 
   it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
     for (const spec of [...def.inputs, ...def.outputs]) {
@@ -100,7 +106,7 @@ describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name,
       const svg = await latexToSvg(latex);
       expect(svg.hata, latex).toBe(false);
     }
-  });
+  }, KOMBINASYON_TEST_SURESI);
 
   it("birimler katalogda var ve boyutları tutuyor", () => {
     for (const spec of [...def.inputs, ...def.outputs]) {
