@@ -2,7 +2,9 @@
  * PDF rapor uç noktalarının ortak yardımcıları (yalnızca sunucu): oturum ve tercihler, sınırlı JSON gövde
  * okuma, hata ve PDF yanıtları. `_lib` klasörü yönlendirmeye dahil değildir.
  */
+import { headers } from "next/headers";
 import * as z from "zod";
+import { clientIp, createRateLimiter, rateLimitMessage, type RateLimitRule } from "@/app/(auth)/_lib/rate-limit";
 import type { AuthUser } from "@/lib/auth";
 import { pdfContentDisposition } from "@/lib/rapor/dosya-adi";
 import { RAPOR_GOVDE_MAX } from "@/lib/rapor/sinirlar";
@@ -66,13 +68,35 @@ function oturumdan(user: AuthUser): RaporOturumu {
   };
 }
 
-/** Giriş yapılmışsa oturum bilgisi; yoksa ya da oturum okunamazsa null (kayıtsız raporlar için). */
+/**
+ * PDF üretimi işlemci yoğundur (MathJax + pdfmake, rapor başına ~1 s): uç noktalar kötüye kullanıma karşı
+ * hız sınırlıdır. Girişsiz istekler IP başına, girişli istekler kullanıcı başına sayılır. Auth sınırlayıcısı
+ * gibi yalnızca üretimde etkindir ve tek süreç içindir; IP `x-forwarded-for`'dan okunur (DURUM.md açık işi).
+ */
+export const RAPOR_HIZ_SINIRI = {
+  anonim: { max: 20, windowSeconds: 60 },
+  girisli: { max: 30, windowSeconds: 60 },
+} satisfies Record<string, RateLimitRule>;
+
+const HIZ_SINIRI_ETKIN = process.env.NODE_ENV === "production";
+const raporSinirlayici = createRateLimiter({ enabled: HIZ_SINIRI_ETKIN });
+
+async function hizSiniriUygula(oturum: RaporOturumu | null): Promise<void> {
+  if (!HIZ_SINIRI_ETKIN) return;
+  const anahtar = oturum ? `rapor:kullanici:${oturum.userId}` : `rapor:ip:${clientIp(await headers())}`;
+  const sonuc = raporSinirlayici.check(anahtar, oturum ? RAPOR_HIZ_SINIRI.girisli : RAPOR_HIZ_SINIRI.anonim);
+  if (!sonuc.ok) throw new IstekHatasi(429, rateLimitMessage(sonuc.retryAfterSeconds));
+}
+
+/** Giriş yapılmışsa oturum bilgisi; yoksa ya da oturum okunamazsa null (kayıtsız raporlar için). Hız sınırlıdır. */
 export async function istegeBagliOturum(): Promise<RaporOturumu | null> {
   const session = await getSession().catch((error: unknown) => {
     console.error("Rapor: oturum okunamadı; anonim devam ediliyor", error);
     return null;
   });
-  return session?.user ? oturumdan(session.user) : null;
+  const oturum = session?.user ? oturumdan(session.user) : null;
+  await hizSiniriUygula(oturum);
+  return oturum;
 }
 
 /** Giriş zorunlu uç noktalar: oturum yoksa 401, okunamazsa 503 (IstekHatasi). */
@@ -85,7 +109,9 @@ export async function zorunluOturum(): Promise<RaporOturumu> {
     throw new IstekHatasi(503, "Oturum doğrulanamadı. Lütfen biraz sonra tekrar deneyin.");
   }
   if (!session?.user) throw new IstekHatasi(401, "Bu raporu indirmek için giriş yapmalısınız.");
-  return oturumdan(session.user);
+  const oturum = oturumdan(session.user);
+  await hizSiniriUygula(oturum);
+  return oturum;
 }
 
 /** Gövdeyi en çok `sinir` bayt okur (Content-Length'e güvenmeden); aşarsa 413. */
