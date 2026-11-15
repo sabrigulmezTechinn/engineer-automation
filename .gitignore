@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# örnek ortam dosyası commit edilir (yukarıdaki .env* kuralının istisnası)
+!.env.example
+
+# geliştirme e-postaları (src/lib/email.ts)
+/.dev-mail/
