@@ -9,8 +9,8 @@
 |---|---|---|
 | 0 | Altyapı: kullanıcı hesabı, hesap motoru, birim sistemi, formül gösterimi | ✅ Bitti (c5ddcb7) |
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
-| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (df29ba7; 1236 test, e2e 111 adım) |
-| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | 🔄 Sırada |
+| 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (10b478a; 1238 test, e2e 111 adım) |
+| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | 🔄 Sürüyor (ortak zemin 6ca6112; işçiler A–D) |
 | 4 | Elektronik (12) | ⏳ |
 
 ## Hesaplar
@@ -64,6 +64,11 @@ Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçile
 - Hesap sayfası durumu useCalcState (src/components/calc/use-calc-state.ts); CalcWorkspace kaydetme/rapor/senaryo yuvaları.
   Profil tercihleri runSecenekleri ile motora geçer (anlamlı basamak; imperial: hp, lbf·ft, psi, °F).
 - Karşılaştırmada bir satırdaki tüm senaryolar tek birimle gösterilir.
+- İmperial tercih: tork lbf·ft, basınç psi, sıcaklık °F; güç bilerek yok (elektrik devrelerinde hp anlamsız).
+- Rapor uç noktaları hız sınırlı (girişsiz IP başına 20/dk, girişli kullanıcı başına 30/dk; yalnızca üretimde).
+- Faz 3 telif kararı (2.1): IEC 60364-5-52 tabloları gömülmez; kamuya açık üretici kataloğu değerleri kaynağıyla,
+  kullanıcı I₀'ı geçersiz kılabilir; sıcaklık düzeltmesi formülle, gruplama/toprak katsayıları girdi.
+- Adımlarda birimler latexSpec ile (kartla aynı; mekanikte varsayılan birim).
 - Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
