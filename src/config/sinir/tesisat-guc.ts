@@ -61,6 +61,22 @@ export const TESISAT_GUC_SINIRLARI = {
   },
 
   /**
+   * Fan debisi katsayısı f, deniz seviyesinden yüksekliğe göre (2.8): V = f·Q/ΔT. Katalogda m³·K/(W·h) birimiyle
+   * 3,1 (0–100 m), 3,2 (100–250 m), 3,3 (250–500 m), 3,4 (500–750 m), 3,5 (750–1000 m); burada SI'ya (m³·K/J) çevrilmiş
+   * olarak (÷3600) tutulur. Fiziksel karşılığı 1/(ρ_hava·c_p).
+   * Kaynak: Rittal "Technical System Catalogue / Climate control", TopTherm fan-and-filter units, Project planning (s. 3-6)
+   *   https://www.rittal.de/downloads/eBook/TSH/EN/climate_control/pubData/SEO/Page_7.html
+   *   https://static.chipdip.ru/lib/034/DOC021034421.pdf (aynı katalogun PDF'i)
+   */
+  fanKatsayisi: {
+    r100: 3.1 / 3600,
+    r250: 3.2 / 3600,
+    r500: 3.3 / 3600,
+    r750: 3.4 / 3600,
+    r1000: 3.5 / 3600,
+  },
+
+  /**
    * IEC 61439-1 normal hizmet koşulları ve sıcaklık artışı sınırları (2.8, yalnızca bilgi). Standart metni açılamadı;
    * değerler standarda atıf yapan üretici belgesinden: ABB "Technical Application Papers No.11 — Guidelines to the
    * construction of a low-voltage assembly complying with the Standards IEC 61439 Part 1 and Part 2" (1SDC007110G0203),
