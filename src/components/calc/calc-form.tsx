@@ -152,7 +152,7 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
   const labelOf = (key: string) => def.inputs.find((i) => i.key === key)?.label ?? key;
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <Card className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-semibold">Girdiler</h3>
@@ -164,7 +164,7 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
         <form
           noValidate
           onSubmit={(e) => e.preventDefault()}
-          className="mt-4 grid gap-x-4 gap-y-5 sm:grid-cols-2 lg:grid-cols-1"
+          className="mt-4 grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 lg:grid-cols-1"
         >
           {visibleInputs.map((input) =>
             input.kind !== "select" ? (
@@ -468,7 +468,7 @@ function OutputCards({ outputs, specs, unitOptions, onUnit }: {
   }
 
   return (
-    <ul className="grid gap-3 sm:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {outputs.map((output) => {
         const units = unitOptions.get(output.key) ?? [];
         const spec = specs.get(output.key);

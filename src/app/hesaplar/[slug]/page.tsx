@@ -84,7 +84,7 @@ export default async function HesapPage({ params }: PageProps<"/hesaplar/[slug]"
       {def.formulas.length > 0 && (
         <section aria-labelledby="formuller" className="mt-8">
           <SectionHeading id="formuller">Formüller</SectionHeading>
-          <ul className="mt-3 grid gap-3 md:grid-cols-2">
+          <ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
             {def.formulas.map((formula, i) => (
               <li key={`${formula.label}-${i}`}>
                 <Card className="h-full px-4 py-3">

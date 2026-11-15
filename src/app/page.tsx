@@ -52,7 +52,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <ul className="mt-10 grid gap-4 border-t border-line pt-6 sm:grid-cols-3">
+        <ul className="mt-10 grid grid-cols-1 gap-4 border-t border-line pt-6 sm:grid-cols-3">
           {OZELLIKLER.map((item) => (
             <li key={item.title}>
               <p className="text-sm font-semibold">{item.title}</p>
@@ -66,7 +66,7 @@ export default function Home() {
         <h2 id="kategoriler-baslik" className="text-lg font-semibold tracking-tight">
           Kategoriler
         </h2>
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => {
             const hasCalcs = category.calcs.length > 0;
             const shown = category.calcs.slice(0, KART_HESAP_SINIRI);
