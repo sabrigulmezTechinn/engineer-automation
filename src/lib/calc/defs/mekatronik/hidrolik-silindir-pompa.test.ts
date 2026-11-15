@@ -60,7 +60,7 @@ describe("seri anma basıncı kontrolü", () => {
     const over = def.compute({ ...BASE, seri: "iso6022", p: 260 * BAR }, ctx);
     expect(over.checks.find((c) => c.level === "uyari")?.reference?.standard).toBe("ISO 6022");
     const none = def.compute({ ...BASE, seri: "yok", p: 400 * BAR }, ctx);
-    expect(none.checks.map((c) => c.level)).toEqual(["ok"]);
+    expect(none.checks.map((c) => c.level)).toEqual(["bilgi"]);
   });
 
   it("mil çapı piston çapından küçük olmalı", () => {

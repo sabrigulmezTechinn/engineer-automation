@@ -147,7 +147,7 @@ describe("kritik devir, burkulma, izin verilen yük (THK)", () => {
     expect(w).toHaveLength(1);
     expect(w[0].message).toMatch(/burkulma/);
     expect(w[0].reference?.clause).toMatch(/\(5\)/);
-    expect(def.compute(BASE, ctx).checks.every((c) => c.level === "ok")).toBe(true);
+    expect(def.compute(BASE, ctx).checks.every((c) => c.level === "ok" || c.level === "bilgi")).toBe(true);
   });
 
   it("çapraz kontroller: d₁ < d₀, açıklıklar mil boyunu aşamaz", () => {

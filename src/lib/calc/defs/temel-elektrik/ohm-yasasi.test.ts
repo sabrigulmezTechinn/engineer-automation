@@ -49,7 +49,7 @@ describe("ders kitabı değerleri (her mod)", () => {
   it("P-R: 50 W, 2 Ω → 10 V, 5 A (pozitif kök, 'ok' check'i)", () => {
     const r = compute("P-R", { P: 50, R: 2 });
     expectOutputs(r, { V: 10, I: 5, R: 2, P: 50 });
-    expect(r.checks).toEqual([expect.objectContaining({ level: "ok" })]);
+    expect(r.checks).toEqual([expect.objectContaining({ level: "bilgi" })]);
     expect(r.checks[0].message).toMatch(/pozitif/);
   });
 

@@ -76,7 +76,7 @@ describe("IEC 61131-2 besleme toleransı", () => {
   it("yük gerilimi girilmezse aralık bilgisi verilir", () => {
     const r = compute({ yukGuc: [50] });
     const bilgi = r.checks.find((c) => c.reference?.standard === "IEC 61131-2");
-    expect(bilgi).toMatchObject({ level: "ok" });
+    expect(bilgi).toMatchObject({ level: "bilgi" });
     expect(bilgi?.message).toMatch(/20,4 V.*28,8 V/);
   });
 

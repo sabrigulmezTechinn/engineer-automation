@@ -114,7 +114,7 @@ describe("<BirimDonusturucu>", () => {
     expect(document.querySelector('[data-awg="yakin"]')?.textContent).toContain("13 AWG");
     expect(document.querySelector('[data-awg="buyuk"]')?.textContent).toContain("12 AWG");
     expect(document.querySelector('[data-awg="kucuk"]')?.textContent).toContain("14 AWG");
-    expect(document.querySelector('[data-level="ok"]')?.textContent).toContain("13 AWG");
+    expect(document.querySelector('[data-level="bilgi"]')?.textContent).toContain("13 AWG");
   });
 
   it("sonuç bölgesi aria-live ile duyurulur; varsayılanlara dön durumu sıfırlar", () => {

@@ -37,7 +37,7 @@ describe("SI hesap (elle hesap)", () => {
     expect(r.outputs.IkOran).toBeCloseTo(7 / 3, 12);
     expect(r.outputs.akimOrani).toBeCloseTo(1 / 3, 12);
     expect(r.outputs.torkOrani).toBeCloseTo(1 / 3, 12);
-    expect(r.checks).toEqual([expect.objectContaining({ level: "ok", message: expect.stringMatching(/üçgen bağlı/) })]);
+    expect(r.checks).toEqual([expect.objectContaining({ level: "bilgi", message: expect.stringMatching(/üçgen bağlı/) })]);
   });
 
   it("ototrafo %65: hat 42,88 A, motor 65,98 A, tork 48,00 N·m (x² = 0,4225)", () => {

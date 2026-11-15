@@ -83,7 +83,7 @@ describe("ısı dengesi durumları", () => {
   it("IEC 61439-1 bilgi mesajı config değerlerinden", () => {
     const r = def.compute(BASE, ctx);
     const info = r.checks.find((c) => c.reference?.standard === "IEC 61439-1");
-    expect(info?.level).toBe("ok");
+    expect(info?.level).toBe("bilgi");
     expect(info?.message).toMatch(/40 °C.*35 °C.*[-−]5 °C.*70 K.*30 K/);
   });
 });

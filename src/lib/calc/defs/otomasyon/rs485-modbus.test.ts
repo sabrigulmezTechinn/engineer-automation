@@ -71,7 +71,7 @@ describe("motor üzerinden (runCalc)", () => {
     expect(r.outputs.find((x) => x.key === "T_cevrim")?.formatted).toBe("22,92 ms");
     // 300 m < 520,8 m → uygun; sonlandırma bilgisi her zaman
     const levels = r.result.checks.map((c) => c.level);
-    expect(levels).toEqual(["ok", "ok"]);
+    expect(levels).toEqual(["ok", "bilgi"]);
     expect(r.result.checks[0].message).toMatch(/kılavuz sınırı/);
     expect(r.result.checks[1].message).toMatch(/150 Ω.*120 Ω/);
   });
@@ -128,7 +128,7 @@ describe("motor üzerinden (runCalc)", () => {
 
   it("kablo uzunluğu boşsa uzunluk kontrolü yapılmaz, kılavuz değer yine verilir", () => {
     const r = run({ L: { value: "", unit: "m" } });
-    expect(r.result.checks.map((c) => c.level)).toEqual(["ok"]);
+    expect(r.result.checks.map((c) => c.level)).toEqual(["bilgi"]);
     expect(r.result.outputs.L_kilavuz).toBeCloseTo(520.8333, 3);
   });
 

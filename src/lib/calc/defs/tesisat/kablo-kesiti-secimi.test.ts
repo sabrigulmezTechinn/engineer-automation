@@ -55,7 +55,7 @@ describe("(a) katalog yolu", () => {
     expect(r.outputs.I2).toBeCloseTo(72.5, 9);
     expect(r.outputs.I2sinir).toBeCloseTo(74.088473, 5);
     expect(r.outputs.R20).toBeCloseTo(1.83e-3, 12);
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("aynı devre gG 50 A ile → 16 mm² (I₂ = 80 A, I_z ≥ 80/1,45 = 55,17 A gerekir)", () => {
@@ -65,7 +65,7 @@ describe("(a) katalog yolu", () => {
     expect(r.outputs.I0).toBe(79);
     expect(r.outputs.Iz).toBeCloseTo(68.416007, 5);
     expect(r.outputs.I2).toBeCloseTo(80, 9);
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("koruma yok: yalnızca I_z ≥ I_b (45/0,866 = 51,96 A → 10 mm²)", () => {
@@ -121,7 +121,7 @@ describe("(b) I₀ elle", () => {
     expect(r.outputs.I2).toBeCloseTo(78, 9);
     expect(r.outputs.I2sinir).toBeCloseTo(97.178851, 5);
     expect(r.outputs).not.toHaveProperty("kesit");
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
     // Kompakt şalterde koruma akımı I_r diye adlandırılır
     expect(r.checks.some((c) => /I_b ≤ I_r ≤ I_z/.test(c.message))).toBe(true);
     expect(r.steps.some((s) => s.latex.includes("I_r = 60"))).toBe(true);

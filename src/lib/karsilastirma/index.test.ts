@@ -192,13 +192,13 @@ describe("karsilastirmaOlustur — senaryo durumu", () => {
   it("başarılı senaryoda kontroller ve en kötü seviye", () => {
     const k = karsilastirmaOlustur(ohmYasasi, [
       ohm("vr", vr("12", "V", "6", "ohm")),
-      // P-R modunda karekök için "ok" bilgisi
+      // P-R modunda karekök notu "bilgi" seviyesinde: hüküm değil, en kötü seviye null
       ohm("pr", { mod: { value: "P-R" }, P: { value: "50", unit: "W" }, R: { value: "2", unit: "ohm" } }),
       // V-I, I = 0 → direnç tanımsız uyarısı, R çıktısı yok
       ohm("vi", { mod: { value: "V-I" }, V: { value: "12", unit: "V" }, I: { value: "0", unit: "A" } }),
     ]);
     expect(k.senaryolar.map((s) => s.durum.ok)).toEqual([true, true, true]);
-    expect(k.senaryolar.map((s) => s.durum.enKotu)).toEqual([null, "ok", "uyari"]);
+    expect(k.senaryolar.map((s) => s.durum.enKotu)).toEqual([null, null, "uyari"]);
     expect(k.senaryolar[2].durum.kontroller[0].message).toMatch(/tanımsız/);
     expect(satir(k, "cikti", "R").degerler).toEqual(["6", "2", null]);
   });
@@ -336,10 +336,10 @@ describe("taramaYap", () => {
       { x: 0, y: null, seviye: "uyari" },
       { x: 1, y: 12, seviye: null },
     ]);
-    // P-R: her noktada "ok" bilgisi
+    // P-R: her noktada yalnızca karekök notu ("bilgi") var; hüküm olmadığından seviye null
     const pr = ohm("pr", { mod: { value: "P-R" }, P: { value: "50", unit: "W" }, R: { value: "2", unit: "ohm" } });
     const t = taramaYap(ohmYasasi, pr, { girdiKey: "R", ciktiKey: "V", baslangic: 2, bitis: 8, birim: "ohm", noktaSayisi: 2 });
-    expect(t.noktalar.map((p) => p.seviye)).toEqual(["ok", "ok"]);
+    expect(t.noktalar.map((p) => p.seviye)).toEqual([null, null]);
     expect(t.noktalar[0].y).toBeCloseTo(10, 12); // √(50·2)
     expect(t.noktalar[1].y).toBeCloseTo(20, 12); // √(50·8)
   });

@@ -93,7 +93,7 @@ describe("adım, frekans, çözünürlük", () => {
     const r = def.compute({ ...BASE, theta: 0.7 * DEG, mikro: 1 }, ctx);
     expect(r.outputs.N).toBeCloseTo(514.2857, 4);
     expect(r.checks.filter((c) => c.level === "uyari")).toHaveLength(1);
-    expect(def.compute(BASE, ctx).checks.every((c) => c.level === "ok")).toBe(true);
+    expect(def.compute(BASE, ctx).checks.every((c) => c.level === "ok" || c.level === "bilgi")).toBe(true);
   });
 });
 

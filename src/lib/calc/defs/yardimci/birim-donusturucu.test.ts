@@ -159,7 +159,7 @@ describe("AWG (runCalc)", () => {
     expect(o.awg_sapma).toBeCloseTo((o.awg_n_alan - 2.5e-6) / 2.5e-6, 12);
     expect(o.awg_sapma).toBeGreaterThan(0.04); // (2,63 − 2,5)/2,5 ≈ %5
     expect(o.awg_sapma).toBeLessThan(0.06);
-    const ok = r.result.checks.find((c) => c.level === "ok");
+    const ok = r.result.checks.find((c) => c.level === "bilgi");
     expect(ok?.message).toContain("13 AWG");
   });
 

@@ -54,7 +54,7 @@ describe("compute (SI, elle hesap)", () => {
 
   it("bobinde karşılıklı endüktans notu, seri kondansatörde gerilim paylaşımı notu verilir", () => {
     expect(compute("bobin", "paralel", [1, 2]).checks).toEqual([
-      expect.objectContaining({ level: "ok", message: expect.stringMatching(/karşılıklı endüktans/) }),
+      expect.objectContaining({ level: "bilgi", message: expect.stringMatching(/karşılıklı endüktans/) }),
     ]);
     expect(compute("kondansator", "seri", [1, 2]).checks[0].message).toMatch(/gerilim/);
     expect(compute("direnc", "seri", [1, 2]).checks).toEqual([]);

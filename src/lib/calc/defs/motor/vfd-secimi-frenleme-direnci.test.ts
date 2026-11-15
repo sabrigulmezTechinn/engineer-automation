@@ -42,7 +42,7 @@ describe("(b) frenleme direnci, güç doğrudan", () => {
     expect(r.outputs.PfrenOrt).toBe(7500);
     expect(r.outputs.Psurekli).toBeCloseTo(750, 9);
     expect(r.outputs).not.toHaveProperty("dE");
-    expect(r.checks.map((c) => c.level)).toEqual(["ok", "ok"]);
+    expect(r.checks.map((c) => c.level)).toEqual(["bilgi", "bilgi"]);
   });
 
   it("R_min > R_maks → uyarı; R_min ≤ R_maks → aralık bilgisi", () => {
@@ -51,7 +51,7 @@ describe("(b) frenleme direnci, güç doğrudan", () => {
     expect(bad.checks.filter((c) => c.level === "uyari")).toHaveLength(1);
     expect(bad.checks.find((c) => c.level === "uyari")?.message).toMatch(/80 Ω.*75 Ω/);
     const ok = def.compute({ ...base, Rmin: 40 }, ctx);
-    expect(ok.checks.every((c) => c.level === "ok")).toBe(true);
+    expect(ok.checks.every((c) => c.level === "ok" || c.level === "bilgi")).toBe(true);
     expect(ok.checks.some((c) => /40 Ω ile 75 Ω/.test(c.message))).toBe(true);
   });
 });
@@ -136,7 +136,7 @@ describe("varsayılan dışı birimler (runCalc)", () => {
     if (!r.ok) throw new Error(JSON.stringify(r));
     expect(r.result.outputs.Rmaks).toBeCloseTo(50.2883, 4);
     expect(r.result.outputs.IfrenTepe).toBeCloseTo(14.914, 4);
-    expect(r.result.checks.every((c) => c.level === "ok")).toBe(true);
+    expect(r.result.checks.every((c) => c.level === "ok" || c.level === "bilgi")).toBe(true);
   });
 
   it("sürücü: I_n 14,5 A, kısa süreli 0,024 kA → 16 A", () => {

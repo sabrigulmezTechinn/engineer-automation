@@ -119,10 +119,10 @@ describe("doğrulama ve kontroller", () => {
 
   it("katalog karşılaştırması: mil farklı ve standart dışı çap bilgi düzeyinde", () => {
     const rod = def.compute({ ...CIFT, d: 0.025 }, ctx);
-    expect(rod.checks.some((c) => c.level === "ok" && /Festo DSBC kataloğunda mil çapı 20 mm \(girilen 25 mm\)/.test(c.message))).toBe(true);
+    expect(rod.checks.some((c) => c.level === "bilgi" && /Festo DSBC kataloğunda mil çapı 20 mm \(girilen 25 mm\)/.test(c.message))).toBe(true);
     const odd = def.compute({ ...CIFT, D: 0.055 }, ctx);
-    expect(odd.checks.some((c) => c.level === "ok" && /katalog listesindeki çaplardan biri değil.*8, 10, 12, 16, 20, 25 mm.*32, 40, 50, 63, 80, 100, 125 mm.*125 mm üstü/.test(c.message))).toBe(true);
-    expect(odd.checks.every((c) => c.level === "ok")).toBe(true);
+    expect(odd.checks.some((c) => c.level === "bilgi" && /katalog listesindeki çaplardan biri değil.*8, 10, 12, 16, 20, 25 mm.*32, 40, 50, 63, 80, 100, 125 mm.*125 mm üstü/.test(c.message))).toBe(true);
+    expect(odd.checks.every((c) => c.level === "ok" || c.level === "bilgi")).toBe(true);
   });
 
   it("adımlarda basınç bar, çap mm, alan cm² ile yazılır (Pa değil)", () => {

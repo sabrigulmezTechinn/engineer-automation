@@ -103,7 +103,7 @@ describe("tek fazlı", () => {
     expect(r.checks[0]).toMatchObject({ level: "uyari" });
     expect(r.checks[0].message).toMatch(/%3,444.*%1,5/);
     // ρ₂₀/A notu
-    expect(r.checks[1]).toMatchObject({ level: "ok" });
+    expect(r.checks[1]).toMatchObject({ level: "bilgi" });
   });
 
   it("tek faz ile üç faz aynı R, X, I, L için 2/√3 oranında ΔU verir", () => {

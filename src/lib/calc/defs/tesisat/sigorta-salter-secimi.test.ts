@@ -25,7 +25,7 @@ describe("minyatür devre kesici (IEC 60898-1)", () => {
     expect(r.outputs.I2sinir).toBeCloseTo(73.95, 9);
     expect(r.outputs.ImMin).toBeCloseTo(250, 9);
     expect(r.outputs.ImMax).toBeCloseTo(500, 9);
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("B ve D eğrilerinin anlık açma bölgesi (20 A: B 60–100 A, D 200–400 A)", () => {
@@ -40,7 +40,7 @@ describe("minyatür devre kesici (IEC 60898-1)", () => {
     const r = def.compute({ Ib: 22, Iz: 25, koruma: "mcb", egri: "C" }, ctx);
     expect(r.outputs.In).toBe(25);
     expect(r.outputs.I2).toBeCloseTo(36.25, 9);
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("seri yetmezse uyarı (I_b 70 A > 63 A)", () => {
@@ -70,7 +70,7 @@ describe("gG sigorta (IEC 60269)", () => {
     expect(r.outputs.In).toBe(50);
     expect(r.outputs.I2).toBeCloseTo(80, 9);
     expect(r.outputs.I2sinir).toBeCloseTo(87, 9);
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("I_b 22 A, I_z 25 A: MCB 25 A seçerken gG'de 25 A'nın I₂'si (40 A) 36,25 A'yı aşar → uygun değer yok", () => {
@@ -85,7 +85,7 @@ describe("gG sigorta (IEC 60269)", () => {
     const r = def.compute({ Ib: 18, Iz: 24, koruma: "gG", InSecim: 20 }, ctx);
     expect(r.outputs.In).toBe(20);
     expect(r.outputs.I2).toBeCloseTo(32, 9);
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("I_n = 16 A sınırı 1,6 bandına dahil (Enel Tablo 6: 16 ≤ I_n)", () => {
@@ -104,7 +104,7 @@ describe("gG sigorta (IEC 60269)", () => {
     // Elle: I₂ = 1,75·10 = 17,5 ≤ 1,45·14,5 = 21,025
     const b = def.compute({ Ib: 9, Iz: 14.5, koruma: "gG", InSecim: 10, k2: 1.75 }, ctx);
     expect(b.outputs.I2).toBeCloseTo(17.5, 9);
-    expect(b.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(b.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 });
 
@@ -117,7 +117,7 @@ describe("kompakt şalter (IEC 60947-2)", () => {
     expect(r.outputs.IrMin).toBe(180);
     expect(r.outputs.IrMax).toBe(200);
     expect(r.outputs).not.toHaveProperty("In");
-    expect(r.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("I_b > I_z → ayar aralığı yok uyarısı", () => {
@@ -133,14 +133,14 @@ describe("varsayılan dışı birimler (runCalc)", () => {
     const r = run({ Ib: { value: "0,021", unit: "kA" }, Iz: { value: "0,025", unit: "kA" } });
     if (!r.ok) throw new Error(JSON.stringify(r));
     expect(r.result.outputs.In).toBe(25);
-    expect(r.result.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.result.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("sınır: denetlenen I_n 0,051 kA = I_z 51 A → koşul sağlanır", () => {
     const r = run({ Ib: { value: "45", unit: "A" }, Iz: { value: "51", unit: "A" }, InSecim: { value: "0,051", unit: "kA" } });
     if (!r.ok) throw new Error(JSON.stringify(r));
     expect(r.result.outputs.In).toBeCloseTo(51, 9);
-    expect(r.result.checks.filter((c) => c.level !== "ok")).toEqual([]);
+    expect(r.result.checks.filter((c) => c.level === "uyari" || c.level === "hata")).toEqual([]);
   });
 
   it("kompakt: I_r 0,19 kA, I_b 180 A, I_z 0,2 kA; I₂ kA biriminde", () => {

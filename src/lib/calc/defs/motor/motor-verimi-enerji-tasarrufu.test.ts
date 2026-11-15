@@ -28,7 +28,7 @@ describe("SI hesap (elle hesap)", () => {
     expect(r.outputs.dC).toBeCloseTo(8893.2806, 4);
     // Fiyat farkı girilmedi: geri ödeme yok, bilgi notu var
     expect(r.outputs).not.toHaveProperty("geriOdeme");
-    expect(r.checks).toEqual([expect.objectContaining({ level: "ok" })]);
+    expect(r.checks).toEqual([expect.objectContaining({ level: "bilgi" })]);
   });
 
   it("fiyat farkı 25 000 TL, 6000 sa, 4 TL/kWh → 17 786,6 TL/yıl, 1,406 yıl", () => {
