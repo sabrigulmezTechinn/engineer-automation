@@ -4,6 +4,7 @@
  */
 import type { CalcDefinition } from "../../types";
 import { donguYukDirenci } from "./dongu-yuk-direnci";
+import { pidAyari } from "./pid-ayari";
 import { rs485Modbus } from "./rs485-modbus";
 
-export const OTOMASYON: CalcDefinition[] = [donguYukDirenci, rs485Modbus];
+export const OTOMASYON: CalcDefinition[] = [pidAyari, donguYukDirenci, rs485Modbus];
