@@ -15,6 +15,9 @@
  *   https://www.ti.com/lit/pdf/slla272 : "uzunluk [m] × veri hızı [bps] < 10^7" (tutucu kural);
  *   22 AWG, 120 Ω UTP kabloda direnç sınırı ≈ 1200 m. Bu kural Modbus §3.4.3 ile uyumludur (9600 Bd → ≈ 1042 m).
  *   (TI SLLA070D aynı ilişkiyi 10^8 olarak verir; daha tutucu olan SLLA272D kullanıldı.)
+ * - MODBUS Application Protocol Specification V1.1b3 (2012), §6.3 (03 Read Holding Registers),
+ *   https://www.modbus.org/file/secure/modbusprotocolspecification.pdf : yardım metnindeki örnek çerçeve
+ *   uzunlukları (istek PDU 1 + 2 + 2 bayt, yanıt PDU 1 + 1 + 2·N bayt; seri ADU = adres + PDU + CRC).
  */
 import { latexAuto, latexNum, latexQty } from "@/lib/calc/latex";
 import type { CalcDefinition, Check, ComputeInputs, Reference, Step } from "@/lib/calc/types";
@@ -58,7 +61,7 @@ const MESSAGES = {
   devicesOver: (n: number) =>
     `${n} cihaz, tekrarlayıcısız hatta her zaman izin verilen 32 cihazı aşıyor. Cihazların birim yükü (UL) belgelenmiş olmalı veya tekrarlayıcı kullanılmalıdır.`,
   termination:
-    "Sonlandırma: ana hattın iki ucuna (yalnızca iki uca) 150 Ω (0,5 W) direnç; hat polarizasyonu varsa 1 nF (≥ 10 V) seri kondansatörlü 120 Ω (0,25 W). Kablo karakteristik empedansı tipik 120 Ω'dur.",
+    "Sonlandırma: ana hattın iki ucuna (yalnızca iki uca) 150 Ω (0,5 W) direnç; hat polarizasyonu varsa 1 nF (≥ 10 V) seri kondansatörlü 120 Ω (0,25 W). RS-485 kablolarının karakteristik empedansı tipik 120 Ω'dur (TI SLLA272D).",
 } as const;
 
 function num(inputs: ComputeInputs, key: string): number {
@@ -138,6 +141,12 @@ export const rs485Modbus: CalcDefinition = {
       note: "Elektriksel katman. Uzunluk–hız kuralı ve 1200 m değeri TI SLLA272D'den alınmıştır.",
     },
     { ...TI_SLLA272, note: "L·Bd < 10⁷ (tutucu kural); 22 AWG 120 Ω UTP için ≈ 1200 m; 120 Ω sonlandırma." },
+    {
+      standard: "Modbus Application Protocol V1.1b3",
+      title: "MODBUS Application Protocol Specification (Modbus.org, 2012)",
+      clause: "§6.3 03 Read Holding Registers",
+      note: "Örnek çerçeve uzunlukları: istek PDU 5 bayt, yanıt PDU 2 + 2·N bayt; seri hatta + adres (1) + CRC (2).",
+    },
   ],
   inputs: [
     {
@@ -176,7 +185,7 @@ export const rs485Modbus: CalcDefinition = {
       min: 4,
       max: 256,
       integer: true,
-      help: "Adres + fonksiyon kodu + veri + CRC. Ör. 03 Read Holding Registers isteği 8 bayttır. RTU çerçevesi 4–256 bayt.",
+      help: "Adres + fonksiyon kodu + veri + CRC. Ör. 03 Read Holding Registers isteği: 1 + 1 + 2 + 2 + 2 = 8 bayt. RTU çerçevesi 4–256 bayt.",
     },
     {
       kind: "number",

@@ -93,7 +93,7 @@ export const pidAyari: CalcDefinition = {
   references: [
     {
       ...ASTROM,
-      note: "Ziegler & Nichols (1942), Trans. ASME 64:759–768 kurallarının yorumu. Özgün makalede kapalı çevrim PI: 0,45·K_u, T_u/1,2.",
+      note: "Ziegler & Nichols (1942), Trans. ASME 64:759–768 kurallarının yorumu. Özgün makaledeki kapalı çevrim PI değerleri 0,45·K_u ve T_u/1,2 olarak aktarılır (Hellem, NTNU 2001; özgün metin incelenmedi); burada Tablo 6.2 kullanıldı.",
     },
   ],
   inputs: [
@@ -183,6 +183,7 @@ export const pidAyari: CalcDefinition = {
       default: 30,
       min: 0,
       minExclusive: true,
+      help: "Teğet yöntemiyle tutarlı olmalı: T = K / (en dik teğetin eğimi, birim basamak başına). Böylece a = K·L/T teğetin dikey eksen kesimidir.",
       visibleWhen: { key: "yontem", equals: "acik" },
     },
   ],

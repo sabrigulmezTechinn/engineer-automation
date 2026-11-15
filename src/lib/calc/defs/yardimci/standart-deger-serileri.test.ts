@@ -81,18 +81,38 @@ describe("standardNeighbours (elle hesap)", () => {
     expect(r.nearest).toBeCloseTo(1000, 9);
   });
 
-  it("standart değer kendisine eşlenir (kayan nokta artığına rağmen)", () => {
-    for (const x of [4.7e3, 4700.000000000001, 4699.999999999999, 47e-12, 3.3e-6, 1e-3]) {
+  it("standart değer kendisine eşlenir (kayan nokta artığına rağmen); alt/üst kesin komşulardır", () => {
+    // E12: … 3,9 – 4,7 – 5,6 …; 47 pF → 39 / 56 pF; 3,3 µF → 2,7 / 3,9 µF; 1 mF → 0,82 / 1,2 mF
+    const cases: [number, number, number][] = [
+      [4.7e3, 3.9e3, 5.6e3],
+      [4700.000000000001, 3.9e3, 5.6e3],
+      [4699.999999999999, 3.9e3, 5.6e3],
+      [47e-12, 39e-12, 56e-12],
+      [3.3e-6, 2.7e-6, 3.9e-6],
+      [1e-3, 0.82e-3, 1.2e-3],
+    ];
+    for (const [x, lo, hi] of cases) {
       const r = standardNeighbours(x, "E12");
-      expect(r.lower, String(x)).toBeCloseTo(x, 12 - Math.floor(Math.log10(x)));
-      expect(r.upper).toBe(r.lower);
-      expect(r.nearest).toBe(r.lower);
+      const digits = 12 - Math.floor(Math.log10(x));
+      expect(r.exact, String(x)).toBe(true);
+      expect(r.nearest, String(x)).toBeCloseTo(x, digits);
+      expect(r.lower, String(x)).toBeCloseTo(lo, digits);
+      expect(r.upper, String(x)).toBeCloseTo(hi, digits);
     }
+  });
+
+  it("dekat sınırındaki standart değer: 10 kΩ (E12) → alt 8,2 kΩ, üst 12 kΩ; 8,2 kΩ → üst 10 kΩ", () => {
+    const a = standardNeighbours(10000, "E12");
+    expect(a.nearest).toBeCloseTo(10000, 9);
+    expect(a.lower).toBeCloseTo(8200, 9);
+    expect(a.upper).toBeCloseTo(12000, 9);
+    const b = standardNeighbours(8200, "E12");
+    expect(b.upper).toBeCloseTo(10000, 9);
   });
 
   it("E24: 5,0 → alt 4,7, üst 5,1, en yakın 5,1", () => {
     const r = standardNeighbours(5.0, "E24");
-    expect(r).toEqual({ lower: 4.7, upper: 5.1, nearest: 5.1 });
+    expect(r).toEqual({ lower: 4.7, upper: 5.1, nearest: 5.1, exact: false });
   });
 
   it("E96: 9,6 kΩ → alt 9,53 kΩ (en yakın), üst 9,76 kΩ", () => {
@@ -102,17 +122,17 @@ describe("standardNeighbours (elle hesap)", () => {
     expect(r.nearest).toBeCloseTo(9530, 9);
   });
 
-  it("E192: 9,19 → alt 9,09, üst 9,20, en yakın 9,20; 9,2 standarttır", () => {
-    expect(standardNeighbours(9.19, "E192")).toEqual({ lower: 9.09, upper: 9.2, nearest: 9.2 });
-    expect(standardNeighbours(9.2, "E192")).toEqual({ lower: 9.2, upper: 9.2, nearest: 9.2 });
+  it("E192: 9,19 → alt 9,09, üst 9,20, en yakın 9,20; 9,2 standarttır (komşular 9,09 ve 9,31)", () => {
+    expect(standardNeighbours(9.19, "E192")).toEqual({ lower: 9.09, upper: 9.2, nearest: 9.2, exact: false });
+    expect(standardNeighbours(9.2, "E192")).toEqual({ lower: 9.09, upper: 9.31, nearest: 9.2, exact: true });
   });
 
   it("tam ortada eşitlikte üst değer seçilir: E6'da 1,25 → 1,5", () => {
-    expect(standardNeighbours(1.25, "E6")).toEqual({ lower: 1, upper: 1.5, nearest: 1.5 });
+    expect(standardNeighbours(1.25, "E6")).toEqual({ lower: 1, upper: 1.5, nearest: 1.5, exact: false });
   });
 
   it("dekadın sonu: E24'te 9,9 → alt 9,1, üst 10", () => {
-    expect(standardNeighbours(9.9, "E24")).toEqual({ lower: 9.1, upper: 10, nearest: 10 });
+    expect(standardNeighbours(9.9, "E24")).toEqual({ lower: 9.1, upper: 10, nearest: 10, exact: false });
   });
 
   it("geçersiz değerde fırlatır", () => {
@@ -147,10 +167,13 @@ describe("motor üzerinden (runCalc)", () => {
     expect(r.result.outputs.R_alt).toBeCloseTo(8200, 9);
   });
 
-  it("kondansatör µF ile: 3,3 µF E6'da standarttır; 85 nF E12 → 82 nF", () => {
+  it("kondansatör µF ile: 3,3 µF E6'da standarttır (komşular 2,2 / 4,7 µF); 85 nF E12 → 82 nF", () => {
     const a = run({ bilesen: { value: "kondansator" }, seri: { value: "E6" }, C: { value: "3,3", unit: "uF" } });
     expect(a.result.outputs.C_yakin).toBeCloseTo(3.3e-6, 18);
+    expect(a.result.outputs.C_alt).toBeCloseTo(2.2e-6, 18);
+    expect(a.result.outputs.C_ust).toBeCloseTo(4.7e-6, 18);
     expect(a.result.outputs.sapma_yakin).toBe(0);
+    expect(a.result.outputs.sapma_alt).toBeCloseTo(-1.1 / 3.3, 12);
     expect(a.result.checks).toEqual([expect.objectContaining({ level: "ok" })]);
 
     const b = run({ bilesen: { value: "kondansator" }, seri: { value: "E12" } });
@@ -165,10 +188,12 @@ describe("motor üzerinden (runCalc)", () => {
     expect(r.result.outputs.L_ust).toBeCloseTo(4.7e-3, 15);
   });
 
-  it("47 pF girişi (4,6999…e-11 olsa da) standart kabul edilir", () => {
+  it("47 pF girişi (4,6999…e-11 olsa da) standart kabul edilir; E6 komşuları 33 ve 68 pF", () => {
     const r = run({ bilesen: { value: "kondansator" }, seri: { value: "E6" }, C: { value: "47", unit: "pF" } });
-    expect(r.result.outputs.C_ust).toBe(r.result.outputs.C_alt);
-    expect(r.result.outputs.sapma_ust).toBeCloseTo(0, 9);
+    expect(r.result.outputs.sapma_yakin).toBe(0);
+    expect(r.result.outputs.C_alt).toBeCloseTo(33e-12, 22);
+    expect(r.result.outputs.C_ust).toBeCloseTo(68e-12, 22);
+    expect(r.result.checks).toEqual([expect.objectContaining({ level: "ok" })]);
   });
 
   it("sıfır ve negatif değer alan hatası verir", () => {

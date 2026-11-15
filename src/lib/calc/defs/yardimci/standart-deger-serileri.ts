@@ -4,9 +4,10 @@
  * değerin hemen altındaki ve üstündeki standart değerleri ve yüzde sapmalarını verir.
  *
  * Tanımlar:
- * - alt = serideki en büyük değer ≤ x, üst = serideki en küçük değer ≥ x. x bir standart değerse üçü de x'tir.
- * - En yakın = |s − x| en küçük olan (alt veya üst); bu, x'e göre yüzde sapması en küçük olan değerdir.
- *   Tam ortada eşitlikte üst değer seçilir.
+ * - alt = serideki x'ten küçük en büyük değer, üst = x'ten büyük en küçük değer (kesin komşular).
+ * - En yakın: x bir standart değerse (eşitlik payı içinde) x'in kendisi; değilse |s − x| en küçük olan
+ *   (alt veya üst), yani x'e göre yüzde sapması en küçük olan değer. Tam ortada eşitlikte üst değer seçilir.
+ *   Böylece 10 kΩ (E12) için en yakın 10 kΩ, alt 8,2 kΩ, üst 12 kΩ olur.
  * - Sapma δ = (s − x) / x.
  * Değerler dekatlar arasında taşınır: 9,6 kΩ için E12'de üst değer bir sonraki dekadın ilk değeri 10 kΩ'dur.
  */
@@ -38,10 +39,12 @@ export interface StandardNeighbours {
   lower: number;
   upper: number;
   nearest: number;
+  /** x serideki bir değere eşit mi (eşitlik payı içinde) */
+  exact: boolean;
 }
 
 /**
- * x > 0 için seçilen serideki alt, üst ve en yakın standart değer.
+ * x > 0 için seçilen serideki kesin alt ve üst komşular ve en yakın standart değer.
  * Adaylar x'in dekadı ve komşu iki dekattan üretilir (log10 yuvarlama hatasına karşı).
  */
 export function standardNeighbours(x: number, id: ESeriesId): StandardNeighbours {
@@ -56,15 +59,17 @@ export function standardNeighbours(x: number, id: ESeriesId): StandardNeighbours
   }
   let lower = -Infinity;
   let upper = Infinity;
+  let match: number | undefined;
   for (const c of candidates) {
-    if (c <= x * (1 + REL_TOL) && c > lower) lower = c;
-    if (c >= x * (1 - REL_TOL) && c < upper) upper = c;
+    if (Math.abs(c - x) <= x * REL_TOL) match = c;
+    else if (c < x && c > lower) lower = c;
+    else if (c > x && c < upper) upper = c;
   }
   if (!Number.isFinite(lower) || !Number.isFinite(upper)) {
     throw new Error(`standart-deger-serileri: ${x} için komşu değer bulunamadı`);
   }
-  const nearest = x - lower < upper - x ? lower : upper;
-  return { lower, upper, nearest };
+  const nearest = match ?? (x - lower < upper - x ? lower : upper);
+  return { lower, upper, nearest, exact: match !== undefined };
 }
 
 const MESSAGES = {
@@ -88,13 +93,13 @@ export const standartDegerSerileri: CalcDefinition = {
     "Direnç, kondansatör veya bobin değerinin IEC 60063 E serilerindeki (E6–E192) en yakın standart karşılığını, hemen altındaki ve üstündeki standart değerleri ve yüzde sapmaları bulun.",
   formulas: [
     { label: "Dekat ve mantis", latex: "x = m \\cdot 10^{k}, \\quad 1 \\le m < 10" },
-    { label: "Alt ve üst standart değer", latex: "x_{\\text{alt}} \\le x \\le x_{\\text{üst}}" },
+    { label: "Komşu standart değerler", latex: "x_{\\text{alt}} < x < x_{\\text{üst}}" },
     { label: "Sapma", latex: "\\delta = \\frac{x_{\\text{std}} - x}{x} \\cdot 100\\,\\%" },
   ],
   references: [
     {
-      standard: "IEC 60063:2015",
-      title: "Preferred number series for resistors and capacitors",
+      standard: "IEC 60063",
+      title: "Preferred number series for resistors and capacitors (2015)",
       clause: "4.1 (Tablo 1: E3–E24), 4.2 (Tablo 2: E48–E192)",
       note: "Seri değerleri Vishay belge no. 28372 'Standard Series Values in a Decade … according to IEC 60063' belgesinden alınmıştır.",
     },
@@ -184,7 +189,7 @@ export const standartDegerSerileri: CalcDefinition = {
     if (!E_SERIES[series]) throw new Error(`standart-deger-serileri: bilinmeyen seri "${String(series)}"`);
 
     const x = num(inputs, meta.input);
-    const { lower, upper, nearest } = standardNeighbours(x, series);
+    const { lower, upper, nearest, exact } = standardNeighbours(x, series);
     // Eşitlik payı içindeki fark (3,3 µF → 3,2999999999999996e-6 F) sıfır sapma sayılır.
     const dev = (s: number) => {
       const d = (s - x) / x;
@@ -196,7 +201,7 @@ export const standartDegerSerileri: CalcDefinition = {
     const steps: Step[] = [
       {
         label: `${series} serisinde komşu standart değerler`,
-        latex: `${s}_{\\text{alt}} = ${q(lower)} \\le ${s} = ${q(x)} \\le ${s}_{\\text{üst}} = ${q(upper)}`,
+        latex: `${s}_{\\text{alt}} = ${q(lower)} < ${s} = ${q(x)} < ${s}_{\\text{üst}} = ${q(upper)}`,
       },
       {
         label: "En yakın standart değer ve sapması",
@@ -204,7 +209,7 @@ export const standartDegerSerileri: CalcDefinition = {
       },
     ];
     const checks: Check[] = [];
-    if (lower === upper) checks.push({ level: "ok", message: MESSAGES.exact(series) });
+    if (exact) checks.push({ level: "ok", message: MESSAGES.exact(series) });
 
     return {
       outputs: {

@@ -9,8 +9,8 @@
  * https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf): No. 0000 = 0,4600 inç, No. 36 = 0,0050 inç,
  * aradaki 38 boyut geometrik dizidir; oran 92^(1/39) = 1,122 932 2. Buradan
  *   d_n = 0,005 inç · 92^((36 − n)/39) = 0,127 mm · 92^((36 − n)/39),  0000 → n = −3.
- * Bu araç 4/0 (n = −3) … 40 aralığını kapsar. ASTM B258 tablosu bu formülden üretilir (standardın metni
- * ücretlidir; kapsadığı aralık burada doğrulanmadı).
+ * Bu araç 4/0 (n = −3) … 40 aralığını kapsar. Formül NBS Handbook 100'den alınmıştır; ASTM B258'in metni
+ * ücretli olduğu için incelenmedi (kapsadığı aralık burada doğrulanmadı).
  */
 import { latexNum, latexQty } from "@/lib/calc/latex";
 import type { CalcDefinition, Check, ComputeInputs, InputSpec, OutputSpec, Reference, Step } from "@/lib/calc/types";
@@ -249,7 +249,7 @@ export const birimDonusturucu: CalcDefinition = {
     {
       standard: "ASTM B258",
       title: "Standard nominal diameters and cross-sectional areas of AWG sizes of solid round wires used as electrical conductors",
-      note: "AWG tanım formülü NBS Handbook 100 §2.2'den doğrulandı.",
+      note: "Standart metni incelenmedi; AWG tanım formülü NBS Handbook 100 §2.2'den alındı.",
     },
     { ...NBS100, note: "No. 0000 = 0,4600 inç, No. 36 = 0,0050 inç; aradaki 38 boyut geometrik dizi (oran 92^(1/39))." },
   ],
