@@ -3,8 +3,8 @@
 Türkçe mühendislik hesaplama platformu. Kapsam: docs/KAPSAM.md
 
 ## Model düzeni
-- Ana oturum (Sonnet): kodu yazar, düzeltmeleri uygular, işi koordine eder.
-- Danışman (Opus, advisor aracı). Şu üç anda danışmana başvur:
+- Ana oturum (Opus): kodu yazar, düzeltmeleri uygular, işi koordine eder.
+- Danışman (Fable, advisor aracı). Şu üç anda danışmana başvur:
   1. Bir planı kesinleştirmeden önce
   2. Aynı hata ikinci kez ortaya çıktığında
   3. İşi bitti olarak bildirmeden önce (son diff'i incelet)
