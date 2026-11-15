@@ -24,7 +24,6 @@ export const MIL = 25.4e-6;
 const T20 = 293.15;
 
 /** Hüküm olmayan notlar (yöntem, hatırlatma) için seviye */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 export type PcbMod = "genislik" | "akim";
 export type PcbKatman = "dis" | "ic";
@@ -335,7 +334,7 @@ export const pcbYolGenisligi: CalcDefinition = {
       steps.push({ label: "Güç kaybı", latex: `P = I^2 \\cdot R = (${q("I_izin", I)})^2 \\cdot ${q("R", R)} = ${q("P", Pk)}` });
       Object.assign(outputs, { R, dV, P: Pk });
     } else {
-      checks.push({ level: BILGI, message: MESSAGES.direncYok });
+      checks.push({ level: "bilgi", message: MESSAGES.direncYok });
     }
 
     // IPC-2221 grafiklerinin kapsamı
@@ -362,7 +361,7 @@ export const pcbYolGenisligi: CalcDefinition = {
         reference: REF_ADVANCEDPCB,
       });
     }
-    checks.push({ level: BILGI, message: MESSAGES.ipc2152 });
+    checks.push({ level: "bilgi", message: MESSAGES.ipc2152 });
 
     return { outputs, steps, checks };
   },

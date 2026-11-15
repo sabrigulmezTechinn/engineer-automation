@@ -51,7 +51,6 @@ import {
 } from "./kod-ortak";
 
 /** Hüküm olmayan notlar (kod metni, yöntem, hatırlatma) için seviye */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 // ---------------------------------------------------------------------------
 // Referanslar
@@ -496,7 +495,7 @@ function renkHesabi(inputs: ComputeInputs) {
     ozet += `, ±${Math.round(tcr * 1e6)} ppm/K`;
   }
   const checks: Check[] = [
-    { level: BILGI, message: `Bantlar (soldan sağa): ${parcalar.join(" – ")} → ${ozet}.`, reference: REF_VISHAY_20020 },
+    { level: "bilgi", message: `Bantlar (soldan sağa): ${parcalar.join(" – ")} → ${ozet}.`, reference: REF_VISHAY_20020 },
     seriKontrolu("R", R, MESSAGES.bantYonu, REF_TT_TN004),
   ];
   return { outputs, steps, checks };
@@ -526,7 +525,7 @@ function smdHesabi(inputs: ComputeInputs) {
       label: `EIA-96: kod ${String(n).padStart(2, "0")} → ${taban}, ${harf} → ${CARPAN_METNI[us]}`,
       latex: `R = ${taban} \\cdot 10^{${us}}\\,\\Omega = ${q("R", R)}`,
     });
-    checks.push({ level: BILGI, message: `Kod ${kod} → ${metin("R", R)}. ${MESSAGES.eia96}`, reference: REF_BOURNS_CR });
+    checks.push({ level: "bilgi", message: `Kod ${kod} → ${metin("R", R)}. ${MESSAGES.eia96}`, reference: REF_BOURNS_CR });
   } else if (tip === "3" || tip === "4") {
     const chars = smdKarakterleri(inputs, tip);
     const d = smdKodDegeri(chars);
@@ -549,7 +548,7 @@ function smdHesabi(inputs: ComputeInputs) {
       });
     }
     checks.push({
-      level: BILGI,
+      level: "bilgi",
       message: `Kod ${kod} → ${metin("R", R)}. ${tip === "3" ? MESSAGES.smd3 : MESSAGES.smd4}`,
       reference: REF_VISHAY_20020,
     });
@@ -557,7 +556,7 @@ function smdHesabi(inputs: ComputeInputs) {
     throw new Error(`renk-smd-kondansator-kodlari: bilinmeyen SMD kod biçimi "${String(tip)}"`);
   }
 
-  if (R === 0) checks.push({ level: BILGI, message: MESSAGES.kopru, reference: REF_BOURNS_CR });
+  if (R === 0) checks.push({ level: "bilgi", message: MESSAGES.kopru, reference: REF_BOURNS_CR });
   else checks.push(seriKontrolu("R", R, MESSAGES.kodKontrol));
   return { outputs: { R } as Record<string, number>, steps, checks };
 }
@@ -606,7 +605,7 @@ function kondansatorHesabi(inputs: ComputeInputs) {
   }
 
   const kod = `${d1}${d2}${d3}${harf === "yok" ? "" : harf}`;
-  checks.unshift({ level: BILGI, message: `Kod ${kod} → ${metin("C", C)} (${tolMetni}).`, reference: harf === "yok" ? REF_VISHAY_45171 : REF_KEMET });
+  checks.unshift({ level: "bilgi", message: `Kod ${kod} → ${metin("C", C)} (${tolMetni}).`, reference: harf === "yok" ? REF_VISHAY_45171 : REF_KEMET });
   checks.push(seriKontrolu("C", C, MESSAGES.kodKontrol));
   return { outputs, steps, checks };
 }
@@ -629,7 +628,7 @@ function tersHesabi(inputs: ComputeInputs) {
     const g = anlamliHane(R, s);
     const renkler = bantRenkleri(g.m, g.us);
     if (!renkler) {
-      checks.push({ level: BILGI, message: MESSAGES.tersYok(bant, bant === "4" ? "0,1 Ω – 99 GΩ" : "1 Ω – 999 GΩ"), reference: REF_VISHAY_20020 });
+      checks.push({ level: "bilgi", message: MESSAGES.tersYok(bant, bant === "4" ? "0,1 Ω – 99 GΩ" : "1 Ω – 999 GΩ"), reference: REF_VISHAY_20020 });
       continue;
     }
     // Birim çevirisi artığı (0,23 kΩ → 230,00000000000003 Ω) sapma olarak gösterilmesin.
@@ -644,7 +643,7 @@ function tersHesabi(inputs: ComputeInputs) {
     ];
     const yuvarlama = sapma !== 0 ? ` (girilen değerden sapma ${metin("sapma4", sapma)})` : "";
     checks.push({
-      level: BILGI,
+      level: "bilgi",
       message: `${bant} bant (soldan sağa): ${adlar.join(" – ")} → ${metin("R", g.deger)} ${yuzde(tolBilgi.tol)}${yuvarlama}.`,
       reference: REF_VISHAY_20020,
     });
@@ -653,7 +652,7 @@ function tersHesabi(inputs: ComputeInputs) {
   const smd = smdKodlari(R);
   const yok = MESSAGES.tersSmdYok;
   checks.push({
-    level: BILGI,
+    level: "bilgi",
     message: MESSAGES.tersSmd(smd.uc ?? yok, smd.dort ?? yok, smd.eia96 ?? yok),
     reference: REF_VISHAY_20020,
   });
