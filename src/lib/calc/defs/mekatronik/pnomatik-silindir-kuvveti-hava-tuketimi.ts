@@ -14,7 +14,7 @@ import type { CalcContext, CalcDefinition, Check, ComputeInputs, NumberInputSpec
 import { formatNumber, formatQuantity, fromSI } from "@/lib/units";
 import { daireAlani, num, optNum } from "./akiskan-ortak";
 
-const WHERE = "pnomatik-silindir";
+const WHERE = "pnomatik-silindir-kuvveti-hava-tuketimi";
 
 export type PnomatikEtki = "cift" | "tek";
 
@@ -186,7 +186,7 @@ const MESSAGES = {
     `∅${D} ${standart} standart piston çapı; ${katalog} kataloğunda mil çapı ${dk} (girilen ${d}).`,
   catalogBoreOnly: (D: string, standart: string) => `∅${D} ${standart} standart piston çapı.`,
   notInCatalog: (list6432: string, list15552: string) =>
-    `Piston çapı katalogdaki standart çaplardan biri değil (Festo DSNU, ISO 6432: ${list6432} mm; Festo DSBC, ISO 15552: ${list15552} mm).`,
+    `Piston çapı katalog listesindeki çaplardan biri değil (Festo DSNU, ISO 6432: ${list6432} mm; Festo DSBC, ISO 15552: ${list15552} mm). ISO 15552'nin 125 mm üstü çapları (320 mm'ye kadar) bu listede yok; üretici kataloğuna bakın.`,
 } as const;
 
 function crossChecks(inputs: ComputeInputs): Check[] {
@@ -355,7 +355,11 @@ export const pnomatikSilindir: CalcDefinition = {
     );
 
     const seri = ctx.limits.mekatronikAkiskan.pnomatikSeriBasinci;
-    if (p > seri * (1 + 1e-9)) checks.push({ level: "uyari", message: MESSAGES.pressureOverSeries, reference: REF_15552 });
+    if (p > seri * (1 + 1e-9)) {
+      // ISO 6432: 8–25 mm, ISO 15552: 32 mm ve üstü
+      const reference = D <= 0.025 + 1e-9 ? REF_6432 : REF_15552;
+      checks.push({ level: "uyari", message: MESSAGES.pressureOverSeries, reference });
+    }
     checks.push({ level: "ok", message: MESSAGES.assumptions, reference: REF_8778 });
 
     return { outputs, steps, checks };

@@ -18,7 +18,7 @@ import type { CalcDefinition, CalcResult, Check, NumberInputSpec, OutputSpec, Re
 import { formatNumber, formatQuantity } from "@/lib/units";
 import { G_N, daireAlani, num, optNum } from "./akiskan-ortak";
 
-const WHERE = "vakum-vantuz";
+const WHERE = "vakum-vantuz-tutma-kuvveti";
 
 export type VakumYukDurumu = "I" | "II" | "III";
 
@@ -155,6 +155,14 @@ const OUT_FTOP: OutputSpec = {
   defaultUnit: "N",
   units: ["N", "kN", "kgf"],
 };
+const OUT_FIZIN: OutputSpec = {
+  key: "Fizin",
+  label: "Emniyetli tutma kuvveti (n·Δp·A/S)",
+  symbol: "F_{\\text{izin}}",
+  dimension: "kuvvet",
+  defaultUnit: "N",
+  units: ["N", "kN", "kgf"],
+};
 const OUT_SG: OutputSpec = {
   key: "Sgercek",
   label: "Seçilen vantuzlarla gerçek emniyet katsayısı",
@@ -201,6 +209,10 @@ export const vakumVantuz: CalcDefinition = {
     { label: "Yük durumu III — vantuz dikey, kuvvet dikey", latex: "F_{\\text{TH}} = \\frac{m}{\\mu} \\cdot (g + a) \\cdot S" },
     { label: "Bir vantuzun teorik tutma kuvveti", latex: "F_v = \\Delta p \\cdot A = \\Delta p \\cdot \\frac{\\pi d^2}{4}" },
     { label: "Gerekli efektif çap (n vantuz)", latex: "d_{\\text{gerekli}} = \\sqrt{\\frac{4 \\, F_{\\text{TH}}}{\\pi \\cdot n \\cdot \\Delta p}}" },
+    {
+      label: "Emniyetli tutma kuvveti (yük durumunun gerektirdiği F_TH/S ile karşılaştırılır)",
+      latex: "F_{\\text{izin}} = \\frac{n \\cdot \\Delta p \\cdot A}{S} \\geq \\frac{F_{\\text{TH}}}{S}",
+    },
     { label: "Gerçek emniyet katsayısı", latex: "S_{\\text{gerçek}} = S \\cdot \\frac{n \\cdot F_v}{F_{\\text{TH}}}" },
   ],
   references: [REF_YUK, REF_CAP],
@@ -224,7 +236,7 @@ export const vakumVantuz: CalcDefinition = {
     IN_N,
     IN_DV,
   ],
-  outputs: [OUT_FTH, OUT_DREQ, OUT_FV, OUT_FTOP, OUT_SG],
+  outputs: [OUT_FTH, OUT_DREQ, OUT_FV, OUT_FTOP, OUT_FIZIN, OUT_SG],
 
   compute: (inputs, ctx): CalcResult => {
     const yuk = inputs.yuk as VakumYukDurumu;
@@ -282,8 +294,10 @@ export const vakumVantuz: CalcDefinition = {
     if (dv !== undefined) {
       const Fvantuz = dp * daireAlani(dv);
       const Ftoplam = n * Fvantuz;
+      const Fizin = Ftoplam / S;
+      const Fyuk = FTH / S;
       const Sgercek = (S * Ftoplam) / FTH;
-      Object.assign(outputs, { Fvantuz, Ftoplam, Sgercek });
+      Object.assign(outputs, { Fvantuz, Ftoplam, Fizin, Sgercek });
       steps.push(
         {
           label: "Bir vantuzun teorik tutma kuvveti",
@@ -292,6 +306,10 @@ export const vakumVantuz: CalcDefinition = {
         {
           label: "Toplam teorik tutma kuvveti",
           latex: `F_{\\text{toplam}} = n \\cdot F_v = ${latexNum(n)} \\cdot ${qF(Fvantuz)} = ${qF(Ftoplam)}`,
+        },
+        {
+          label: "Emniyetli tutma kuvveti (yük durumunun gerektirdiği F_TH/S ile karşılaştırma)",
+          latex: `F_{\\text{izin}} = \\frac{n \\cdot \\Delta p \\cdot A}{S} = \\frac{${qF(Ftoplam)}}{${latexNum(S)}} = ${qF(Fizin)} ${Fizin >= Fyuk * (1 - 1e-9) ? "\\geq" : "<"} \\frac{F_{\\text{TH}}}{S} = ${qF(Fyuk)}`,
         },
         {
           label: "Gerçek emniyet katsayısı",

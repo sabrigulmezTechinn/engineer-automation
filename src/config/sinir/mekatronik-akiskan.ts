@@ -82,12 +82,12 @@ export const MEKATRONIK_AKISKAN_SINIRLARI = {
   },
 
   /**
-   * Rulman ömrü güvenilirlik düzeltme katsayısı a₁ (ISO 281:2007 ile uyumlu değerler). Anahtar: güvenilirlik %.
-   * - SKF Rolling bearings catalogue (PUB BU/P1 17000/1 EN), Tablo 3 "Values for life adjustment factor a1", s. 90:
+   * Rulman ömrü güvenilirlik düzeltme katsayısı a₁. Anahtar: güvenilirlik %.
+   * - SKF Rolling bearings catalogue (PUB BU/P1 17000/1 EN), Tablo 3 "Values for life adjustment factor a1", s. 90
+   *   ("values in accordance with ISO 281"):
    *   https://www.skf.com/binaries/pub12/Images/0901d196802809de-Rolling-bearings---17000_1-EN_tcm_12-121486.pdf
-   * - Aynı değerler JTEKT (Koyo) SSS, "Life modification factor for reliability a1" (JIS B 1518:2013'ten):
+   * - Aynı değerler JTEKT (Koyo) SSS, "Life modification factor for reliability a1" ("Citation from JIS B 1518:2013"):
    *   https://www.jtekt.co.jp/products/bearing/en/support/faq/article/002207.php
-   * (Eski ISO 281:1990 değerleri, ör. %99 → 0,21, kullanılmaz.)
    */
   rulmanA1: {
     "90": 1,

@@ -17,7 +17,7 @@ import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
 import type { InputState } from "@/lib/calc/types";
 import { getUnit } from "@/lib/units";
 import { G_N } from "./akiskan-ortak";
-import { vakumVantuz as def } from "./vakum-vantuz";
+import { vakumVantuz as def } from "./vakum-vantuz-tutma-kuvveti";
 
 const ctx = defaultContext();
 const BAR = 1e5;
@@ -82,13 +82,16 @@ describe("gerekli vantuz çapı (Schmalz örneği, 50 kg, 0,4 bar, 4 vantuz, S 2
 describe("seçilen vantuz kontrolü", () => {
   it("varsayılan: 20 kg, 5 m/s², S 2, 0,6 bar, 4 × ∅60 mm → yeterli, S_gerçek 2,29", () => {
     // Elle: F_TH = 20·14,80665·2 = 592,266 N; d_gerekli = √(4·592,266/(π·4·60 000)) = 56,054 mm;
-    // F_v = 60 000·π·0,03² = 169,646 N; F_toplam = 678,584 N; S_gerçek = 2·678,584/592,266 = 2,29148
+    // F_v = 60 000·π·0,03² = 169,646 N; F_toplam = 678,584 N; S_gerçek = 2·678,584/592,266 = 2,29148;
+    // F_izin = n·Δp·A/S = 678,584/2 = 339,292 N ≥ F_TH/S = m·(g + a) = 20·14,80665 = 296,133 N
     const r = def.compute({ yuk: "I", m: 20, a: 5, S: 2, dp: 0.6 * BAR, n: 4, dv: 0.06 }, ctx);
     expect(r.outputs.FTH).toBeCloseTo(592.266, 3);
     expect(r.outputs.dGerekli).toBeCloseTo(0.0560542, 7);
     expect(r.outputs.Fvantuz).toBeCloseTo(169.646, 3);
     expect(r.outputs.Ftoplam).toBeCloseTo(678.584, 3);
     expect(r.outputs.Sgercek).toBeCloseTo(2.291484, 6);
+    expect(r.outputs.Fizin).toBeCloseTo(339.292, 3);
+    expect(r.steps.some((s) => s.latex.includes("339{,}3\\,\\mathrm{N} \\geq \\frac{F_{\\text{TH}}}{S} = 296{,}1\\,\\mathrm{N}"))).toBe(true);
     expect(r.checks.filter((c) => c.level === "uyari")).toEqual([]);
     expect(r.checks[0].message).toMatch(/yeterli.*678,6 N.*592,3 N.*2,29/);
   });
@@ -104,6 +107,9 @@ describe("seçilen vantuz kontrolü", () => {
     expect(small.checks.filter((c) => c.level === "uyari")).toEqual([
       expect.objectContaining({ message: expect.stringMatching(/yetersiz/) }),
     ]);
+    // Elle: F_izin = 4·60 000·π·0,025²/2 = 235,619 N < F_TH/S = 296,133 N
+    expect(small.outputs.Fizin).toBeCloseTo(235.619, 3);
+    expect(small.steps.some((s) => s.latex.includes("< \\frac{F_{\\text{TH}}}{S}"))).toBe(true);
     const lowS = def.compute({ yuk: "I", m: 20, a: 5, S: 1.2, dp: 0.6 * BAR, n: 4 }, ctx);
     expect(lowS.checks.filter((c) => c.level === "uyari")).toEqual([
       expect.objectContaining({ message: expect.stringMatching(/1,5/), reference: expect.objectContaining({ standard: "Schmalz Vacuum Knowledge" }) }),
@@ -128,7 +134,7 @@ describe("varsayılan dışı birimler (runCalc)", () => {
   it("0,05 t, 0,5 g, yük durumu II (μ 0,4), S 2,5, 700 mbar, 6 × 8 cm → yetersiz uyarısı", () => {
     // Elle: a = 0,5·9,80665 = 4,903325 m/s²; F_TH = 50·(9,80665 + 4,903325/0,4)·2,5 = 2758,1203 N;
     // d_gerekli = √(4·2758,12/(π·6·70 000)) = 91,4402 mm; F_v = 70 000·π·0,04² = 351,8584 N;
-    // F_toplam = 2111,1503 N < F_TH → S_gerçek = 2,5·2111,15/2758,12 = 1,913577
+    // F_toplam = 2111,1503 N < F_TH → S_gerçek = 2,5·2111,15/2758,12 = 1,913577; F_izin = 2111,1503/2,5 = 844,4601 N
     const r = run(
       {
         yuk: { value: "II" },
@@ -149,6 +155,7 @@ describe("varsayılan dışı birimler (runCalc)", () => {
     expect(o.Fvantuz).toBeCloseTo(351.8584, 3);
     expect(o.Ftoplam).toBeCloseTo(2111.1503, 3);
     expect(o.Sgercek).toBeCloseTo(1.913577, 6);
+    expect(o.Fizin).toBeCloseTo(844.4601, 3);
     expect(r.outputs.find((x) => x.key === "FTH")).toMatchObject({ unit: "kN" });
     expect(r.outputs.find((x) => x.key === "dGerekli")).toMatchObject({ unit: "cm", formatted: "9,144 cm" });
     expect(r.result.checks.filter((c) => c.level === "uyari")).toHaveLength(1);

@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
 import type { InputState } from "@/lib/calc/types";
-import { pnomatikSilindir as def } from "./pnomatik-silindir";
+import { pnomatikSilindir as def } from "./pnomatik-silindir-kuvveti-hava-tuketimi";
 
 const ctx = defaultContext();
 const BAR = 1e5;
@@ -112,13 +112,16 @@ describe("doğrulama ve kontroller", () => {
       expect.objectContaining({ message: expect.stringMatching(/10 bar/), reference: expect.objectContaining({ standard: "ISO 15552" }) }),
     ]);
     expect(def.compute({ ...CIFT, p: 10 * BAR }, ctx).checks.filter((c) => c.level === "uyari")).toEqual([]);
+    // ∅8–25 mm silindirde referans ISO 6432
+    const small = def.compute({ ...CIFT, D: 0.02, d: 0.008, p: 12 * BAR }, ctx);
+    expect(small.checks.find((c) => c.level === "uyari")?.reference?.standard).toBe("ISO 6432");
   });
 
   it("katalog karşılaştırması: mil farklı ve standart dışı çap bilgi düzeyinde", () => {
     const rod = def.compute({ ...CIFT, d: 0.025 }, ctx);
     expect(rod.checks.some((c) => c.level === "ok" && /Festo DSBC kataloğunda mil çapı 20 mm \(girilen 25 mm\)/.test(c.message))).toBe(true);
     const odd = def.compute({ ...CIFT, D: 0.055 }, ctx);
-    expect(odd.checks.some((c) => c.level === "ok" && /standart çaplardan biri değil.*8, 10, 12, 16, 20, 25 mm.*32, 40, 50, 63, 80, 100, 125 mm/.test(c.message))).toBe(true);
+    expect(odd.checks.some((c) => c.level === "ok" && /katalog listesindeki çaplardan biri değil.*8, 10, 12, 16, 20, 25 mm.*32, 40, 50, 63, 80, 100, 125 mm.*125 mm üstü/.test(c.message))).toBe(true);
     expect(odd.checks.every((c) => c.level === "ok")).toBe(true);
   });
 
