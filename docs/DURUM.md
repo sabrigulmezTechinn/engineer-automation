@@ -10,8 +10,8 @@
 | 0 | Altyapı: kullanıcı hesabı, hesap motoru, birim sistemi, formül gösterimi | ✅ Bitti (c5ddcb7) |
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
 | 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (10b478a; 1238 test, e2e 111 adım) |
-| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | 🔄 Sürüyor (ortak zemin 6ca6112; işçiler A–D) |
-| 4 | Elektronik (12) | ⏳ |
+| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ✅ Bitti (38 hesap; e2e 145 adım; danışman incelemesi) |
+| 4 | Elektronik (12) | 🔄 Sürüyor (ortak zemin 7f2836c; işçiler A–D) |
 
 ## Hesaplar
 
@@ -21,12 +21,13 @@
 | 3.1–3.5 | Motor ve sürücü | ✅ (3.5'te IE sınıfı tespiti yok) |
 | 5.1–5.7 | Otomasyon ve PLC | ✅ |
 | 7.1–7.2 | Yardımcı araçlar | ✅ |
-| 2.1–2.8 | Elektrik tesisat | ⏳ Faz 3 |
-| 6.1–6.9 | Mekatronik | ⏳ Faz 3 |
+| 2.1–2.8 | Elektrik tesisat | ✅ (2.1: katalog yolu Prysmian NYY/YXV + elle I₀; IEC 60364-5-52 Ek G yok) |
+| 6.1–6.9 | Mekatronik | ✅ |
 | 4.1–4.12 | Elektronik | ⏳ Faz 4 |
 
 Danışman Faz 1'de şu hesapların formül gövdelerini inceledi: 1.4, 1.7, 3.3, 3.4 (aritmetik), 5.3, 7.1 (AWG), 7.2.
 Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçilerin elle hesaplanmış testlerine dayanır.
+Faz 3'te danışman 2.1–2.3, 2.5, 2.7, 6.2, 6.9 gövdelerini inceledi (formül hatası yok); diğer on hesabın ana test vektörleri elle doğrulandı.
 
 ## Çalışma düzeni (her faz)
 
@@ -69,6 +70,14 @@ Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçile
 - Faz 3 telif kararı (2.1): IEC 60364-5-52 tabloları gömülmez; kamuya açık üretici kataloğu değerleri kaynağıyla,
   kullanıcı I₀'ı geçersiz kılabilir; sıcaklık düzeltmesi formülle, gruplama/toprak katsayıları girdi.
 - Adımlarda birimler latexSpec ile (kartla aynı; mekanikte varsayılan birim).
+- Kontrol seviyeleri: "ok" yalnızca sağlanan koşul hükmü (yeşil, "Uygun"); kabul/yöntem/hatırlatma notları "bilgi" (nötr).
+  En kötü seviye (karşılaştırma rozeti, PDF özeti) bilgiyi saymaz.
+- 2.1 teslim yolu: (a) Prysmian NYY (PVC) ve YXV (XLPE) 4 damarlı katalog tabloları + (b) elle I₀; k_t formülle,
+  gruplama/toprak katsayıları girdi. EİTY sınırları (%1,5 / %3 / %5) RG 22479 (1995 değişikliği) üzerinden okundu.
+- 2.7 Dwight çubuk formülü çapla: R = ρ/(2πL)·[ln(8L/d) − 1] (KAPSAM düzeltildi; 16 mm, 3 m, 100 Ω·m → 33,49 Ω).
+- 2.5 varsayılan gerilim toleransı +%6 (c_maks 1,05; CT158 örneğiyle aynı), +%10 seçilebilir; faz-toprak Dyn trafo ve PE dönüşü kabulüyle.
+- Faz 4 ortak zemini: ns/µJ/mJ/nC/µC birimleri; 4.5 için "renk-kodu" özel arayüzü (durum select'lerde, metin kutusu ayrıştırır;
+  yeni girdi türü yok); select çarpımı 512'yi aşınca görünürlüğü yöneten select'ler × diğer her seçenek tek tek denenir.
 - Termokupl katsayıları NIST dosyasından `scripts/nist-termokupl-katsayilari.py` ile üretilir; E serileri Vishay (IEC 60063'e göre) tablosundan.
 
 ## Açık işler
@@ -90,3 +99,9 @@ Diğerleri (1.2, 1.3, 1.5, 1.6, 3.1, 3.2, 3.5, 5.1, 5.2, 5.4, 5.6, 5.7) işçile
 - Profil tercihleri (ondalık basamak, birim sistemi) kaydediliyor ama hesap sayfalarına uygulanmıyor (Faz 2 ile birlikte).
 - Standart seti seçenekleri (`iec`, `ts`) geçici.
 - Faz 3: IEC 60364-5-52 tabloları telif nedeniyle birebir gömülemez (KAPSAM §5.1); üretici katalog değerleri veya lisans gerekir.
+- 2.2: EİTY'nin güncel birleştirilmiş metni mevzuat.gov.tr'de bulunamadı; sınırlar 1995 değişikliğinden. Elle teyit edilmeli.
+- 2.5: c_min değeri CT158 (IEC 60909 2001 baskısına dayanır); 2016 baskısındaki değer doğrulanmadı.
+- 2.3: gG sigortada I_n < 16 A için I₂/I_n oranının kaynağı açılamadı (kullanıcı girdisi). Kablo reaktansı için Türk üretici tablosu bulunamadı.
+- 6.x: ISO 3408, 15552, 6432, 6020-2, 6022, 281 tam metinleri açılmadı (değerler THK/Festo/SKF kataloglarından).
+- formatNumber negatif sayıda ASCII "-" yazar ("−5 °C" yerine "-5 °C").
+- Öneriler (Faz 3 işçileri): 1/K, mm⁴, kg/m³, "milyon devir", NL hacim birimleri; eşli liste girdisi (P_i ile cos φ_i).
