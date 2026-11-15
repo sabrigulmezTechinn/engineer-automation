@@ -196,7 +196,7 @@ describe("tanım", () => {
       "P = I^2 \\cdot R",
       "P = \\frac{V^2}{R}",
     ]);
-    expect(ohmYasasi.references[0].standard).toMatch(/^IEC 60050/);
+    expect(ohmYasasi.references[0]).toMatchObject({ standard: "IEC 60050", clause: expect.stringMatching(/131/) });
   });
 
   it("her mod tam olarak iki sayı girdisini gösterir", () => {

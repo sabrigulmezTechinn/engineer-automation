@@ -75,8 +75,9 @@ export const ohmYasasi: CalcDefinition = {
   ],
   references: [
     {
-      standard: "IEC 60050-131",
-      title: "Uluslararası Elektroteknik Sözlük (IEV) — Bölüm 131: Devre teorisi",
+      standard: "IEC 60050",
+      title: "Uluslararası Elektroteknik Sözlük (IEV)",
+      clause: "Bölüm 131: Devre teorisi",
       note: "Gerilim, akım, direnç ve güç terimlerinin tanımları",
     },
   ],

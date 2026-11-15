@@ -99,6 +99,8 @@ const SPECIAL: Record<string, string> = {
   ")": ")",
   "-": "-",
   "%": "\\%",
+  // KaTeX'te binde işareti yok; yaklaşık gösterim
+  "‰": "{\\%_0}",
   "′": "^{\\prime}",
   "″": "^{\\prime\\prime}",
 };
@@ -153,8 +155,13 @@ export function latexUnitSymbol(symbol: string): string {
   return out.trimEnd();
 }
 
-/** Sayı ile birim arasında boşluk konmayan semboller (düzlem açı: 45°). */
-const NO_SPACE_SYMBOLS = new Set(["°", "′", "″"]);
+// Yerleşim kuralları birim sisteminin formatQuantity'siyle aynıdır, böylece sonuç ve adım tutarlı görünür.
+/** Sembolsüz birimler: boş veya "-" (boyutsuz/kesir) */
+const NO_SYMBOLS = new Set(["", "-"]);
+/** Türkçe yazımda sayının önüne gelen semboller: %50 */
+const PREFIX_SYMBOLS = new Set(["%", "‰"]);
+/** Sayıya bitişik yazılan semboller (düzlem açı): 45° */
+const ATTACHED_SYMBOLS = new Set(["°", "′", "″"]);
 
 /** Birim kimliğinin LaTeX sembolü, ör. "kohm" → "\mathrm{k}\Omega". */
 export function latexUnit(unitId: string): string {
@@ -163,14 +170,17 @@ export function latexUnit(unitId: string): string {
 
 /**
  * SI değeri verilen birime çevirip LaTeX'te değer + birim olarak yazar.
- * Ör. latexQty(1500, "kV") → "1{,}5\,\mathrm{kV}".
+ * Ör. latexQty(1500, "kV") → "1{,}5\,\mathrm{kV}", yüzde → "\%50", açı → "45^\circ".
  */
 export function latexQty(valueSI: number, unitId: string, options?: FormatOptions): string {
   const symbol = getUnit(unitId).symbol;
   const num = latexNum(fromSI(valueSI, unitId), options);
-  if (symbol === "") return num;
+  if (NO_SYMBOLS.has(symbol)) return num;
   const unit = latexUnitSymbol(symbol);
-  if (NO_SPACE_SYMBOLS.has(symbol)) {
+  if (PREFIX_SYMBOLS.has(symbol)) {
+    return num.startsWith("-") ? `-${unit}${num.slice(1)}` : `${unit}${num}`;
+  }
+  if (ATTACHED_SYMBOLS.has(symbol)) {
     // Sayı tabanı varsa boş tabana gerek yok: "45^\circ". Üslü sayıda çift üst simgeyi önlemek için kalır.
     return num.includes("^") ? `${num}${unit}` : `${num}${unit.replace(/^\{\}/, "")}`;
   }

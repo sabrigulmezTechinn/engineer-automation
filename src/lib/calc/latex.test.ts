@@ -61,6 +61,7 @@ describe("latexUnitSymbol", () => {
     ["°C", "{}^\\circ\\mathrm{C}"],
     ["°", "{}^\\circ"],
     ["%", "\\%"],
+    ["‰", "{\\%_0}"],
     ["Ω·m", "\\Omega\\cdot \\mathrm{m}"],
     ["W/(m²·K)", "\\mathrm{W}/(\\mathrm{m}^2\\cdot \\mathrm{K})"],
     ["dev/dk", "\\mathrm{dev}/\\mathrm{dk}"],
@@ -71,7 +72,7 @@ describe("latexUnitSymbol", () => {
   });
 
   it("tüm semboller KaTeX'te strict kipte hatasız işlenir", () => {
-    for (const s of ["kV", "kΩ", "µF", "mm²", "m³/s", "s⁻¹", "°C", "°", "%", "Ω·m", "W/(m²·K)", "dev/dk", "saat", "çğış"]) {
+    for (const s of ["kV", "kΩ", "µF", "mm²", "m³/s", "s⁻¹", "°C", "°", "%", "‰", "Ω·m", "W/(m²·K)", "dev/dk", "saat", "çğış"]) {
       expect(() => renderStrict(`1\\,${latexUnitSymbol(s)}`), s).not.toThrow();
     }
   });
@@ -93,9 +94,12 @@ describe("latexQty / latexSI / latexUnit", () => {
     expect(latexQty((1.5e-6 * Math.PI) / 180, "deg")).toBe("1{,}5 \\times 10^{-6}{}^\\circ");
   });
 
-  it("yüzde ve sembolsüz birimler", () => {
-    expect(latexQty(0.5, "yuzde")).toBe("50\\,\\%");
-    expect(latexQty(0.5, "kesir")).toBe("0{,}5");
+  it("yüzde sayının önüne yazılır (Türkçe), sembolsüz birimde yalnız sayı", () => {
+    expect(latexQty(0.5, "yuzde")).toBe("\\%50");
+    expect(latexQty(-0.05, "yuzde")).toBe("-\\%5");
+    expect(latexQty(0.005, "binde")).toBe("{\\%_0}5");
+    expect(latexQty(0.5, "kesir")).toBe("0{,}5"); // sembol "-"
+    expect(latexQty(3, "adet")).toBe("3"); // sembol ""
   });
 
   it("latexSI boyutun SI birimini kullanır", () => {
@@ -119,6 +123,8 @@ describe("latexQty / latexSI / latexUnit", () => {
       latexQty(Math.PI / 4, "deg"),
       latexQty((1.5e-6 * Math.PI) / 180, "deg"),
       latexQty(0.5, "yuzde"),
+      latexQty(-0.05, "yuzde"),
+      latexQty(0.005, "binde"),
       latexQty(Number.NaN, "V"),
       latexQty(1, "ohm_m"),
       latexQty(1, "W_m2K"),

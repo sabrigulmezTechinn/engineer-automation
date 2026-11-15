@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ohmYasasi } from "./defs/temel-elektrik/ohm-yasasi";
 import { CATEGORIES, allCalcs, calcsByCategory, compareCalcIds, getCalc, validateDefinitions } from "./registry";
 import type { CalcDefinition, CategoryId } from "./types";
@@ -58,6 +58,21 @@ describe("kayıt defteri", () => {
 
   it("kayıtlı tanımlar doğrulamadan geçer", () => {
     expect(validateDefinitions(allCalcs())).toEqual([]);
+  });
+});
+
+describe("yüklemede doğrulama", () => {
+  afterEach(() => {
+    vi.doUnmock("./defs/temel-elektrik/ohm-yasasi");
+    vi.resetModules();
+  });
+
+  it("hatalı tanım varsa modül yüklenirken fırlatır", async () => {
+    vi.resetModules();
+    vi.doMock("./defs/temel-elektrik/ohm-yasasi", () => ({
+      ohmYasasi: { ...ohmYasasi, inputs: [...ohmYasasi.inputs, ohmYasasi.inputs[1]] },
+    }));
+    await expect(import("./registry")).rejects.toThrow(/Hesap kayıt defteri geçersiz[\s\S]*yinelenen girdi anahtarı "V"/);
   });
 });
 

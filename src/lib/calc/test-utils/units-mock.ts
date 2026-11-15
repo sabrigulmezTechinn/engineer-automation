@@ -28,8 +28,9 @@ const UNITS: UnitDef[] = [
   { id: "degC", symbol: "°C", name: "santigrat derece", dimension: "sicaklik", factor: 1, offset: 273.15 },
   { id: "rad", symbol: "rad", name: "radyan", dimension: "aci", factor: 1 },
   { id: "deg", symbol: "°", name: "derece", dimension: "aci", factor: Math.PI / 180 },
-  { id: "kesir", symbol: "", name: "kesir", dimension: "oran", factor: 1 },
+  { id: "kesir", symbol: "-", name: "kesir", dimension: "oran", factor: 1 },
   { id: "yuzde", symbol: "%", name: "yüzde", dimension: "oran", factor: 0.01 },
+  { id: "binde", symbol: "‰", name: "binde", dimension: "oran", factor: 0.001 },
   { id: "adet", symbol: "", name: "adet", dimension: "boyutsuz", factor: 1 },
   { id: "rad_s", symbol: "rad/s", name: "radyan/saniye", dimension: "acisal_hiz", factor: 1 },
   { id: "rpm", symbol: "dev/dk", name: "devir/dakika", dimension: "acisal_hiz", factor: (2 * Math.PI) / 60 },
@@ -113,14 +114,19 @@ export function formatNumber(value: number, options?: FormatOptions): string {
   return String(Number(value.toPrecision(sig))).replace(".", ",");
 }
 
+/** Sembolsüz ("" veya "-"), önde (%), bitişik (°) ve boşluklu yerleşim. */
 export function formatQuantity(value: number, unitId: string, options?: FormatOptions): string {
   const sym = getUnit(unitId).symbol;
   const num = formatNumber(value, options);
-  return sym ? `${num} ${sym}` : num;
+  if (num === "—" || sym === "" || sym === "-") return num;
+  if (sym === "%" || sym === "‰") return num.startsWith("-") ? `-${sym}${num.slice(1)}` : `${sym}${num}`;
+  if (sym === "°" || sym === "′") return `${num}${sym}`;
+  return `${num} ${sym}`;
 }
 
-// Derleme zamanı denetimi: sahte modül gerçek API ile aynı imzalara sahip olmalı.
-const _imzaDenetimi: typeof import("@/lib/units") = {
+// Derleme zamanı denetimi: sağlanan her fonksiyon gerçek API'deki imzayla aynı olmalı.
+// Partial: gerçek modül yeni yardımcılar dışa açtığında bu dosya derlemeyi bozmasın.
+void ({
   getUnit,
   unitsFor,
   siUnit,
@@ -130,5 +136,4 @@ const _imzaDenetimi: typeof import("@/lib/units") = {
   parseNumber,
   formatNumber,
   formatQuantity,
-};
-void _imzaDenetimi;
+} satisfies Partial<typeof import("@/lib/units")>);
