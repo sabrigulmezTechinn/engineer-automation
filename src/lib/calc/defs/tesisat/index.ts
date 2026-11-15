@@ -4,5 +4,6 @@
  */
 import type { CalcDefinition } from "../../types";
 import { kisaDevreAkimi } from "./kisa-devre-akimi";
+import { topraklamaDirenci } from "./topraklama-direnci";
 
-export const TESISAT: CalcDefinition[] = [kisaDevreAkimi];
+export const TESISAT: CalcDefinition[] = [kisaDevreAkimi, topraklamaDirenci];
