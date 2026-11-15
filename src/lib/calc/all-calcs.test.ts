@@ -62,13 +62,17 @@ describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name,
     }
   });
 
-  it("formüller, varsayılan adımlar ve semboller PDF'teki MathJax'ten hatasız geçer", async () => {
-    const r = runCalc(def, defaultState(def));
-    const latexler = [
+  it("formüller, tüm seçim kombinasyonlarının adımları ve semboller PDF'teki MathJax'ten hatasız geçer", async () => {
+    const adimlar = new Set<string>();
+    for (const combo of selectCombinations(def)) {
+      const r = runCalc(def, { ...defaultState(def), ...combo });
+      if (r.ok) for (const s of r.result.steps) adimlar.add(s.latex);
+    }
+    const latexler = new Set([
       ...def.formulas.map((f) => f.latex),
-      ...(r.ok ? r.result.steps.map((s) => s.latex) : []),
+      ...adimlar,
       ...[...def.inputs, ...def.outputs].flatMap((s) => (s.symbol ? [s.symbol] : [])),
-    ];
+    ]);
     for (const latex of latexler) {
       const svg = await latexToSvg(latex);
       expect(svg.hata, latex).toBe(false);

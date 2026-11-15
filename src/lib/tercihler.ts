@@ -16,10 +16,10 @@ export interface KullaniciTercihleri {
 /**
  * İmperial tercihinde çıktılar için öncelikli birimler. Yalnızca karşılığı açık olan boyutlar:
  * uzunluk (inç mi fit mi), kütle, debi gibi bağlama göre değişenler bilerek yok; onlar SI/otomatik kalır.
+ * Güç de yok: hp yalnızca motor/mil gücünde anlamlıdır; elektrik devrelerinde (ör. 65 mW) hp'ye çevirmek yanlış olur.
  * Bir hesap çıktısının izinli birimleri arasında yoksa yok sayılır (engine.displayUnit).
  */
 export const IMPERIAL_BIRIMLER: Partial<Record<Dimension, string>> = {
-  guc: "hp",
   tork: "lbfft",
   basinc: "psi",
   sicaklik: "degF",

@@ -101,7 +101,7 @@ export default async function HesapPage({ params, searchParams }: PageProps<"/he
       <section aria-labelledby="hesaplama" className="mt-8">
         <SectionHeading id="hesaplama">Hesaplama</SectionHeading>
         <div className="mt-3">
-          <Suspense fallback={<CalcWorkspace slug={def.slug} />}>
+          <Suspense fallback={<CalcWorkspace slug={def.slug} yedek />}>
             <CalismaAlani slug={def.slug} searchParams={searchParams} />
           </Suspense>
         </div>

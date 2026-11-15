@@ -20,11 +20,18 @@ export function CalcWorkspace({
   kayit,
   tercihler,
   girisYapildi = false,
+  yedek = false,
 }: {
   slug: string;
   kayit?: KayitliHesap | null;
   tercihler?: CalcTercihleri;
   girisYapildi?: boolean;
+  /**
+   * Suspense yedeği: istek verisi (oturum, ?kayit=, tercihler) gelene kadar gösterilen etkileşimsiz form.
+   * Gerçek çalışma alanı gelince bu ağaç atılır; kullanıcı bu arada yazarsa değer kaybolmasın diye denetimler
+   * devre dışıdır ve kaydetme/rapor/senaryo bölümleri çizilmez.
+   */
+  yedek?: boolean;
 }) {
   const def = getCalc(slug);
   if (!def) {
@@ -34,8 +41,19 @@ export function CalcWorkspace({
       </p>
     );
   }
+  if (yedek) return <Yedek def={def} />;
   return (
     <Workspace key={kayit?.id ?? def.slug} def={def} kayit={kayit ?? null} tercihler={tercihler} girisYapildi={girisYapildi} />
+  );
+}
+
+function Yedek({ def }: { def: CalcDefinition }) {
+  const calc = useCalcState(def);
+  return (
+    <fieldset disabled aria-busy="true" className="min-w-0 opacity-70">
+      <legend className="sr-only">Hesap yükleniyor</legend>
+      {def.customUi ? <CustomCalc id={def.customUi} calc={calc} /> : <CalcFormView calc={calc} />}
+    </fieldset>
   );
 }
 
