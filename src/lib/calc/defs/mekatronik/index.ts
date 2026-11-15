@@ -3,5 +3,8 @@
  * kayıt defteri (registry.ts) bu listeyi okur. Sıra önemsiz, allCalcs KAPSAM numarasına göre sıralar.
  */
 import type { CalcDefinition } from "../../types";
+import { pnomatikSilindir } from "./pnomatik-silindir";
 
-export const MEKATRONIK: CalcDefinition[] = [];
+export const MEKATRONIK: CalcDefinition[] = [
+  pnomatikSilindir,
+];
