@@ -473,24 +473,56 @@ export async function basliktaAdOlmali(page, ad) {
  */
 export async function girisliBaglam(t, secenekler = {}) {
   if (!t.paylasilan.oturum) {
-    const baglam = await t.yeniBaglam();
-    const { page } = await t.yeniSayfa(baglam);
     const k = yeniKullaniciBilgileri();
-    kayitHakkiAl();
-    const baslangic = Date.now();
-    await page.goto("/kayit");
-    const durum = await kayitFormunuGonder(page, k);
-    esitOlmali(durum, "basarili", "Kayıt sonucu");
-    const posta = await epostaBekle({ alici: k.email, sonra: baslangic, yolIcerir: "/verify-email" });
-    baglantiKokunuDogrula(posta.baglanti);
-    await page.goto(posta.baglanti);
-    await adresOlmali(page, "/e-posta-dogrulandi");
-    await basliktaAdOlmali(page, k.ad);
+    t.paylasilan.oturum = await kayitliOturumAc(t, k);
     t.paylasilan.kullanici = k;
-    t.paylasilan.oturum = await baglam.storageState();
-    await page.close();
   }
   return t.yeniBaglam({ ...secenekler, storageState: t.paylasilan.oturum });
+}
+
+/**
+ * Yeni kullanıcıyı kaydeder (bir kayıt hakkı harcar), doğrulama bağlantısıyla oturum açar ve oturumun
+ * storageState'ini döner. Kayıt için açılan sayfa kapatılır; bağlam senaryo sonunda kapanır.
+ */
+async function kayitliOturumAc(t, k) {
+  const baglam = await t.yeniBaglam();
+  const { page } = await t.yeniSayfa(baglam);
+  kayitHakkiAl();
+  const baslangic = Date.now();
+  await page.goto("/kayit");
+  const durum = await kayitFormunuGonder(page, k);
+  esitOlmali(durum, "basarili", "Kayıt sonucu");
+  const posta = await epostaBekle({ alici: k.email, sonra: baslangic, yolIcerir: "/verify-email" });
+  baglantiKokunuDogrula(posta.baglanti);
+  await page.goto(posta.baglanti);
+  await adresOlmali(page, "/e-posta-dogrulandi");
+  await basliktaAdOlmali(page, k.ad);
+  const oturum = await baglam.storageState();
+  await page.close();
+  return oturum;
+}
+
+/**
+ * İkinci (başka) bir kullanıcının oturumlu bağlamı: sahiplik denetimleri için (başkasının kaydı/projesi).
+ * İlk çağrıda kayıt hakkı harcayarak kullanıcıyı açar, sonraki senaryolarla paylaşır
+ * (`t.paylasilan.ikinciKullanici`, `t.paylasilan.ikinciOturum`). Bu bağlamda da çıkış yapmayın.
+ */
+export async function ikinciKullaniciBaglami(t, secenekler = {}) {
+  if (!t.paylasilan.ikinciOturum) {
+    const k = { ...yeniKullaniciBilgileri(), ad: "E2E İkinci", sirket: "", unvan: "" };
+    t.paylasilan.ikinciOturum = await kayitliOturumAc(t, k);
+    t.paylasilan.ikinciKullanici = k;
+  }
+  return t.yeniBaglam({ ...secenekler, storageState: t.paylasilan.ikinciOturum });
+}
+
+/** Sayfa yatay taşmıyor mu (scrollWidth ≤ clientWidth)? Taşıyorsa DogrulamaHatasi. */
+export async function yatayTasmaYok(page) {
+  const { genislik, gorunen } = await page.evaluate(() => ({
+    genislik: document.documentElement.scrollWidth,
+    gorunen: document.documentElement.clientWidth,
+  }));
+  dogrula(genislik <= gorunen, `Yatay taşma: scrollWidth ${genislik} > clientWidth ${gorunen}`);
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -529,6 +561,21 @@ export async function indirilenPdf(page, tiklama, { zamanAsimi = 30_000 } = {}) 
     throw new DogrulamaHatasi(`pdftotext ${dosyaAdi} dosyasını okuyamadı: ${e.message.split("\n")[0]}`);
   }
   return { yol, dosyaAdi, metin };
+}
+
+/**
+ * PDF metnini karşılaştırmaya hazırlar: rapor uzun kelimelere koyduğu sıfır genişlikli boşlukları ve yumuşak
+ * tireleri siler, boşlukları (satır sonu, NBSP, U+202F) tek boşluğa indirger.
+ */
+export function pdfSadelestir(metin) {
+  return sadelestir((metin ?? "").replace(/[​­]/g, ""));
+}
+
+/** Sadeleştirilmiş PDF metninde parçaların hepsi olmalı; eksikler tek hatada listelenir. */
+export function pdfIcermeli(metin, parcalar, ne = "PDF") {
+  const sade = pdfSadelestir(metin);
+  const eksik = parcalar.filter((p) => (p instanceof RegExp ? !p.test(sade) : !sade.includes(sadelestir(p))));
+  dogrula(eksik.length === 0, () => `${ne} metninde yok: ${eksik.map((p) => JSON.stringify(String(p))).join(", ")}`);
 }
 
 /** Çalıştırma raporunu (JSON) çıktı klasörüne yazar. */
