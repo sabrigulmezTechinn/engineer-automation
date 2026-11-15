@@ -97,9 +97,9 @@ const mocks = vi.hoisted(() => {
     const state: InputState = {};
     for (const i of d.inputs) {
       state[i.key] =
-        i.kind === "number"
-          ? { value: i.default === undefined ? "" : String(i.default), unit: i.defaultUnit }
-          : { value: i.default };
+        i.kind === "select"
+          ? { value: i.default }
+          : { value: i.default === undefined ? "" : String(i.default), unit: i.defaultUnit };
     }
     return state;
   }
