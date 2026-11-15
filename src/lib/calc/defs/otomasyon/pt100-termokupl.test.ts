@@ -226,6 +226,12 @@ describe("motor üzerinden (runCalc)", () => {
 });
 
 describe("tanım", () => {
+  it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
+    for (const spec of [...pt100Termokupl.inputs, ...pt100Termokupl.outputs]) {
+      if (spec.symbol !== undefined) expect(() => renderStrict(spec.symbol as string), spec.key).not.toThrow();
+    }
+  });
+
   it("her mod yalnızca kendi girdilerini gösterir", () => {
     const expected: Record<SensorMod, string[]> = {
       "rtd-tr": ["r0Secim", "T"],

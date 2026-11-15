@@ -130,6 +130,12 @@ describe("motor üzerinden (runCalc)", () => {
 });
 
 describe("tanım", () => {
+  it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
+    for (const spec of [...gucKaynagi24Vdc.inputs, ...gucKaynagi24Vdc.outputs]) {
+      if (spec.symbol !== undefined) expect(() => renderStrict(spec.symbol as string), spec.key).not.toThrow();
+    }
+  });
+
   it("yük girişi moduna göre liste girdisi", () => {
     const keys = (mod: string) =>
       visibleInputs(gucKaynagi24Vdc, { ...defaultState(gucKaynagi24Vdc), mod: { value: mod } }).map((i) => i.key);

@@ -44,22 +44,22 @@ const MESSAGES = {
   sifirSinyalAraligi: "Sinyal aralığının iki ucu (x₁ ve x₂) eşit olamaz: ölçekleme tanımsızdır (x₂ − x₁ = 0).",
   sifirMuhendislikAraligi:
     "Mühendislik aralığının iki ucu (y₁ ve y₂) eşit olamaz: ölçek tanımsızdır (y₂ − y₁ = 0).",
-  arizaAlt: (q: string) =>
-    `${q} NAMUR NE 43'e göre arıza sinyalidir (≤ 3,6 mA): verici arızası, kopuk hat veya besleme kaybı. Bu sinyal ölçüm bilgisi taşımaz; ölçekleme yapılmadı.`,
-  arizaUst: (q: string) =>
-    `${q} NAMUR NE 43'e göre arıza sinyalidir (≥ 21 mA): verici arızası veya döngüde kısa devre. Bu sinyal ölçüm bilgisi taşımaz; ölçekleme yapılmadı.`,
-  belirsiz:
-    "Sinyal NE 43 ölçüm aralığının (3,8–20,5 mA) dışında, arıza eşiklerinin (3,6 mA / 21 mA) içinde: tanımlı bir ölçüm ya da arıza sinyali değildir. Alıcı bu değeri güvenilir ölçüm saymamalı; kabloyu ve vericiyi kontrol edin.",
-  asimAlt:
-    "Sinyal 4 mA'nın altında ama NE 43 ölçüm aralığında (≥ 3,8 mA): proses değeri ölçek aralığının alt ucunun altında. Değer doğrusal olarak uzatılarak hesaplandı.",
-  asimUst:
-    "Sinyal 20 mA'nın üstünde ama NE 43 ölçüm aralığında (≤ 20,5 mA): proses değeri ölçek aralığının üst ucunun üstünde. Değer doğrusal olarak uzatılarak hesaplandı.",
-  geriAriza:
-    "Hesaplanan akım NE 43 arıza bölgesinde (≤ 3,6 mA veya ≥ 21 mA): verici bu proses değerini ölçüm olarak iletemez (ölçüm sinyali 3,8 mA / 20,5 mA'da doyar) ve alıcı bu akımı arıza olarak yorumlar. Ölçek aralığını genişletin.",
-  geriBelirsiz:
-    "Hesaplanan akım NE 43 ölçüm aralığının (3,8–20,5 mA) dışında, arıza eşiklerinin içinde: verici bu değeri üretmez ve alıcı güvenilir ölçüm saymaz. Ölçek aralığını genişletin.",
-  geriAsim:
-    "Proses değeri ölçek aralığının (y₁…y₂) dışında: hesaplanan akım 4–20 mA dışında ama NE 43 ölçüm aralığında (3,8–20,5 mA). NE 43 uyumlu verici bu sınırlara kadar sürer, ötesinde doyar.",
+  arizaAlt: (q: string, L: NamurMetni) =>
+    `${q} NAMUR NE 43'e göre arıza sinyalidir (≤ ${L.arizaAlt}): verici arızası, kopuk hat veya besleme kaybı. Bu sinyal ölçüm bilgisi taşımaz; ölçekleme yapılmadı.`,
+  arizaUst: (q: string, L: NamurMetni) =>
+    `${q} NAMUR NE 43'e göre arıza sinyalidir (≥ ${L.arizaUst}): verici arızası veya döngüde kısa devre. Bu sinyal ölçüm bilgisi taşımaz; ölçekleme yapılmadı.`,
+  belirsiz: (L: NamurMetni) =>
+    `Sinyal NE 43 ölçüm aralığının (${L.olcumAlt}…${L.olcumUst}) dışında, arıza eşiklerinin (${L.arizaAlt} / ${L.arizaUst}) içinde: tanımlı bir ölçüm ya da arıza sinyali değildir. Alıcı bu değeri güvenilir ölçüm saymamalı; kabloyu ve vericiyi kontrol edin.`,
+  asimAlt: (L: NamurMetni) =>
+    `Sinyal 4 mA'nın altında ama NE 43 ölçüm aralığında (≥ ${L.olcumAlt}): proses değeri ölçek aralığının alt ucunun altında. Değer doğrusal olarak uzatılarak hesaplandı.`,
+  asimUst: (L: NamurMetni) =>
+    `Sinyal 20 mA'nın üstünde ama NE 43 ölçüm aralığında (≤ ${L.olcumUst}): proses değeri ölçek aralığının üst ucunun üstünde. Değer doğrusal olarak uzatılarak hesaplandı.`,
+  geriAriza: (L: NamurMetni) =>
+    `Hesaplanan akım NE 43 arıza bölgesinde (≤ ${L.arizaAlt} veya ≥ ${L.arizaUst}): verici bu proses değerini ölçüm olarak iletemez (ölçüm sinyali ${L.olcumAlt} / ${L.olcumUst} değerinde doyar) ve alıcı bu akımı arıza olarak yorumlar. Ölçek aralığını genişletin.`,
+  geriBelirsiz: (L: NamurMetni) =>
+    `Hesaplanan akım NE 43 ölçüm aralığının (${L.olcumAlt}…${L.olcumUst}) dışında, arıza eşiklerinin içinde: verici bu değeri üretmez ve alıcı güvenilir ölçüm saymaz. Ölçek aralığını genişletin.`,
+  geriAsim: (L: NamurMetni) =>
+    `Proses değeri ölçek aralığının (y₁…y₂) dışında: hesaplanan akım 4–20 mA dışında ama NE 43 ölçüm aralığında (${L.olcumAlt}…${L.olcumUst}). NE 43 uyumlu verici bu sınırlara kadar sürer, ötesinde doyar.`,
   gerilimDisi:
     "Sinyal 0–10 V aralığının dışında: proses değeri ölçek aralığının dışında olabilir ya da kablo/kaynak hatası vardır. Değer doğrusal olarak uzatıldı; analog girişin aşım bölgesini ve doyma değerini modül veri sayfasından kontrol edin.",
   geriGerilimDisi:
@@ -126,8 +126,8 @@ function crossChecks(inputs: ComputeInputs, ctx: CalcContext): Check[] {
     const x = num(inputs, "x_ma");
     const bolge = namurBolgesi(x, ctx);
     const q = mAMetni(x);
-    if (bolge === "ariza-alt") checks.push({ level: "hata", message: MESSAGES.arizaAlt(q), reference: NAMUR_REF });
-    if (bolge === "ariza-ust") checks.push({ level: "hata", message: MESSAGES.arizaUst(q), reference: NAMUR_REF });
+    if (bolge === "ariza-alt") checks.push({ level: "hata", message: MESSAGES.arizaAlt(q, namurMetni(ctx)), reference: NAMUR_REF });
+    if (bolge === "ariza-ust") checks.push({ level: "hata", message: MESSAGES.arizaUst(q, namurMetni(ctx)), reference: NAMUR_REF });
   }
   return checks;
 }
@@ -137,16 +137,28 @@ function mAMetni(xA: number): string {
   return formatQuantity(fromSI(xA, "mA"), "mA", { significant: 6 });
 }
 
+/** NE 43 sınırlarının mesaj metni (config'teki değerlerden), ör. { arizaAlt: "3,6 mA", … } */
+type NamurMetni = Record<"arizaAlt" | "olcumAlt" | "olcumUst" | "arizaUst", string>;
+function namurMetni(ctx: CalcContext): NamurMetni {
+  const n = ctx.limits.otomasyon.namurNe43;
+  return {
+    arizaAlt: mAMetni(n.arizaAlt),
+    olcumAlt: mAMetni(n.olcumAlt),
+    olcumUst: mAMetni(n.olcumUst),
+    arizaUst: mAMetni(n.arizaUst),
+  };
+}
+
 /** Sinyal → mühendislik yönündeki sinyal kontrolleri (arıza bölgesi validate'te reddedilir) */
 function ileriKontroller(sinyal: Sinyal, x: number, x1: number, x2: number, ctx: CalcContext): Check[] {
   if (sinyal === "ma") {
     switch (namurBolgesi(x, ctx)) {
       case "belirsiz":
-        return [{ level: "uyari", message: MESSAGES.belirsiz, reference: NAMUR_REF }];
+        return [{ level: "uyari", message: MESSAGES.belirsiz(namurMetni(ctx)), reference: NAMUR_REF }];
       case "asim-alt":
-        return [{ level: "uyari", message: MESSAGES.asimAlt, reference: NAMUR_REF }];
+        return [{ level: "uyari", message: MESSAGES.asimAlt(namurMetni(ctx)), reference: NAMUR_REF }];
       case "asim-ust":
-        return [{ level: "uyari", message: MESSAGES.asimUst, reference: NAMUR_REF }];
+        return [{ level: "uyari", message: MESSAGES.asimUst(namurMetni(ctx)), reference: NAMUR_REF }];
       default:
         return [];
     }
@@ -162,12 +174,12 @@ function geriKontroller(sinyal: Sinyal, x: number, x1: number, x2: number, ctx: 
     switch (namurBolgesi(x, ctx)) {
       case "ariza-alt":
       case "ariza-ust":
-        return [{ level: "uyari", message: MESSAGES.geriAriza, reference: NAMUR_REF }];
+        return [{ level: "uyari", message: MESSAGES.geriAriza(namurMetni(ctx)), reference: NAMUR_REF }];
       case "belirsiz":
-        return [{ level: "uyari", message: MESSAGES.geriBelirsiz, reference: NAMUR_REF }];
+        return [{ level: "uyari", message: MESSAGES.geriBelirsiz(namurMetni(ctx)), reference: NAMUR_REF }];
       case "asim-alt":
       case "asim-ust":
-        return [{ level: "uyari", message: MESSAGES.geriAsim, reference: NAMUR_REF }];
+        return [{ level: "uyari", message: MESSAGES.geriAsim(namurMetni(ctx)), reference: NAMUR_REF }];
       default:
         return [];
     }

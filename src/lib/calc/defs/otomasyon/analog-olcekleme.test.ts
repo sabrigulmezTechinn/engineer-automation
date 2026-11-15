@@ -193,6 +193,12 @@ describe("motor üzerinden (runCalc)", () => {
 });
 
 describe("tanım", () => {
+  it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
+    for (const spec of [...analogOlcekleme.inputs, ...analogOlcekleme.outputs]) {
+      if (spec.symbol !== undefined) expect(() => renderStrict(spec.symbol as string), spec.key).not.toThrow();
+    }
+  });
+
   it("her mod yalnızca kendi girdilerini gösterir", () => {
     const expected: Record<AnalogMod, string[]> = {
       "ma-muh": ["x_ma", "y1", "y2"],

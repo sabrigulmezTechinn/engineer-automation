@@ -116,6 +116,12 @@ describe("motor üzerinden (runCalc)", () => {
 });
 
 describe("tanım", () => {
+  it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
+    for (const spec of [...enkoder.inputs, ...enkoder.outputs]) {
+      if (spec.symbol !== undefined) expect(() => renderStrict(spec.symbol as string), spec.key).not.toThrow();
+    }
+  });
+
   it("doğrusal hareket seçimine göre girdiler", () => {
     const keys = (dogrusal: string) =>
       visibleInputs(enkoder, { ...defaultState(enkoder), dogrusal: { value: dogrusal } })

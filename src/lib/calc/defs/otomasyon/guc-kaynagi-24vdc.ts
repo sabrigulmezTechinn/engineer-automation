@@ -160,7 +160,7 @@ export const gucKaynagi24Vdc: CalcDefinition = {
       kind: "number",
       key: "uYuk",
       label: "Yük klemensindeki gerilim (isteğe bağlı)",
-      symbol: "U_{yük}",
+      symbol: "U_{\\text{yük}}",
       dimension: "gerilim",
       defaultUnit: "V",
       units: ["V"],
