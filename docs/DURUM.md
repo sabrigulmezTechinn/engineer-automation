@@ -10,7 +10,7 @@
 | 0 | Altyapı: kullanıcı hesabı, hesap motoru, birim sistemi, formül gösterimi | ✅ Bitti (c5ddcb7) |
 | 1 | Temel elektrik (7) + Motor/sürücü (5) + Otomasyon/PLC (7) + Yardımcı (2) = 21 hesap | ✅ Bitti |
 | 2 | Kaydetme/projeler, karşılaştırma, PDF rapor | ✅ Bitti (10b478a; 1238 test, e2e 111 adım) |
-| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ✅ Bitti (38 hesap; e2e 145 adım; danışman incelemesi) |
+| 3 | Elektrik tesisat (8) + Mekatronik/mekanik (9) | ✅ Bitti (38 hesap; 072aad2: 1623 test, e2e 145 adım; danışman incelemesi) |
 | 4 | Elektronik (12) | 🔄 Sürüyor (ortak zemin 7f2836c; işçiler A–D) |
 
 ## Hesaplar
