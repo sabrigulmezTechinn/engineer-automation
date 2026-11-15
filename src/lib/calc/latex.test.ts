@@ -1,5 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import { latexNum, latexOperand, latexQty, latexSI, latexUnit, latexUnitSymbol, numberTextToLatex } from "./latex";
+import {
+  latexAutoOperand,
+  latexNum,
+  latexOperand,
+  latexQty,
+  latexSI,
+  latexSpecOperand,
+  latexUnit,
+  latexUnitSymbol,
+  numberTextToLatex,
+} from "./latex";
 import { renderStrict } from "./test-utils/katex";
 
 vi.mock("@/lib/units", () => import("@/lib/calc/test-utils/units-mock"));
@@ -132,5 +142,18 @@ describe("latexQty / latexSI / latexUnit", () => {
       latexOperand(-2e-9, "akim"),
     ];
     for (const l of all) expect(() => renderStrict(l), l).not.toThrow();
+  });
+});
+
+describe("latexSpecOperand / latexAutoOperand: işaret gösterilen değerden", () => {
+  const santigrat = { dimension: "sicaklik" as const, defaultUnit: "degC" };
+  it("ofsetli birimde SI pozitif ama gösterilen negatif → parantez (−5 °C = 268,15 K)", () => {
+    expect(latexSpecOperand(santigrat, 268.15)).toMatch(/^\(.*\)$/);
+    expect(latexSpecOperand(santigrat, 293.15)).not.toMatch(/^\(/); // 20 °C
+  });
+  it("ofsetsiz birimde eski davranış: negatif değer parantezli", () => {
+    expect(latexSpecOperand({ dimension: "akim", defaultUnit: "A" }, -2)).toMatch(/^\(.*\)$/);
+    expect(latexAutoOperand(-0.002, "akim")).toMatch(/^\(.*\)$/);
+    expect(latexAutoOperand(0.002, "akim")).not.toMatch(/^\(/);
   });
 });

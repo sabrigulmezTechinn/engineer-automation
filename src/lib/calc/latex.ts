@@ -215,20 +215,25 @@ export function latexSpec(
   return latexQty(valueSI, autoOutputUnit(spec, valueSI), options);
 }
 
-/** latexSpec'in işlem içi hali: negatif değer parantezlenir. */
+/**
+ * latexSpec'in işlem içi hali: GÖSTERİLEN değer negatifse parantezlenir. İşarete SI değerinden bakılmaz:
+ * ofsetli birimlerde ikisi ayrışır (−5 °C = 268,15 K; parantezsiz "θ − −5 °C" yazılırdı).
+ */
 export function latexSpecOperand(
   spec: Pick<OutputSpec, "dimension" | "defaultUnit" | "units" | "autoUnit">,
   valueSI: number,
   options?: FormatOptions,
 ): string {
-  const s = latexSpec(spec, valueSI, options);
-  return valueSI < 0 ? `(${s})` : s;
+  const unit = autoOutputUnit(spec, valueSI);
+  const s = latexQty(valueSI, unit, options);
+  return fromSI(valueSI, unit) < 0 ? `(${s})` : s;
 }
 
-/** latexAuto'nun işlem içi hali: negatif değer parantezlenir. */
+/** latexAuto'nun işlem içi hali: gösterilen değer negatifse parantezlenir (bkz. latexSpecOperand). */
 export function latexAutoOperand(valueSI: number, dimension: Dimension, options?: FormatOptions): string {
-  const s = latexAuto(valueSI, dimension, options);
-  return valueSI < 0 ? `(${s})` : s;
+  const unit = autoOutputUnit({ dimension, defaultUnit: siUnit(dimension).id }, valueSI);
+  const s = latexQty(valueSI, unit, options);
+  return fromSI(valueSI, unit) < 0 ? `(${s})` : s;
 }
 
 /** Negatif değerler işlem içinde parantezlenir: (-2\,\mathrm{A}). */
