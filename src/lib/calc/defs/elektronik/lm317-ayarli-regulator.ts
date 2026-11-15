@@ -185,6 +185,7 @@ const INPUTS: InputSpec[] = [
     defaultUnit: "degC",
     units: ["degC", "K"],
     default: 25,
+    min: 0,
     help: "Yalnızca R_θJA girilirse jonksiyon sıcaklığı için kullanılır.",
   },
   {

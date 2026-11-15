@@ -25,8 +25,8 @@ export const ELEKTRONIK_ENTEGRE_SINIRLARI = {
     /**
      * Zamanlama dirençlerinin (R_A + R_B) en büyük değeri, Ω: §5.5 "THRES current" dipnotu (1): "when VCC = 5V, the
      * maximum value is R = RA + RB ≅ 3.4MΩ, and for VCC = 15V, the maximum value is RA + RB ≅ 10MΩ".
-     * Veri sayfası yalnız bu iki noktayı verir; ara değer üretilmez. Hesap V_CC < 15 V için tutucu olarak 5 V değerini,
-     * V_CC ≥ 15 V için 15 V değerini kullanır. (LM555 SNAS548D §6.5 dipnot 5 15 V için 20 MΩ verir; daha tutucu olan
+     * Veri sayfası yalnız bu iki noktayı verir; ara değer üretilmez. Hesap V_CC < 15 V için 5 V değerini (5–15 V arasında
+     * tutucu; V_CC < 5 V'ta gerçek sınır daha düşüktür), V_CC ≥ 15 V için 15 V değerini kullanır. (LM555 SNAS548D §6.5 dipnot 5 15 V için 20 MΩ verir; daha tutucu olan
      * NE555 değerleri seçildi.)
      */
     rToplamMax: { vccDusuk: 5, rDusuk: 3.4e6, vccYuksek: 15, rYuksek: 10e6 },

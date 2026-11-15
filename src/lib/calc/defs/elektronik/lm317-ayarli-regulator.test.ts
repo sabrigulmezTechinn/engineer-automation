@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
 import { renderStrict } from "@/lib/calc/test-utils/katex";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
 import type { CalcResult, ComputeInputs, InputState, RunResult, SelectInputSpec } from "@/lib/calc/types";
 import { lm317AyarliRegulator } from "./lm317-ayarli-regulator";
 
@@ -197,5 +198,46 @@ describe("motor üzerinden (runCalc)", () => {
     expect(r.result.outputs.Rs).toBeCloseTo(3.65, 12);
     expect(r.result.outputs.I).toBeCloseTo(0.342466, 6);
     expect(r.outputs.find((o) => o.key === "Iyuk")?.formatted).toBe("342,52 mA");
+  });
+});
+
+describe("her mod × her E serisi (ters modlar standart değer seçer)", () => {
+  const opts = (key: string) => (lm317AyarliRegulator.inputs.find((i) => i.key === key) as SelectInputSpec).options.map((o) => o.value);
+  const combos = opts("mod").flatMap((mod) => opts("seri").map((seri) => [mod, seri] as const));
+
+  it.each(combos)("%s / %s: varsayılan girdilerle hatasız sonuç", (mod, seri) => {
+    const r = ok(runCalc(lm317AyarliRegulator, state({ mod: { value: mod }, seri: { value: seri } })));
+    expect(r.result.checks.filter((c) => c.level === "hata")).toEqual([]);
+    for (const s of r.result.steps) expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+  });
+});
+
+describe("ısıl adımlar (R_θJA girildiğinde; all-calcs varsayılanla bu yola girmez)", () => {
+  const modes = (lm317AyarliRegulator.inputs.find((i) => i.key === "mod") as SelectInputSpec).options.map((o) => o.value);
+  const durumlar = modes.flatMap((mod) => [[mod, "25"] as const, [mod, "-20"] as const]);
+
+  it.each(durumlar)("%s, T_a %s °C: T_j ve P_max adımları KaTeX strict ve PDF MathJax'ten geçer", async (mod, ta) => {
+    const r = ok(
+      runCalc(lm317AyarliRegulator, state({ mod: { value: mod }, Ta: { value: ta, unit: "degC" }, RthJA: { value: "23,5", unit: "degC_W" } })),
+    );
+    expect(r.result.outputs).toHaveProperty("Tj");
+    expect(r.result.outputs).toHaveProperty("Pmax");
+    expect(r.result.steps.map((s) => s.label)).toEqual(expect.arrayContaining(["Jonksiyon sıcaklığı", "İzin verilen en büyük kayıp"]));
+    for (const s of r.result.steps) {
+      expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+      expect((await latexToSvg(s.latex)).hata, s.latex).toBe(false);
+    }
+  });
+
+  it("0 °C altındaki ortam sıcaklığı P_max adımında parantezlenir; (125 − (−20))/23,5 = 6,1702 W", () => {
+    const r = ok(runCalc(lm317AyarliRegulator, state({ Ta: { value: "-20", unit: "degC" }, RthJA: { value: "23,5", unit: "degC_W" } })));
+    const pmax = r.result.steps.find((s) => s.label === "İzin verilen en büyük kayıp");
+    expect(pmax?.latex).toMatch(/- \(-20\\,\{\}\^\\circ\\mathrm\{C\}\)/);
+    expect(r.result.outputs.Pmax).toBeCloseTo(145 / 23.5, 9);
+  });
+
+  it("T_a 0 K'nin altına inemez (alan hatası)", () => {
+    const r = runCalc(lm317AyarliRegulator, state({ Ta: { value: "-300", unit: "degC" } }));
+    expect(r.ok).toBe(false);
   });
 });

@@ -35,7 +35,7 @@ const MESSAGES = {
   besleme: (v: string, min: string, max: string) =>
     `Besleme gerilimi ${v}, NE555 önerilen çalışma aralığının (${min} – ${max}) dışında.`,
   rMax: (ad: string, r: string, max: string) =>
-    `${ad} = ${r}, veri sayfasındaki en büyük değeri (≅ ${max}) aşıyor: THRES giriş akımı kondansatörün eşik seviyesine dolmasını engelleyebilir. Veri sayfası 5 V için ≅ 3,4 MΩ, 15 V için ≅ 10 MΩ verir; V_CC < 15 V'ta tutucu olarak 5 V değeri esas alındı.`,
+    `${ad} = ${r}, veri sayfasındaki en büyük değeri (≅ ${max}) aşıyor: THRES giriş akımı kondansatörün eşik seviyesine dolmasını engelleyebilir. Veri sayfası yalnız 5 V için ≅ 3,4 MΩ ve 15 V için ≅ 10 MΩ verir; V_CC < 15 V'ta 5 V değeri esas alındı (V_CC < 5 V'ta gerçek sınır daha da düşüktür).`,
   fMax: (f: string, max: string) =>
     `Frekans ${f}: veri sayfası bozulmayı azaltmak için astable çalışmada en çok ${max} önerir (daha yüksek frekansta CMOS 555 önerilir).`,
   tMin: (tw: string, min: string) =>

@@ -248,3 +248,14 @@ describe("motor üzerinden (runCalc)", () => {
     expect(r.ok).toBe(false);
   });
 });
+
+describe("her mod × her E serisi (ters modlar standart değer seçer)", () => {
+  const opts = (key: string) => (opAmpKazanci.inputs.find((i) => i.key === key) as SelectInputSpec).options.map((o) => o.value);
+  const combos = opts("mod").flatMap((mod) => opts("seri").map((seri) => [mod, seri] as const));
+
+  it.each(combos)("%s / %s: varsayılan girdilerle hatasız sonuç", (mod, seri) => {
+    const r = ok(runCalc(opAmpKazanci, state({ mod: { value: mod }, seri: { value: seri } })));
+    expect(r.result.checks.filter((c) => c.level === "hata")).toEqual([]);
+    for (const s of r.result.steps) expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+  });
+});
