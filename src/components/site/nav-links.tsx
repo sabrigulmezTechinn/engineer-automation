@@ -4,6 +4,8 @@ import { cx } from "@/components/ui/cx";
 export const NAV_ITEMS = [
   { href: "/hesaplar", label: "Hesaplar" },
   { href: "/standartlar", label: "Standartlar" },
+  // Giriş gerektirir; oturumsuz ziyaretçiyi src/proxy.ts giriş sayfasına yönlendirir.
+  { href: "/projeler", label: "Projeler" },
 ] as const;
 
 /**
