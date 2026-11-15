@@ -96,7 +96,7 @@ describe("adımlar", () => {
       "E_{\\text{gün}} = P \\cdot t_{\\text{gün}} = 2\\,\\mathrm{kW} \\cdot 8\\,\\mathrm{sa} = 16\\,\\mathrm{kWh}",
     );
     expect(toplam.latex).toBe("E = E_{\\text{gün}} \\cdot n = 16\\,\\mathrm{kWh} \\cdot 30 = 480\\,\\mathrm{kWh}");
-    expect(maliyet.latex).toBe("M = c \\cdot E = 4\\,\\mathrm{TL}/\\mathrm{kWh} \\cdot 480\\,\\mathrm{kWh} = 1920\\,\\mathrm{TL}");
+    expect(maliyet.latex).toBe("M = c \\cdot E = 4\\,\\mathrm{TL}/\\mathrm{kWh} \\cdot 480\\,\\mathrm{kWh} = 1920{,}00\\,\\mathrm{TL}"); // para iki ondalık
   });
 
   it("yük oranı girildiyse adımda görünür; tüm adımlar KaTeX strict'ten geçer", () => {

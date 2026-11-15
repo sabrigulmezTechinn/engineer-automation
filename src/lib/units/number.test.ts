@@ -155,7 +155,7 @@ describe("formatNumber", () => {
     [5e-324, "5×10⁻³²⁴"],
     // eşik yuvarlamadan sonra uygulanır; 9'ların eldesi üssü artırır
     [999999999.9, "1×10⁹"],
-    [999949999, g("999_900_000")],
+    [999949999, g("999_949_999")], // tam sayı basamakları atılmaz
     [9.99996e-5, "0,0001"],
     [9.99996e-6, "1×10⁻⁵"],
     [9.99996e9, "1×10¹⁰"],
@@ -199,7 +199,8 @@ describe("formatNumber", () => {
     expect(formatNumber(1234.5678, { significant: 6 })).toBe("1234,57");
     expect(formatNumber(2.675, { significant: 3 })).toBe("2,68");
     expect(formatNumber(0.000123456, { significant: 2 })).toBe("0,00012");
-    expect(formatNumber(987654, { significant: 1 })).toBe(g("1_000_000"));
+    // Tam sayı basamakları anlamlı basamak sayısından bağımsız olarak korunur.
+    expect(formatNumber(987654, { significant: 1 })).toBe(g("987_654"));
     expect(formatNumber(1.5, { significant: 10 })).toBe("1,5");
   });
 

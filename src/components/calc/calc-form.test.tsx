@@ -185,7 +185,9 @@ vi.mock("@/lib/calc/registry", () => ({
     slug === mocks.def.slug ? mocks.def : slug === mocks.eksikDef.slug ? mocks.eksikDef : undefined,
 }));
 
-vi.mock("@/lib/calc/engine", () => ({
+vi.mock("@/lib/calc/engine", async (importOriginal) => ({
+  // Görünürlük (visibleWhen zinciri) gerçek motorla çözülür; hesap ve varsayılan durum sahtedir.
+  visibleInputs: (await importOriginal<typeof import("@/lib/calc/engine")>()).visibleInputs,
   defaultState: mocks.defaultState,
   runCalc: mocks.runCalc,
 }));
