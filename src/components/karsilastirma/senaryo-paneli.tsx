@@ -113,12 +113,14 @@ function PanelIcerigi({
     [outputUnits, significant, preferredUnits],
   );
 
-  const karsilastirma = useMemo(() => karsilastirmaOlustur(def, senaryolar, options), [def, senaryolar, options]);
+  // Adı silinmiş senaryo tabloda, taramada ve raporda sıra numarasıyla görünür ("Senaryo 2").
+  const adliSenaryolar = useMemo(() => senaryolar.map((s, i) => ({ ...s, ad: senaryoAdi(s.ad, i) })), [senaryolar]);
+  const karsilastirma = useMemo(() => karsilastirmaOlustur(def, adliSenaryolar, options), [def, adliSenaryolar, options]);
 
   // Tarama temeli: kullanıcı seçmediyse ilk senaryo (rapor da ilk senaryoyu kullanır), senaryo yoksa formdaki değerler.
   const temeller = useMemo<Senaryo[]>(
-    () => [...senaryolar, { id: FORM_TEMELI, ad: "Formdaki mevcut değerler", state }],
-    [senaryolar, state],
+    () => [...adliSenaryolar, { id: FORM_TEMELI, ad: "Formdaki mevcut değerler", state }],
+    [adliSenaryolar, state],
   );
   const tarama = useTarama(def, temeller, options);
 
@@ -235,7 +237,7 @@ function PanelIcerigi({
 
       {senaryolar.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 empty:hidden">
-          <KarsilastirmaRaporDugmesi hesapSlug={def.slug} senaryolar={senaryolar} outputUnits={outputUnits} tarama={raporTaramasi} />
+          <KarsilastirmaRaporDugmesi hesapSlug={def.slug} senaryolar={adliSenaryolar} outputUnits={outputUnits} tarama={raporTaramasi} />
         </div>
       )}
     </div>

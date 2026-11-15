@@ -136,6 +136,16 @@ describe("SenaryoPaneli", () => {
     expect(deger(within(senaryoListesi()).getByLabelText("2. senaryonun adı"))).toBe("Senaryo 3");
   });
 
+  it("adı silinen senaryo tabloda ve raporda sıra numarasıyla görünür", () => {
+    render(<Deneme />);
+    ac();
+    ekle();
+    ekle();
+    fireEvent.change(within(senaryoListesi()).getByLabelText("1. senaryonun adı"), { target: { value: "   " } });
+    expect([...tablo().querySelectorAll("thead th")].map((th) => th.textContent)).toEqual(["Büyüklük", "Senaryo 1", "Senaryo 2"]);
+    expect(screen.getByTestId("rapor").getAttribute("data-senaryolar")).toBe("Senaryo 1|Senaryo 2");
+  });
+
   it(`en çok 8 senaryo eklenebilir`, () => {
     render(<Deneme />);
     ac();

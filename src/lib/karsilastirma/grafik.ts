@@ -116,6 +116,13 @@ function metinGenisligi(metin: string, punto: number): number {
   return metin.length * punto * 0.58;
 }
 
+/** Metni yaklaşık `maxPx` genişliğe sığdırır; sığmazsa sonunu "…" ile keser (tam metin title/desc'te kalır). */
+export function kisalt(metin: string, punto: number, maxPx: number): string {
+  if (metinGenisligi(metin, punto) <= maxPx) return metin;
+  const n = Math.max(1, Math.floor(maxPx / (punto * 0.58)) - 1);
+  return `${metin.slice(0, n).trimEnd()}…`;
+}
+
 function eksenEtiketi(etiket: string, birimSembolu: string): string {
   return birimSembolu ? `${etiket} (${birimSembolu})` : etiket;
 }
@@ -185,22 +192,32 @@ export function cizgiGrafikSvg(seri: TaramaSerisi, secenekler?: GrafikSecenekler
   const hesaplanan = noktalar.filter((p): p is TaramaNoktasi & { y: number } => p.y !== null);
   const xs = noktalar.map((p) => p.x);
   const ys = hesaplanan.map((p) => p.y);
-  const xT = xs.length > 0 ? eksenTikleri(Math.min(...xs), Math.max(...xs), 6) : eksenTikleri(0, 1, 6);
-  const yT = ys.length > 0 ? eksenTikleri(Math.min(...ys), Math.max(...ys), 5) : eksenTikleri(0, 1, 5);
-  const xTikMetni = xT.tikler.map((t) => tikEtiketi(t, xT.ondalik));
-  const yTikMetni = yT.tikler.map((t) => tikEtiketi(t, yT.ondalik));
+  const [xMin, xMax] = xs.length > 0 ? [Math.min(...xs), Math.max(...xs)] : [0, 1];
+  const [yMin, yMax] = ys.length > 0 ? [Math.min(...ys), Math.max(...ys)] : [0, 1];
 
   const uyariSayisi = hesaplanan.filter((p) => p.seviye === "uyari").length;
   const hataSayisi = hesaplanan.filter((p) => p.seviye === "hata").length;
 
-  // Yerleşim
+  // Yerleşim. Tik sayısı alana göre azaltılır: dar grafikte x etiketleri, alçak grafikte y etiketleri çakışmasın.
   const tikPunto = 11;
   const ustBaslik = baslik ? 22 : 0;
   const lejantY = 8 + ustBaslik + 10;
-  const sol = Math.max(44, 22 + Math.max(...yTikMetni.map((t) => metinGenisligi(t, tikPunto))) + 10);
-  const sag = 12 + metinGenisligi(xTikMetni[xTikMetni.length - 1] ?? "", tikPunto) / 2;
   const ust = lejantY + 16;
   const alt = 46;
+  let yT = eksenTikleri(yMin, yMax, 5);
+  for (let hedef = 5; hedef > 2 && (H - alt - ust) / (yT.tikler.length - 1) < 18; hedef--) yT = eksenTikleri(yMin, yMax, hedef - 1);
+  const yTikMetni = yT.tikler.map((t) => tikEtiketi(t, yT.ondalik));
+  const sol = Math.max(44, 22 + Math.max(...yTikMetni.map((t) => metinGenisligi(t, tikPunto))) + 10);
+  let xT = eksenTikleri(xMin, xMax, 6);
+  let xTikMetni = xT.tikler.map((t) => tikEtiketi(t, xT.ondalik));
+  for (let hedef = 6; hedef > 2; hedef--) {
+    xT = eksenTikleri(xMin, xMax, hedef);
+    xTikMetni = xT.tikler.map((t) => tikEtiketi(t, xT.ondalik));
+    const enGenis = Math.max(...xTikMetni.map((t) => metinGenisligi(t, tikPunto)));
+    const cizimGenisligi = W - sol - 12 - metinGenisligi(xTikMetni[xTikMetni.length - 1], tikPunto) / 2;
+    if (cizimGenisligi / (xT.tikler.length - 1) >= enGenis + 10) break;
+  }
+  const sag = 12 + metinGenisligi(xTikMetni[xTikMetni.length - 1] ?? "", tikPunto) / 2;
   const px0 = sol;
   const px1 = W - sag;
   const py0 = ust;
@@ -210,7 +227,7 @@ export function cizgiGrafikSvg(seri: TaramaSerisi, secenekler?: GrafikSecenekler
 
   const parcalar: string[] = [];
   parcalar.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="${R.arkaPlan}"/>`);
-  if (baslik) parcalar.push(metin(px0, 8 + 13, baslik, { punto: 13, renk: R.metin }));
+  if (baslik) parcalar.push(metin(px0, 8 + 13, kisalt(baslik, 13, W - px0 - 8), { punto: 13, renk: R.metin }));
 
   // Izgara ve y tikleri
   for (const [i, t] of yT.tikler.entries()) {
@@ -228,11 +245,11 @@ export function cizgiGrafikSvg(seri: TaramaSerisi, secenekler?: GrafikSecenekler
   parcalar.push(`<line x1="${k(px0)}" y1="${k(py0)}" x2="${k(px0)}" y2="${k(py1)}" stroke="${R.eksen}" stroke-width="1"/>`);
   parcalar.push(`<line x1="${k(px0)}" y1="${k(py1)}" x2="${k(px1)}" y2="${k(py1)}" stroke="${R.eksen}" stroke-width="1"/>`);
   // Eksen etiketleri
-  parcalar.push(metin((px0 + px1) / 2, H - 9, xEtiket, { punto: 12, renk: R.metin, hiza: "middle" }));
+  parcalar.push(metin((px0 + px1) / 2, H - 9, kisalt(xEtiket, 12, Math.min(W - 16, 2 * Math.min((px0 + px1) / 2, W - (px0 + px1) / 2) - 8)), { punto: 12, renk: R.metin, hiza: "middle" }));
   const yEtiketX = 14;
   const yEtiketY = (py0 + py1) / 2;
   parcalar.push(
-    metin(yEtiketX, yEtiketY, yEtiket, {
+    metin(yEtiketX, yEtiketY, kisalt(yEtiket, 12, py1 - py0 + 16), {
       punto: 12,
       renk: R.metin,
       hiza: "middle",
@@ -271,8 +288,12 @@ export function cizgiGrafikSvg(seri: TaramaSerisi, secenekler?: GrafikSecenekler
   const ly = lejantY;
   parcalar.push(`<line x1="${k(lx)}" y1="${k(ly)}" x2="${k(lx + 18)}" y2="${k(ly)}" stroke="${R.seri}" stroke-width="2"/>`);
   parcalar.push(isaret(lx + 9, ly, "normal"));
-  parcalar.push(metin(lx + 24, ly + 4, seri.yEtiket, { punto: tikPunto, renk: R.metin }));
-  lx += 24 + metinGenisligi(seri.yEtiket, tikPunto) + 16;
+  // Durum işaretleri her zaman sığsın: gerekirse seri adı kısaltılır.
+  const durumGenisligi =
+    (uyariSayisi > 0 ? 16 + metinGenisligi("Uyarı", tikPunto) + 16 : 0) + (hataSayisi > 0 ? 16 + metinGenisligi("Hata", tikPunto) : 0);
+  const seriAdi = kisalt(seri.yEtiket, tikPunto, Math.max(30, W - 8 - px0 - 24 - 16 - durumGenisligi));
+  parcalar.push(metin(lx + 24, ly + 4, seriAdi, { punto: tikPunto, renk: R.metin }));
+  lx += 24 + metinGenisligi(seriAdi, tikPunto) + 16;
   if (uyariSayisi > 0) {
     parcalar.push(isaret(lx + 6, ly, "uyari"));
     parcalar.push(metin(lx + 16, ly + 4, "Uyarı", { punto: tikPunto, renk: R.metin }));

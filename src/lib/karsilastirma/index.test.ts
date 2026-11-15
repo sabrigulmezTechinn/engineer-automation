@@ -5,6 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { ohmYasasi } from "@/lib/calc/defs/temel-elektrik/ohm-yasasi";
 import { seriParalel } from "@/lib/calc/defs/temel-elektrik/seri-paralel";
+import { acGuc } from "@/lib/calc/defs/temel-elektrik/ac-guc";
+import { defaultState } from "@/lib/calc/engine";
 import type { CalcDefinition, InputState } from "@/lib/calc/types";
 import { TaramaHatasi, enKotuSeviye, karsilastirmaOlustur, taramaYap, type Senaryo, type TaramaAyari } from "./index";
 
@@ -165,6 +167,24 @@ describe("karsilastirmaOlustur — select, liste, gizli girdi", () => {
     const Req = satir(k, "cikti", "Req");
     expect(Req.birim).toBe("kohm");
     expect(Req.degerler).toEqual(["0,79", "1,32"]);
+  });
+});
+
+describe("karsilastirmaOlustur — birimsiz satırlar", () => {
+  it("sembolü '-' olan birimde birim ve birim sembolü boş (sözleşme)", () => {
+    const s1 = defaultState(acGuc);
+    const s2 = { ...s1, cosphi: { value: "0,9", unit: "unitless" } };
+    const k = karsilastirmaOlustur(acGuc, [
+      { id: "a", ad: "a", state: s1 },
+      { id: "b", ad: "b", state: s2 },
+    ]);
+    const cos = satir(k, "girdi", "cosphi");
+    expect(cos.birim).toBe("");
+    expect(cos.birimSembolu).toBe("");
+    expect(cos.degerler).toEqual(["0,8", "0,9"]);
+    expect(cos.sayisal).toEqual([0.8, 0.9]);
+    // Birimli satırlar birim kimliğini taşır
+    expect(satir(k, "cikti", "P").birim).not.toBe("");
   });
 });
 

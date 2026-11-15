@@ -61,6 +61,11 @@ export function birimSembolu(unitId: string): string {
   return symbol === "-" ? "" : symbol;
 }
 
+/** Satırın `birim` alanı: sözleşmeye göre birimsiz değerlerde (sembolü "-" olan birimler) boş. */
+function satirBirimi(unitId: string): string {
+  return getUnit(unitId).symbol === "-" ? "" : unitId;
+}
+
 function cikisSembolu(spec: OutputSpec, unitId: string): string {
   return spec.unitLabel ?? birimSembolu(unitId);
 }
@@ -189,7 +194,7 @@ function girdiSatiri(
       sayisal.push(fromSI(si[0], birim));
     }
   }
-  return { ...temel, birim, birimSembolu: birimSembolu(birim), degerler, sayisal, farkli: farkliMi(degerler) };
+  return { ...temel, birim: satirBirimi(birim), birimSembolu: birimSembolu(birim), degerler, sayisal, farkli: farkliMi(degerler) };
 }
 
 function ciktiSatiri(spec: OutputSpec, runs: RunResult[], options?: RunOptions): KarsilastirmaSatiri | null {
@@ -209,7 +214,7 @@ function ciktiSatiri(spec: OutputSpec, runs: RunResult[], options?: RunOptions):
     key: spec.key,
     label: spec.label,
     ...(spec.symbol !== undefined ? { symbol: spec.symbol } : {}),
-    birim,
+    birim: satirBirimi(birim),
     birimSembolu: cikisSembolu(spec, birim),
     degerler,
     sayisal,

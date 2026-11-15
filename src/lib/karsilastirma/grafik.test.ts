@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { TaramaNoktasi, TaramaSerisi } from "./types";
-import { GRAFIK_RENKLERI, cizgiGrafikSvg, eksenTikleri, tikEtiketi, xmlKacis } from "./grafik";
+import { GRAFIK_RENKLERI, cizgiGrafikSvg, eksenTikleri, kisalt, tikEtiketi, xmlKacis } from "./grafik";
 
 function seri(noktalar: TaramaNoktasi[], ek: Partial<TaramaSerisi> = {}): TaramaSerisi {
   return {
@@ -222,6 +222,33 @@ describe("cizgiGrafikSvg", () => {
     const svg = cizgiGrafikSvg(seri(noktalar));
     expect(svg).not.toMatch(/NaN|Infinity/);
     parse(svg);
+  });
+
+  it("dar grafikte uzun etiketler kısaltılır, x tikleri seyreltilir; tam metin title/desc'te kalır", () => {
+    const uzun = seri(
+      Array.from({ length: 21 }, (_, i) => n(10000 + i * 4500, 1500 + i * 30, i > 15 ? "hata" : i > 10 ? "uyari" : null)),
+      { xEtiket: "Devir başına sayım (enkoder çözünürlüğü)", yEtiket: "Mühendislik değeri (proses biriminde)", xBirimSembolu: "", yBirimSembolu: "dev/dk" },
+    );
+    const dar = parse(cizgiGrafikSvg(uzun, { genislik: 320, yukseklik: 220, baslik: "Senaryo 1 temel alınarak çok uzun bir başlık metni" }));
+    const metinler = [...dar.getElementsByTagName("text")].map((t) => t.textContent ?? "");
+    expect(metinler.filter((m) => m.endsWith("…")).length).toBeGreaterThanOrEqual(3);
+    expect(metinler).toContain("Uyarı");
+    expect(metinler).toContain("Hata");
+    // 10 000–100 000: 320 px'te 0, 50 000, 100 000
+    expect(metinler).toEqual(expect.arrayContaining(["0", "50\u202f000", "100\u202f000"]));
+    expect(metinler).not.toContain("20\u202f000");
+    expect(dar.documentElement.firstElementChild?.textContent).toBe("Senaryo 1 temel alınarak çok uzun bir başlık metni");
+    expect(dar.getElementsByTagName("desc")[0].textContent).toContain("Mühendislik değeri (proses biriminde) (dev/dk)");
+    // Geniş grafikte kısaltma yok
+    const genis = parse(cizgiGrafikSvg(uzun, { genislik: 960, yukseklik: 480 }));
+    expect([...genis.getElementsByTagName("text")].some((t) => t.textContent?.endsWith("…"))).toBe(false);
+  });
+
+  it("kisalt: sığan metne dokunmaz, sığmayanı üç noktayla keser", () => {
+    expect(kisalt("Akım", 11, 100)).toBe("Akım");
+    const k = kisalt("Mühendislik değeri (proses biriminde)", 11, 60);
+    expect(k.endsWith("…")).toBe(true);
+    expect(k.length).toBeLessThan(12);
   });
 
   it("hesaplanabilen değer yoksa açıklama yazar", () => {
