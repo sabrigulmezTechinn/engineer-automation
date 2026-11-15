@@ -153,7 +153,7 @@ export interface CalcResult {
 }
 
 /** Genel form yerine özel arayüzle gösterilen hesaplar (src/components/calc/custom/) */
-export type CustomUiId = "birim-donusturucu";
+export type CustomUiId = "birim-donusturucu" | "renk-kodu";
 
 export interface CalcDefinition {
   /** KAPSAM.md numarası, ör. "1.1" */

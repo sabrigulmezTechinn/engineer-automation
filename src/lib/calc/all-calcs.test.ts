@@ -12,18 +12,41 @@ import { defaultState, runCalc } from "./engine";
 import { allCalcs } from "./registry";
 import { latexToSvg } from "@/lib/rapor/latex-svg";
 import { renderStrict } from "./test-utils/katex";
-import type { CalcDefinition, InputState } from "./types";
+import type { CalcDefinition, InputState, SelectInputSpec } from "./types";
 
 const calcs = allCalcs();
 
-/** Select girdilerinin tüm değer kombinasyonları (en fazla 512); her biri InputState parçası. */
-function selectCombinations(def: CalcDefinition): InputState[] {
+const KOMBINASYON_MAX = 512;
+
+/** Verilen select girdilerinin tüm değer kombinasyonları (en fazla KOMBINASYON_MAX). */
+function product(selects: SelectInputSpec[]): InputState[] {
   let combos: InputState[] = [{}];
-  for (const input of def.inputs) {
-    if (input.kind !== "select") continue;
+  for (const input of selects) {
     const next: InputState[] = [];
     for (const c of combos) for (const o of input.options) next.push({ ...c, [input.key]: { value: o.value } });
-    combos = next.slice(0, 512);
+    combos = next.slice(0, KOMBINASYON_MAX);
+  }
+  return combos;
+}
+
+/**
+ * Select girdilerinin denenecek kombinasyonları; her biri InputState parçası.
+ * Tam çarpım KOMBINASYON_MAX'ı aşmıyorsa hepsi. Aşıyorsa (ör. renk bandı seçimleri) kesip ilk seçimleri
+ * yitirmek yerine: görünürlüğü yöneten select'lerin (visibleWhen'de adı geçen) tam çarpımı ve bunların her
+ * birinde geri kalan her select'in her seçeneği tek tek (diğerleri varsayılanda).
+ */
+function selectCombinations(def: CalcDefinition): InputState[] {
+  const selects = def.inputs.filter((i): i is SelectInputSpec => i.kind === "select");
+  const total = selects.reduce((n, s) => n * s.options.length, 1);
+  if (total <= KOMBINASYON_MAX) return product(selects);
+
+  const controllerKeys = new Set(def.inputs.flatMap((i) => (i.visibleWhen ? [i.visibleWhen.key] : [])));
+  const controllers = selects.filter((s) => controllerKeys.has(s.key));
+  const others = selects.filter((s) => !controllerKeys.has(s.key));
+  const combos: InputState[] = [];
+  for (const base of product(controllers)) {
+    combos.push(base);
+    for (const s of others) for (const o of s.options) combos.push({ ...base, [s.key]: { value: o.value } });
   }
   return combos;
 }

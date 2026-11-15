@@ -83,6 +83,9 @@ const ALL: UnitDef[] = [
     { id: "MVA", symbol: "MVA", name: "megavolt-amper", factor: 1e6 },
   ]),
   ...group("enerji", [
+    // MOSFET anahtarlama enerjisi E_on/E_off (4.8), veri sayfalarında µJ/mJ
+    { id: "uJ", symbol: "µJ", name: "mikrojoule", factor: 1e-6 },
+    { id: "mJ", symbol: "mJ", name: "milijoule", factor: 1e-3 },
     { id: "J", symbol: "J", name: "joule", factor: 1 },
     { id: "kJ", symbol: "kJ", name: "kilojoule", factor: 1e3 },
     { id: "MJ", symbol: "MJ", name: "megajoule", factor: 1e6 },
@@ -91,6 +94,9 @@ const ALL: UnitDef[] = [
     { id: "MWh", symbol: "MWh", name: "megawatt-saat", factor: 3.6e9 },
   ]),
   ...group("yuk", [
+    // MOSFET kapı yükü Q_g (4.8), veri sayfalarında nC
+    { id: "nC", symbol: "nC", name: "nanocoulomb", factor: 1e-9 },
+    { id: "uC", symbol: "µC", name: "mikrocoulomb", factor: 1e-6 },
     { id: "C", symbol: "C", name: "coulomb", factor: 1 },
     { id: "mAh", symbol: "mAh", name: "miliamper-saat", factor: 3.6 },
     { id: "Ah", symbol: "Ah", name: "amper-saat", factor: 3600 },
@@ -116,6 +122,8 @@ const ALL: UnitDef[] = [
     { id: "H", symbol: "H", name: "henry", factor: 1 },
   ]),
   ...group("zaman", [
+    // Anahtarlama süreleri t_r/t_f (4.8)
+    { id: "ns", symbol: "ns", name: "nanosaniye", factor: 1e-9 },
     { id: "us", symbol: "µs", name: "mikrosaniye", factor: 1e-6 },
     { id: "ms", symbol: "ms", name: "milisaniye", factor: 1e-3 },
     { id: "s", symbol: "s", name: "saniye", factor: 1 },
