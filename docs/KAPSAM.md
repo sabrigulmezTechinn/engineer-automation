@@ -83,7 +83,7 @@ Sütunlar: **Hesap** · **Temel formül** · **Standart / kaynak referansı**
 | 2.4 | Kompanzasyon (kVAR) | Q_c = P·(tanφ₁ − tanφ₂) | EPDK reaktif enerji sınırları |
 | 2.5 | Kısa devre akımı | I_k = c·U_n / (√3·Z_k) | IEC 60909-0 |
 | 2.6 | Trafo seçimi ve yüklenme | S = √3·U·I | IEC 60076 |
-| 2.7 | Topraklama direnci | Çubuk: R = ρ/(2πL)·[ln(4L/d) − 1] | IEC 60364-5-54; Elektrik Tesislerinde Topraklamalar Yönetmeliği |
+| 2.7 | Topraklama direnci | Çubuk (Dwight, d çap): R = ρ/(2πL)·[ln(8L/d) − 1] | IEC 60364-5-54; Elektrik Tesislerinde Topraklamalar Yönetmeliği |
 | 2.8 | Pano ısı hesabı | ΔT = P_kayıp / (k·A) ; fan debisi | IEC/TR 60890, IEC 61439-1 |
 
 ### 4.3 Motor ve sürücü (5)
