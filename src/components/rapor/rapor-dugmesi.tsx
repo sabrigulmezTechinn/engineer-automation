@@ -60,6 +60,8 @@ export function RaporDugmesi({ calc, kayit }: { calc: CalcStateApi; kayit?: Kayi
 
   return (
     <IndirDugmesi
+      // Geniş ekranda sağa hizalı: açıklama görünüp kaybolurken düğme yerinden kaymasın.
+      className="sm:max-w-xs sm:items-end sm:text-right"
       etiket="PDF rapor"
       mesgul={mesgul}
       hata={hata}

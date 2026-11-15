@@ -168,7 +168,8 @@ async function ana() {
       );
     }
 
-    browser = await playwright.chromium.launch();
+    // LANG tanımsızsa Chromium Türkçe karakterli indirme adlarını "download" yapar; UTF-8 yerel ayarı ver.
+    browser = await playwright.chromium.launch({ env: { ...process.env, LANG: process.env.LANG || "C.UTF-8" } });
     const { sonuclar, durduran } = await senaryolariCalistir({ browser, playwright, senaryolar: secilen });
     const sureMs = performance.now() - bas;
     const basarili = ozetYaz(sonuclar, { sureMs, durduran });

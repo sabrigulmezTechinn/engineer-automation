@@ -61,8 +61,15 @@ export function KaydetPaneli({
   const [alanHatasi, setAlanHatasi] = useState<{ alan: "ad" | "proje"; metin: string } | null>(null);
 
   useEffect(() => {
+    // Paneli açan öğe (Kaydet / Farklı kaydet düğmesi): panel kapanınca odak ona geri verilir (Esc, Vazgeç).
+    const acan = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     adRef.current?.focus();
     adRef.current?.select();
+    return () => {
+      // Odak kaldırılan panelle birlikte gövdeye düştüyse geri ver; kullanıcı başka yere geçtiyse dokunma.
+      const aktif = document.activeElement;
+      if (acan?.isConnected && (aktif === null || aktif === document.body)) acan.focus();
+    };
   }, []);
 
   function gonder(e: FormEvent) {

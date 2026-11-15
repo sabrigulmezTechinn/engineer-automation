@@ -58,7 +58,8 @@ function Workspace({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 empty:hidden">
+      {/* Mobilde alt alta (kayıt bilgisi tam genişlik), geniş ekranda yan yana: kayıt araçları solda, rapor sağda. */}
+      <div className="flex flex-col gap-3 empty:hidden sm:flex-row sm:items-start sm:justify-between">
         <KayitAraclari calc={calc} kayit={kayit} girisYapildi={girisYapildi} />
         <RaporDugmesi calc={calc} kayit={kayit} />
       </div>
