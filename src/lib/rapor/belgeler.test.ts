@@ -13,7 +13,7 @@ import { defaultState } from "@/lib/calc/engine";
 import { allCalcs, getCalc } from "@/lib/calc/registry";
 import type { CalcDefinition, InputState } from "@/lib/calc/types";
 import type { Karsilastirma, TaramaSerisi } from "@/lib/karsilastirma/types";
-import { hesapRaporuPdf, karsilastirmaRaporuPdf, projeRaporuPdf } from "./belgeler";
+import { esitliktenBol, hesapRaporuPdf, karsilastirmaRaporuPdf, projeRaporuPdf } from "./belgeler";
 import { KISA_SORUMLULUK_REDDI, PLATFORM_ADI, TAM_SORUMLULUK_REDDI, TELIF_NOTU } from "./metinler";
 import { hesapRaporuOlustur } from "./model";
 import { YEDEK_UNICODE_ARALIKLARI, yedekFontMu } from "./pdf";
@@ -185,6 +185,26 @@ describe.each(allCalcs().map((d) => [`${d.id} ${d.slug}`, d] as const))("hesapRa
   });
 });
 
+describe("geniş formüller", () => {
+  it("esitliktenBol en üst düzeydeki = ve \\approx işaretlerinden böler; parantez ve ortam içini bölmez", () => {
+    expect(esitliktenBol("A = B = C")).toEqual(["A", "= B", "= C"]);
+    expect(esitliktenBol("x \\approx 2{,}5 = y")).toEqual(["x", "\\approx 2{,}5", "= y"]);
+    expect(esitliktenBol("\\sum_{i=1}^{n} R_i = R")).toEqual(["\\sum_{i=1}^{n} R_i", "= R"]);
+    expect(esitliktenBol("\\left( a = b \\right) = c")).toEqual(["\\left( a = b \\right)", "= c"]);
+    expect(esitliktenBol("\\begin{cases} a = 1 \\end{cases}")).toEqual(["\\begin{cases} a = 1 \\end{cases}"]);
+    expect(esitliktenBol("a \\leq b")).toEqual(["a \\leq b"]);
+  });
+
+  it("sayfadan geniş adım satırlara bölünerek SVG olarak çizilir (LaTeX kaynağına düşmez)", async () => {
+    const r = rapor("ohm-yasasi");
+    const terimler = Array.from({ length: 14 }, (_, i) => `R_{${i + 1}} = ${i + 1}{,}234\\,\\mathrm{k}\\Omega`).join(" + ");
+    const genis: HesapRaporu = { ...r, adimlar: [{ label: "Çok geniş adım", latex: `R = ${terimler}` }] };
+    const pdf = await hesapRaporuPdf({ baslik: "Geniş", tarih: TARIH }, genis);
+    pdfMi(pdf);
+    expect(pdfMetni(pdf)).not.toContain("\\");
+  });
+});
+
 describe("projeRaporuPdf", () => {
   it("kapak/özet sayfası, içindekiler; her hesap yeni sayfada", async () => {
     const raporlar = [
@@ -280,8 +300,8 @@ const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320" vi
 <rect x="0" y="0" width="640" height="320" fill="#ffffff" stroke="#dde1e7"/>
 <polyline fill="none" stroke="#1d5bbf" stroke-width="2" points="60,40 200,120 340,180 480,220"/>
 <circle cx="200" cy="120" r="4" fill="#8a5700"/>
-<text x="320" y="306" font-family="Noto Sans, sans-serif" font-size="12" text-anchor="middle">Direnç (Ω) — ğüşıöç İĞÜŞÖÇ</text>
-<text x="16" y="160" font-family="Noto Sans, sans-serif" font-size="12" text-anchor="middle" transform="rotate(-90 16 160)">Akım (A)</text>
+<text x="320" y="306" font-family="NotoSans, Noto Sans, sans-serif" font-size="12" text-anchor="middle">Direnç (Ω) — ğüşıöç İĞÜŞÖÇ</text>
+<text x="16" y="160" font-family="NotoSans, Noto Sans, sans-serif" font-size="12" text-anchor="middle" transform="rotate(-90 16 160)">Akım (A)</text>
 </svg>`;
 
 describe("karsilastirmaRaporuPdf", () => {

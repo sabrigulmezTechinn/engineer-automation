@@ -4,7 +4,7 @@
  * PDF indirme: fetch → Blob → geçici indirme bağlantısı. Dosya adı yanıtın `Content-Disposition` başlığından
  * (önce UTF-8 `filename*`), yoksa verilen yedek addan türetilir. Sunucunun `{ hata }` mesajı kullanıcıya gösterilir.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { asciiDosyaAdi, dosyaAdiniCoz } from "@/lib/rapor/dosya-adi";
 
 export class PdfIndirmeHatasi extends Error {
@@ -63,10 +63,14 @@ export function usePdfIndirme() {
   const [hata, setHata] = useState<string | null>(null);
   const aktif = useRef<AbortController | null>(null);
 
-  useEffect(
+  // cacheComponents: sayfadan ayrılınca Next.js sayfayı <Activity> ile gizler (kaldırmaz). Gizlenirken
+  // süren indirme iptal edilir ve eski hata mesajı silinir; sayfaya dönüldüğünde düğme temiz görünür.
+  useLayoutEffect(
     () => () => {
       aktif.current?.abort();
       aktif.current = null;
+      setHata(null);
+      setMesgul(false);
     },
     [],
   );

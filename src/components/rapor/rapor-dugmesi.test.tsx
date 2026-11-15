@@ -4,6 +4,7 @@
  * fetch ve URL.createObjectURL taklit edilir; hesap tanımı ve useCalcState gerçektir.
  */
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { Activity } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useCalcState } from "@/components/calc/use-calc-state";
 import { getCalc } from "@/lib/calc/registry";
@@ -131,6 +132,31 @@ describe("RaporDugmesi", () => {
     render(<Sarmal />);
     fireEvent.click(screen.getByRole("button", { name: /PDF rapor/ }));
     await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/Sunucuya ulaşılamadı/));
+  });
+});
+
+describe("Activity (cacheComponents) ile gizlenme", () => {
+  it("sayfa gizlenip geri gelince eski hata mesajı kalmaz", async () => {
+    fetchMock.mockResolvedValue(Response.json({ hata: "Proje bulunamadı." }, { status: 404 }));
+    const { rerender } = render(
+      <Activity mode="visible">
+        <ProjeRaporDugmesi projeId="p1" />
+      </Activity>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Proje raporu/ }));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Proje bulunamadı."));
+    rerender(
+      <Activity mode="hidden">
+        <ProjeRaporDugmesi projeId="p1" />
+      </Activity>,
+    );
+    rerender(
+      <Activity mode="visible">
+        <ProjeRaporDugmesi projeId="p1" />
+      </Activity>,
+    );
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe(""));
+    expect(screen.getByRole("button", { name: /Proje raporu/ })).toHaveProperty("disabled", false);
   });
 });
 

@@ -8,6 +8,7 @@
  */
 import type {
   Content,
+  ContentSvg,
   ContentTable,
   ContextPageSize,
   PageOrientation,
@@ -83,6 +84,55 @@ function kirilabilir(s: string, n = 12): string {
   });
 }
 
+/** İçerik alanının yüksekliği (sayfa başlığı ve alt bilgi dışı) */
+function icerikYuksekligi(yon: PageOrientation): number {
+  return (yon === "landscape" ? A4.genislik : A4.yukseklik) - KENAR[1] - KENAR[3];
+}
+
+/**
+ * Bölüm başlığının ilk bloğuyla birlikte tutulacağı en büyük tahmini yükseklik: içerik alanının %70'i.
+ * pdfmake birden çok sayfaya yayılan `unbreakable` bloğun taşan kısmını çizmez; tahminler cömert, sınır düşük.
+ * (`pageBreakBefore` her kırılmada tüm belgeyi yeniden dizdiği için büyük proje raporlarında yavaştı.)
+ */
+function birlikteSiniri(yon: PageOrientation): number {
+  return icerikYuksekligi(yon) * 0.7;
+}
+
+/** Metnin yaklaşık satır sayısı; ortalama karakter genişliği bilerek cömert (0,6 em) */
+function satirSayisi(s: string, genislik: number, pt: number): number {
+  const kapasite = Math.max(1, Math.floor(genislik / (pt * 0.6)));
+  return s.split("\n").reduce((t, parca) => t + Math.max(1, Math.ceil([...parca].length / kapasite)), 0);
+}
+
+/** Tablo yüksekliği tahmini (pt): her satır en uzun hücresi kadar; hücre dolgusu ve çizgiler dahil */
+function tabloTahmini(satirlar: string[][], genislikler: number[], pt = 9.5): number {
+  return satirlar.reduce(
+    (toplam, satir) =>
+      toplam + 12 + pt * 1.45 * Math.max(1, ...satir.map((h, i) => satirSayisi(h, Math.max(10, genislikler[i] - 12), pt))),
+    0,
+  );
+}
+
+/** Bir bölüm gövdesi ve tahmini yüksekliği (pt) */
+interface Parca {
+  dugum: Content;
+  tahmin: number;
+}
+
+/** Kısa bir metin parçası */
+function notParcasi(s: string): Parca {
+  return { dugum: { text: metin(s), style: "etiket" }, tahmin: 16 };
+}
+
+/**
+ * Bölüm başlığı + ilk blok. Blok kısaysa ikisi tek `unbreakable` blok olur (başlık sayfa sonunda yalnız
+ * kalmaz); uzunsa normal akışta kalır.
+ */
+function bolum(baslik: string, ilk: Parca, sinir: number, stil: "bolum" | "altBolum" = "bolum"): Content[] {
+  const b: Content = { text: metin(baslik), style: stil };
+  return ilk.tahmin + 40 <= sinir ? [{ unbreakable: true, stack: [b, ilk.dugum] }] : [b, ilk.dugum];
+}
+
 /** "hata" > "uyari" > "ok"; kontrol yoksa null */
 export function enKotuSeviye(kontroller: readonly Check[]): CheckLevel | null {
   if (kontroller.some((c) => c.level === "hata")) return "hata";
@@ -114,19 +164,93 @@ function svgAl(onbellek: SvgOnbellek, latex: string, display: boolean): Promise<
 }
 
 /**
- * LaTeX'i SVG düğümüne çevirir; genişlik `enCok`'u aşarsa orantılı küçültülür. MathJax işleyemezse
- * (hata: true) LaTeX kaynağı düz metin olarak yazılır.
+ * LaTeX'i en üst düzeydeki "=" ve "\approx" işaretlerinden böler ("A = B = C" → "A", "= B", "= C").
+ * Süslü parantez, \left…\right ve \begin…\end içindekiler bölünmez. Bölünecek yer yoksa tek parça döner.
+ */
+export function esitliktenBol(latex: string): string[] {
+  const parcalar: string[] = [];
+  let derinlik = 0;
+  let bas = 0;
+  for (let i = 0; i < latex.length; i++) {
+    const ch = latex[i];
+    if (ch === "\\") {
+      const komut = /^\\([A-Za-z]+|.)/.exec(latex.slice(i))?.[1] ?? "";
+      if (komut === "left" || komut === "begin") derinlik++;
+      else if (komut === "right" || komut === "end") derinlik--;
+      else if (komut === "approx" && derinlik === 0 && latex.slice(bas, i).trim()) {
+        parcalar.push(latex.slice(bas, i).trim());
+        bas = i;
+      }
+      i += komut.length;
+      continue;
+    }
+    if (ch === "{") derinlik++;
+    else if (ch === "}") derinlik--;
+    else if (ch === "=" && derinlik === 0 && latex.slice(bas, i).trim()) {
+      parcalar.push(latex.slice(bas, i).trim());
+      bas = i;
+    }
+  }
+  parcalar.push(latex.slice(bas).trim());
+  return parcalar.filter(Boolean);
+}
+
+function svgDugumu(s: LatexSvg, pt: number, enCok: number): ContentSvg {
+  return { svg: s.svg, width: Math.min(exToPt(s.widthEx, pt), enCok) };
+}
+
+function cizilebilir(s: LatexSvg | null): s is LatexSvg {
+  return Boolean(s && !s.hata && s.widthEx > 0 && s.heightEx > 0);
+}
+
+/**
+ * LaTeX'i SVG düğümüne çevirir. MathJax işleyemezse (hata: true) LaTeX kaynağı düz metin olarak yazılır.
+ * Blok formül `enCok`'tan genişse önce eşittir işaretlerinden satırlara bölünür (devam satırları "= …" ile,
+ * girintili); bölünemeyen ya da bölündüğü hâlde sığmayan satır orantılı küçültülür, sayfayı hiç aşmaz.
  */
 async function formulDugumu(
   onbellek: SvgOnbellek,
   latex: string,
   secenek: { pt: number; enCok: number; display?: boolean },
 ): Promise<Content> {
-  const s = await svgAl(onbellek, latex, secenek.display ?? true);
-  if (!s || s.hata || !(s.widthEx > 0) || !(s.heightEx > 0)) {
+  const display = secenek.display ?? true;
+  const s = await svgAl(onbellek, latex, display);
+  if (!cizilebilir(s)) {
     return { text: metin(latex), italics: true, color: RENK.soluk, fontSize: secenek.pt - 1 };
   }
-  return { svg: s.svg, width: Math.min(exToPt(s.widthEx, secenek.pt), secenek.enCok) };
+  const sigar = (x: LatexSvg) => exToPt(x.widthEx, secenek.pt) <= secenek.enCok;
+  if (!display || sigar(s)) return svgDugumu(s, secenek.pt, secenek.enCok);
+
+  const parcalar = esitliktenBol(latex);
+  if (parcalar.length < 2) return svgDugumu(s, secenek.pt, secenek.enCok);
+  // Açgözlü yerleştirme: sığdıkça aynı satıra ekle. Devam satırı "{} = …" (doğru boşlukla başlar).
+  const girinti = 18;
+  const satirlar: LatexSvg[] = [];
+  let mevcut = parcalar[0];
+  let mevcutSvg = await svgAl(onbellek, mevcut, true);
+  for (const parca of parcalar.slice(1)) {
+    const aday = `${mevcut} ${parca}`;
+    const adaySvg = await svgAl(onbellek, aday, true);
+    const sinir = satirlar.length === 0 ? secenek.enCok : secenek.enCok - girinti;
+    if (cizilebilir(adaySvg) && exToPt(adaySvg.widthEx, secenek.pt) <= sinir) {
+      mevcut = aday;
+      mevcutSvg = adaySvg;
+      continue;
+    }
+    if (!cizilebilir(mevcutSvg)) return svgDugumu(s, secenek.pt, secenek.enCok);
+    satirlar.push(mevcutSvg);
+    mevcut = `{} ${parca}`;
+    mevcutSvg = await svgAl(onbellek, mevcut, true);
+  }
+  if (!cizilebilir(mevcutSvg)) return svgDugumu(s, secenek.pt, secenek.enCok);
+  satirlar.push(mevcutSvg);
+  return {
+    stack: satirlar.map((satir, i) =>
+      i === 0
+        ? svgDugumu(satir, secenek.pt, secenek.enCok)
+        : { ...svgDugumu(satir, secenek.pt, secenek.enCok - girinti), margin: [girinti, 3, 0, 0] as [number, number, number, number] },
+    ),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -145,14 +269,6 @@ const TABLO_DUZENI = {
 
 function baslikHucresi(s: string): TableCell {
   return { text: metin(s), bold: true, fontSize: 8.5, color: RENK.soluk };
-}
-
-function bolumBasligi(s: string): Content {
-  return { text: metin(s), style: "bolum", headlineLevel: 1 };
-}
-
-function altBaslik(s: string): Content {
-  return { text: metin(s), style: "altBolum", headlineLevel: 1 };
 }
 
 /** Rapor türü etiketi, başlık ve "Hazırlayan / Tarih" bilgisi (ilk sayfa) */
@@ -298,23 +414,6 @@ function belge(
     header: sayfaBasligi(baslik),
     footer: altBilgi,
     content: icerik,
-    // Bölüm başlığı sayfanın son satırında yalnız kalmasın.
-    pageBreakBefore: (dugum, sorgular) => {
-      if (dugum.headlineLevel !== 1) return false;
-      const bas = dugum.startPosition;
-      // Sayfa başlığı/alt bilgisi düğümleri ve sayfalara yayılan kapsayıcılar da "sonraki" listesinde gelir;
-      // yalnızca aynı sayfada, başlığın altında ve içerik alanında başlayanlar sayılır.
-      const icerikAlti = KENAR[1] + bas.pageInnerHeight;
-      return !sorgular
-        .getFollowingNodesOnPage()
-        .some(
-          (n) =>
-            n.startPosition.pageNumber === bas.pageNumber &&
-            n.startPosition.top > bas.top + 1 &&
-            n.startPosition.top >= KENAR[1] - 1 &&
-            n.startPosition.top < icerikAlti,
-        );
-    },
     styles: {
       belgeBasligi: { fontSize: 18, bold: true, color: RENK.metin, margin: [0, 2, 0, 0] },
       hesapBasligi: { fontSize: 15, bold: true, color: RENK.metin },
@@ -335,10 +434,11 @@ async function sembolHucresi(onbellek: SvgOnbellek, sembol: string | undefined, 
   return { stack: [await formulDugumu(onbellek, sembol, { pt: SEMBOL_PT, enCok, display: false })], margin: [0, 1.5, 0, 0] };
 }
 
-async function girdiTablosu(onbellek: SvgOnbellek, girdiler: RaporGirdisi[], genislik: number): Promise<Content> {
-  if (girdiler.length === 0) return { text: "Bu hesabın gösterilecek girdisi yok.", style: "etiket" };
+async function girdiTablosu(onbellek: SvgOnbellek, girdiler: RaporGirdisi[], genislik: number): Promise<Parca> {
+  if (girdiler.length === 0) return notParcasi("Bu hesabın gösterilecek girdisi yok.");
   const sembolGenisligi = 64;
   const degerGenisligi = Math.round(genislik * 0.38);
+  const genislikler = [genislik - sembolGenisligi - degerGenisligi, sembolGenisligi, degerGenisligi];
   const satirlar: TableCell[][] = [[baslikHucresi("Girdi"), baslikHucresi("Sembol"), baslikHucresi("Değer")]];
   for (const g of girdiler) {
     satirlar.push([
@@ -348,15 +448,19 @@ async function girdiTablosu(onbellek: SvgOnbellek, girdiler: RaporGirdisi[], gen
     ]);
   }
   return {
-    table: { headerRows: 1, dontBreakRows: true, widths: ["*", sembolGenisligi, degerGenisligi], body: satirlar },
-    layout: TABLO_DUZENI,
+    dugum: {
+      table: { headerRows: 1, dontBreakRows: true, widths: ["*", sembolGenisligi, degerGenisligi], body: satirlar },
+      layout: TABLO_DUZENI,
+    },
+    tahmin: tabloTahmini([["Girdi"], ...girdiler.map((g) => [g.label, "", g.deger])], genislikler),
   };
 }
 
-async function ciktiTablosu(onbellek: SvgOnbellek, ciktilar: PresentedOutput[], genislik: number): Promise<Content> {
-  if (ciktilar.length === 0) return { text: "Bu girdilerle gösterilecek bir çıktı yok.", style: "etiket" };
+async function ciktiTablosu(onbellek: SvgOnbellek, ciktilar: PresentedOutput[], genislik: number): Promise<Parca> {
+  if (ciktilar.length === 0) return notParcasi("Bu girdilerle gösterilecek bir çıktı yok.");
   const sembolGenisligi = 64;
   const degerGenisligi = Math.round(genislik * 0.38);
+  const genislikler = [genislik - sembolGenisligi - degerGenisligi, sembolGenisligi, degerGenisligi];
   const satirlar: TableCell[][] = [[baslikHucresi("Sonuç"), baslikHucresi("Sembol"), baslikHucresi("Değer")]];
   for (const c of ciktilar) {
     satirlar.push([
@@ -366,8 +470,11 @@ async function ciktiTablosu(onbellek: SvgOnbellek, ciktilar: PresentedOutput[], 
     ]);
   }
   return {
-    table: { headerRows: 1, dontBreakRows: true, widths: ["*", sembolGenisligi, degerGenisligi], body: satirlar },
-    layout: TABLO_DUZENI,
+    dugum: {
+      table: { headerRows: 1, dontBreakRows: true, widths: ["*", sembolGenisligi, degerGenisligi], body: satirlar },
+      layout: TABLO_DUZENI,
+    },
+    tahmin: tabloTahmini([["Sonuç"], ...ciktilar.map((c) => [c.label, "", c.formatted])], genislikler, 10.5),
   };
 }
 
@@ -397,11 +504,13 @@ function referansMetni(ref: Reference): string {
 }
 
 /** Uygunluk durumu: her kontrol renkli bir satır (seviye etiketi + mesaj + referans) */
-export function kontrolTablosu(kontroller: readonly Check[]): Content {
-  if (kontroller.length === 0) {
-    return { text: "Bu girdiler için uygunluk kontrolü yok.", style: "etiket" };
-  }
-  return {
+function kontrolTablosu(kontroller: readonly Check[], genislik: number): Parca {
+  if (kontroller.length === 0) return notParcasi("Bu girdiler için uygunluk kontrolü yok.");
+  const tahmin = tabloTahmini(
+    kontroller.map((k) => [SEVIYE_ETIKETI[k.level], k.reference ? `${k.message}\n${referansMetni(k.reference)}` : k.message]),
+    [52, genislik - 52],
+  );
+  const dugum: Content = {
     table: {
       dontBreakRows: true,
       widths: [52, "*"],
@@ -427,13 +536,18 @@ export function kontrolTablosu(kontroller: readonly Check[]): Content {
       paddingBottom: () => 5,
     },
   };
+  return { dugum, tahmin };
 }
 
-function referansTablosu(referanslar: readonly Reference[]): Content {
+function referansTablosu(referanslar: readonly Reference[], genislik: number): Parca {
   if (referanslar.length === 0) {
-    return { text: "Bu hesap temel bağıntılara dayanır; belirli bir standart referansı yoktur.", style: "etiket" };
+    return notParcasi("Bu hesap temel bağıntılara dayanır; belirli bir standart referansı yoktur.");
   }
-  return {
+  const tahmin = tabloTahmini(
+    [["Standart"], ...referanslar.map((r) => [r.standard, r.title ?? "—", referenceDetail(r) ?? "—"])],
+    [120, genislik - 270, 150],
+  );
+  const dugum: Content = {
     table: {
       headerRows: 1,
       dontBreakRows: true,
@@ -449,11 +563,13 @@ function referansTablosu(referanslar: readonly Reference[]): Content {
     },
     layout: TABLO_DUZENI,
   };
+  return { dugum, tahmin };
 }
 
-function hataKutusu(baslik: string, mesajlar: string[]): Content {
+function hataKutusu(baslik: string, mesajlar: string[], genislik: number): Parca {
   const renk = SEVIYE_RENK.hata;
-  return {
+  const tahmin = 24 + tabloTahmini([[baslik], ...mesajlar.map((m) => [m])], [genislik - 30]);
+  const dugum: Content = {
     margin: [0, 4, 0, 4],
     table: {
       widths: ["*"],
@@ -482,6 +598,13 @@ function hataKutusu(baslik: string, mesajlar: string[]): Content {
       paddingBottom: () => 6,
     },
   };
+  return { dugum, tahmin };
+}
+
+/** Formül/adım listesi: başlık ilk formülle birlikte (bir formül bloğu kısa: etiket + tek SVG) */
+function formulBolumu(baslik: string, bloklar: Content[], sinir: number): Content[] {
+  if (bloklar.length === 0) return [];
+  return [...bolum(baslik, { dugum: bloklar[0], tahmin: 160 }, sinir), ...bloklar.slice(1)];
 }
 
 /**
@@ -520,28 +643,25 @@ async function hesapBolumu(
     fontSize: 9.5,
   });
 
-  icerik.push(bolumBasligi("Girdiler"), await girdiTablosu(onbellek, rapor.girdiler, genislik));
+  const sinir = birlikteSiniri("portrait");
+  icerik.push(...bolum("Girdiler", await girdiTablosu(onbellek, rapor.girdiler, genislik), sinir));
 
   if (!rapor.basarili) {
-    icerik.push(bolumBasligi("Sonuç"), hataKutusu("Sonuç hesaplanamadı:", rapor.hataMesajlari));
+    icerik.push(...bolum("Sonuç", hataKutusu("Sonuç hesaplanamadı:", rapor.hataMesajlari, genislik), sinir));
   }
 
-  if (rapor.formuller.length > 0) {
-    icerik.push(bolumBasligi("Formüller"), ...(await formulListesi(onbellek, rapor.formuller, genislik, false)));
-  }
+  icerik.push(...formulBolumu("Formüller", await formulListesi(onbellek, rapor.formuller, genislik, false), sinir));
 
   if (rapor.basarili) {
-    if (rapor.adimlar.length > 0) {
-      icerik.push(bolumBasligi("Ara adımlar"), ...(await formulListesi(onbellek, rapor.adimlar, genislik, true)));
-    }
-    icerik.push(bolumBasligi("Sonuçlar"), await ciktiTablosu(onbellek, rapor.ciktilar, genislik));
+    icerik.push(...formulBolumu("Ara adımlar", await formulListesi(onbellek, rapor.adimlar, genislik, true), sinir));
+    icerik.push(...bolum("Sonuçlar", await ciktiTablosu(onbellek, rapor.ciktilar, genislik), sinir));
   }
 
   if (rapor.basarili || rapor.kontroller.length > 0) {
-    icerik.push(bolumBasligi("Uygunluk durumu"), kontrolTablosu(rapor.kontroller));
+    icerik.push(...bolum("Uygunluk durumu", kontrolTablosu(rapor.kontroller, genislik), sinir));
   }
 
-  icerik.push(bolumBasligi("Standart referansları"), referansTablosu(rapor.referanslar));
+  icerik.push(...bolum("Standart referansları", referansTablosu(rapor.referanslar, genislik), sinir));
   return icerik;
 }
 
@@ -578,15 +698,27 @@ export async function projeRaporuPdf(
   const genislik = icerikGenisligi("portrait");
   const icerik: Content[] = [...kunye(RAPOR_TURU.proje, baslik, [["Hesap sayısı", String(raporlar.length)]])];
 
-  if (proje.aciklama?.trim()) {
-    icerik.push(bolumBasligi("Proje açıklaması"), { text: metin(proje.aciklama.trim()), lineHeight: 1.25 });
+  const sinir = birlikteSiniri("portrait");
+  const aciklama = proje.aciklama?.trim();
+  if (aciklama) {
+    icerik.push(
+      ...bolum(
+        "Proje açıklaması",
+        { dugum: { text: metin(aciklama), lineHeight: 1.25 }, tahmin: satirSayisi(aciklama, genislik, 9.5) * 15 },
+        sinir,
+      ),
+    );
   }
 
-  icerik.push(bolumBasligi("Hesap özeti"));
   if (raporlar.length === 0) {
-    icerik.push({ text: "Bu projede kayıtlı hesap yok.", style: "etiket" });
+    icerik.push(...bolum("Hesap özeti", notParcasi("Bu projede kayıtlı hesap yok."), sinir));
   } else {
-    icerik.push({
+    const ozetGenislikleri = [22, (genislik - 106) / 2, (genislik - 106) / 2, 84];
+    const ozetTahmini = tabloTahmini(
+      [["No"], ...raporlar.map((r) => ["", r.kayitAdi?.trim() || r.baslik, `${r.hesapId} · ${r.baslik}`, "Hesaplanamadı"])],
+      ozetGenislikleri,
+    );
+    const ozet: Content = {
       table: {
         headerRows: 1,
         dontBreakRows: true,
@@ -610,7 +742,8 @@ export async function projeRaporuPdf(
         ],
       },
       layout: TABLO_DUZENI,
-    });
+    };
+    icerik.push(...bolum("Hesap özeti", { dugum: ozet, tahmin: ozetTahmini }, sinir));
   }
   if (secenekler?.atlananlar?.length) {
     icerik.push({
@@ -656,7 +789,7 @@ async function karsilastirmaTablosu(
   onbellek: SvgOnbellek,
   k: Karsilastirma,
   genislik: number,
-): Promise<Content> {
+): Promise<Parca> {
   const n = k.senaryolar.length;
   // Sabit sütunlar senaryo sütunlarına en az ~64 pt bırakacak kadar daralır (8 senaryo, yatay A4).
   const sembolGenisligi = n > 4 ? 36 : 46;
@@ -727,35 +860,60 @@ async function karsilastirmaTablosu(
     }),
   ]);
 
+  const degerGenisligi = (genislik - etiketGenisligi - sembolGenisligi - birimGenisligi) / Math.max(1, n);
+  const genislikler = [etiketGenisligi, sembolGenisligi, birimGenisligi, ...k.senaryolar.map(() => degerGenisligi)];
+  const tahmin = tabloTahmini(
+    [
+      ["", "", "", ...k.senaryolar.map((s) => kisalt(s.ad, 60))],
+      ["Girdiler"],
+      ["Sonuçlar"],
+      ...k.satirlar.map((s) => [s.label, "", s.birimSembolu, ...s.degerler.map((d) => d ?? "—")]),
+      ["", "", "", ...k.senaryolar.map(() => "Hesaplanamadı")],
+    ],
+    genislikler,
+    yaziPt,
+  );
   return {
-    table: {
-      headerRows: 1,
-      dontBreakRows: true,
-      widths: [etiketGenisligi, sembolGenisligi, birimGenisligi, ...Array.from({ length: n }, () => "*" as const)],
-      body: govde,
+    dugum: {
+      table: {
+        headerRows: 1,
+        dontBreakRows: true,
+        widths: [etiketGenisligi, sembolGenisligi, birimGenisligi, ...Array.from({ length: n }, () => "*" as const)],
+        body: govde,
+      },
+      layout: { ...TABLO_DUZENI, paddingLeft: () => 4, paddingRight: () => 4 },
+      fontSize: yaziPt,
     },
-    layout: { ...TABLO_DUZENI, paddingLeft: () => 4, paddingRight: () => 4 },
-    fontSize: yaziPt,
+    tahmin,
   };
 }
 
-function senaryoKontrolleri(k: Karsilastirma): Content[] {
+/** "Uygunluk durumu" bölümü: senaryo başına alt başlık + kontroller (başlık ilk senaryoyla birlikte) */
+function senaryoKontrolleri(k: Karsilastirma, genislik: number, sinir: number): Content[] {
+  const parcalar = k.senaryolar.map((s): Parca => {
+    if (s.durum.ok) return kontrolTablosu(s.durum.kontroller, genislik);
+    const mesajlar = s.durum.kontroller.filter((c) => c.level === "hata").map((c) => c.message);
+    const kutu = hataKutusu("Bu senaryo hesaplanamadı (girdileri kontrol edin).", mesajlar, genislik);
+    const diger = s.durum.kontroller.filter((c) => c.level !== "hata");
+    if (diger.length === 0) return kutu;
+    const tablo = kontrolTablosu(diger, genislik);
+    return { dugum: { stack: [kutu.dugum, tablo.dugum] }, tahmin: kutu.tahmin + tablo.tahmin };
+  });
   const icerik: Content[] = [];
-  for (const s of k.senaryolar) {
-    icerik.push(altBaslik(s.ad));
-    if (!s.durum.ok) {
-      const mesajlar = s.durum.kontroller.filter((c) => c.level === "hata").map((c) => c.message);
-      icerik.push(hataKutusu("Bu senaryo hesaplanamadı (girdileri kontrol edin).", mesajlar));
-      const diger = s.durum.kontroller.filter((c) => c.level !== "hata");
-      if (diger.length > 0) icerik.push(kontrolTablosu(diger));
-    } else {
-      icerik.push(kontrolTablosu(s.durum.kontroller));
-    }
+  for (const [i, s] of k.senaryolar.entries()) {
+    const grup = bolum(kisalt(s.ad, 90), parcalar[i], sinir, "altBolum");
+    if (i === 0) icerik.push(...bolum("Uygunluk durumu", { dugum: { stack: grup }, tahmin: parcalar[i].tahmin + 30 }, sinir));
+    else icerik.push(...grup);
   }
   return icerik;
 }
 
-function taramaBolumu(tarama: { seri: TaramaSerisi; svg: string }, genislik: number, svgli: boolean): Content[] {
+function taramaBolumu(
+  tarama: { seri: TaramaSerisi; svg: string },
+  genislik: number,
+  yukseklik: number,
+  svgli: boolean,
+): Content[] {
   const { seri } = tarama;
   const eksen = (etiket: string, birim: string) => (birim ? `${etiket} (${birim})` : etiket);
   const icerik: Content[] = [
@@ -768,7 +926,10 @@ function taramaBolumu(tarama: { seri: TaramaSerisi; svg: string }, genislik: num
     },
   ];
   if (svgli) {
-    icerik.push({ svg: tarama.svg, width: Math.min(genislik, 640), alignment: "center" } as Content);
+    // `fit`: en-boy oranı korunarak kutuya sığar; grafik bölümü her zaman bir sayfadan kısa kalır.
+    // SVG <text> öğeleri (font-family "NotoSans") svg-to-pdfkit ile belgede daha önce yüklenmiş yazı tipini
+    // kullanır: grafikten önce künye ve tablo (normal + kalın Noto Sans) yazıldığı için yazılar çizilir.
+    icerik.push({ svg: tarama.svg, fit: [Math.min(genislik, 640), yukseklik], alignment: "center" } as Content);
   } else {
     icerik.push({ text: "Grafik çizilemedi.", style: "etiket" });
   }
@@ -791,6 +952,7 @@ export async function karsilastirmaRaporuPdf(
   const onbellek: SvgOnbellek = new Map();
   const yon: PageOrientation = karsilastirma.senaryolar.length > DIKEY_SENARYO_MAX ? "landscape" : "portrait";
   const genislik = icerikGenisligi(yon);
+  const sinir = birlikteSiniri(yon);
 
   const olustur = async (svgli: boolean): Promise<TDocumentDefinitions> => {
     const icerik: Content[] = [
@@ -798,16 +960,15 @@ export async function karsilastirmaRaporuPdf(
         ["Hesap", `${karsilastirma.hesapId} · ${karsilastirma.baslik}`],
         ["Senaryo sayısı", String(karsilastirma.senaryolar.length)],
       ]),
-      bolumBasligi("Senaryo tablosu"),
-      await karsilastirmaTablosu(onbellek, karsilastirma, genislik),
+      ...bolum("Senaryo tablosu", await karsilastirmaTablosu(onbellek, karsilastirma, genislik), sinir),
       {
         text: "Vurgulu satırlarda değerler senaryolar arasında farklıdır. Satırdaki tüm değerler aynı birimle verilmiştir.",
         style: "etiket",
         margin: [0, 4, 0, 0],
       },
     ];
-    if (tarama) icerik.push(...taramaBolumu(tarama, genislik, svgli));
-    icerik.push(bolumBasligi("Uygunluk durumu"), ...senaryoKontrolleri(karsilastirma), sorumlulukBolumu());
+    if (tarama) icerik.push(...taramaBolumu(tarama, genislik, icerikYuksekligi(yon) * 0.6, svgli));
+    icerik.push(...senaryoKontrolleri(karsilastirma, genislik, sinir), sorumlulukBolumu());
     return belge(baslik, RAPOR_TURU.karsilastirma, icerik, yon);
   };
 
