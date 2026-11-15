@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# engineer-automation
 
-## Getting Started
+Otomasyon, mekatronik ve elektrik-elektronik mühendisleri için Türkçe hesaplama platformu.
+Kapsam ve yol haritası: [docs/KAPSAM.md](docs/KAPSAM.md). Çalışma düzeni: [CLAUDE.md](CLAUDE.md).
 
-First, run the development server:
+**Yığın:** Next.js 16 (App Router, `cacheComponents` açık), React 19, TypeScript, Tailwind 4,
+KaTeX, better-auth 1.7, Drizzle ORM + PostgreSQL 16, Vitest.
+
+## Kurulum (yeni bir makine veya container)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+bash scripts/db-setup.sh          # Postgres'i başlatır, engineer kullanıcısını ve veritabanını oluşturur
+cp .env.example .env.local        # sonra BETTER_AUTH_SECRET'i doldurun: openssl rand -base64 32
+npm run db:migrate
+npm run dev                       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `BETTER_AUTH_URL`, sunucunun gerçekten çalıştığı adresle aynı olmalıdır; e-postalardaki bağlantılar bununla oluşturulur.
+- `next build` derleme sırasında `DATABASE_URL` ve `BETTER_AUTH_SECRET` ister.
+- Geliştirmede e-posta gönderilmez: sunucu konsoluna yazılır ve `.dev-mail/` altına JSON + HTML olarak kaydedilir
+  (doğrulama/sıfırlama bağlantısı JSON'daki `links[0]`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Komutlar
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Komut | İş |
+|---|---|
+| `npm run dev` | Geliştirme sunucusu |
+| `npm run build` / `npm start` | Üretim derlemesi / sunucusu |
+| `npm test` | Vitest (gerçek Postgres isteyen `src/lib/auth.integration.test.ts` dahil) |
+| `npm run typecheck` | `next typegen` + `tsc --noEmit` |
+| `npm run lint` | ESLint |
+| `npm run db:generate` / `npm run db:migrate` | Drizzle migration üret / uygula |
 
-## Learn More
+## Yapı
 
-To learn more about Next.js, take a look at the following resources:
+| Yol | İçerik |
+|---|---|
+| `src/lib/units/` | Birim kataloğu (34+ boyut), SI dönüşümü, Türkçe sayı okuma/biçimlendirme |
+| `src/lib/calc/` | Hesap motoru (`runCalc`), kayıt defteri, LaTeX adım yardımcıları, otomatik birim seçimi |
+| `src/lib/calc/defs/<kategori>/<slug>.ts` | Hesap tanımları; yeni hesap buraya yazılır ve `registry.ts`'e eklenir |
+| `src/config/sinirlar.ts` | Yönetmelik/standart sınır değerleri (koddan ayrı, `ctx.limits` ile okunur) |
+| `src/app/hesaplar/[slug]` | Genel hesap sayfası (formül, form, ara adımlar, referanslar) |
+| `src/app/(auth)`, `src/app/profil` | Kayıt, giriş, e-posta doğrulama, şifre sıfırlama, profil ve tercihler |
+| `src/db/` | Drizzle şeması; `user-fields.ts` profil alanlarının tek kaynağı |
+| `src/proxy.ts` | Bilinmeyen hesap adresine 404, korumalı sayfalara oturum yönlendirmesi |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Yeni hesap eklemek
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. `src/lib/calc/defs/<kategori>/<slug>.ts` içinde `CalcDefinition` yazın (girdi/çıktı SI'da, `compute` saf).
+2. `src/lib/calc/registry.ts` içindeki listeye ekleyin; kayıt defteri yüklenirken tanımı doğrular.
+3. Bilinen çözümlü örneklerle (standart ekleri, ders kitapları) test yazın; adım LaTeX'i KaTeX strict ile denetlenir.
+4. Sınır değerleri koda gömmeyin, `src/config/sinirlar.ts`'e ekleyin.
 
-## Deploy on Vercel
+## Notlar
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Alt ajan çalışma kopyalarında (`.claude/worktrees/`) `node_modules` bağlantı (symlink) olduğu için
+  `next build` orada çalışmaz; build ana checkout'ta çalıştırılır.
+- Hesaplar mühendislik kararının yerine geçmez; her sayfada ve raporda sorumluluk reddi bulunur.
