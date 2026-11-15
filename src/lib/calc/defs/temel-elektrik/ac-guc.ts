@@ -87,14 +87,14 @@ export const acGuc: CalcDefinition = {
     {
       kind: "number",
       key: "U1",
-      label: "Gerilim (faz-nötr)",
+      label: "Gerilim (yük uçlarında)",
       symbol: "U",
       dimension: "gerilim",
       defaultUnit: "V",
       default: 230,
       min: 0,
       minExclusive: true,
-      help: "Tek fazlı yükün uçlarındaki etkin (RMS) gerilim.",
+      help: "Tek fazlı yükün uçlarındaki etkin (RMS) gerilim: faz-nötr arasına bağlı yükte ör. 230 V, iki faz arasına bağlı yükte ör. 400 V.",
       visibleWhen: { key: "faz", equals: "1" },
     },
     {

@@ -28,7 +28,7 @@ const BILESEN: Record<Bilesen, BilesenBilgi> = {
 
 const MESSAGES = {
   mutual:
-    "Bobinler arasındaki karşılıklı endüktans (manyetik kuplaj) ihmal edildi. Kuplajlı bobinlerde eşdeğer endüktans, sargı yönlerine göre karşılıklı endüktansın iki katı kadar artar veya azalır.",
+    "Bobinler arasındaki karşılıklı endüktans (manyetik kuplaj) ihmal edildi; bobinlerin birbirini etkilemeyecek şekilde yerleştirildiği kabul edilir. Örneğin seri bağlı iki kuplajlı bobinde eşdeğer endüktans, sargı yönlerine göre L₁ + L₂ ± 2M olur.",
   seriesCaps:
     "Seri kondansatörlerde gerilim kapasitansla ters orantılı paylaşılır: en küçük kondansatör en yüksek gerilimi taşır. Gerilim sınıflarını buna göre seçin.",
 } as const;
