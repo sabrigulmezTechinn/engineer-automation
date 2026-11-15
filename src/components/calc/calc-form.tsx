@@ -22,7 +22,7 @@ import type {
   SelectInputSpec,
   Step,
 } from "@/lib/calc/types";
-import { formatNumber, getUnit, unitsFor, type UnitDef } from "@/lib/units";
+import { getUnit, unitsFor, type UnitDef } from "@/lib/units";
 
 /*
  * Hesaplama formu (istemci). Hesap tanımları fonksiyon içerdiği için sunucudan prop olarak
@@ -493,7 +493,7 @@ function OutputCards({ outputs, specs, unitOptions, onUnit }: {
                 value={String(output.value)}
                 className="text-2xl font-semibold tracking-tight tabular-nums"
               >
-                {formatNumber(output.value)}
+                {output.formattedValue}
               </data>
               {units.length > 1 ? (
                 <select

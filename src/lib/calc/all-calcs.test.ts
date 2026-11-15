@@ -2,7 +2,7 @@
  * Kayıtlı HER hesap için otomatik denetim (gerçek birim sistemiyle). Yeni hesap eklendiğinde
  * ayrıca bir şey yazmadan bu testlerden geçer:
  * - varsayılan girdiler geçerli bir sonuç üretir ("hata" seviyesinde kontrol yok),
- * - formüller ve ara adımlar KaTeX'ten strict kipte hatasız geçer,
+ * - formüller, ara adımlar ve girdi/çıktı sembolleri KaTeX'ten strict kipte hatasız geçer,
  * - girdi/çıktı birimleri katalogda vardır ve boyutları tutar,
  * - en az bir standart/kaynak referansı vardır.
  */
@@ -26,6 +26,12 @@ describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name,
     for (const f of def.formulas) expect(() => renderStrict(f.latex), f.latex).not.toThrow();
     const r = runCalc(def, defaultState(def));
     if (r.ok) for (const s of r.result.steps) expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+  });
+
+  it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
+    for (const spec of [...def.inputs, ...def.outputs]) {
+      if (spec.symbol) expect(() => renderStrict(spec.symbol as string), `${spec.key}: ${spec.symbol}`).not.toThrow();
+    }
   });
 
   it("birimler katalogda var ve boyutları tutuyor", () => {

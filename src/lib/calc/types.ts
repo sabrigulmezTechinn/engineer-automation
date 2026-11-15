@@ -109,6 +109,10 @@ export interface OutputSpec {
    * mekanik büyüklüklerde kapalıdır (ör. uzunluk teknik resimdeki gibi mm'de kalır).
    */
   autoUnit?: boolean;
+  /** Gösterimde anlamlı basamak sayısı (varsayılan 4). Ör. 17971,2 gibi değerler için 6. */
+  significant?: number;
+  /** Tam sayı çıktısı (sayım, adım sayısı): yuvarlanmadan, ondalıksız gösterilir (16384 → "16 384"). */
+  integer?: boolean;
 }
 
 /** Ara adım: formülün değerler yerine konmuş hali */
@@ -179,6 +183,8 @@ export interface PresentedOutput {
   value: number; // seçili birimde
   unit: string; // unit id
   formatted: string; // ör. "1,5 kV"
+  /** Yalnızca sayı, çıktının hassasiyetiyle biçimlenmiş (ör. "1,5"); kartta birim ayrı gösterilir. */
+  formattedValue: string;
 }
 
 export type RunResult =

@@ -3,7 +3,7 @@
  * Sunucu ve istemcide çalışır.
  */
 import { LIMITS } from "@/config/sinirlar";
-import { formatQuantity, fromSI, parseNumber, toSI, unitsFor } from "@/lib/units";
+import { formatNumber, formatQuantity, fromSI, parseNumber, toSI, unitsFor, type FormatOptions } from "@/lib/units";
 import { autoOutputUnit } from "./auto-unit";
 import type {
   CalcContext,
@@ -210,6 +210,13 @@ function failure(checks: Check[], fieldErrors: Record<string, string> = {}): Run
   return { ok: false, fieldErrors, checks };
 }
 
+/** Çıktının gösterim hassasiyeti: tam sayılar ondalıksız, aksi halde anlamlı basamak (varsayılan 4). */
+function outputPrecision(spec: OutputSpec): FormatOptions | undefined {
+  if (spec.integer) return { decimals: 0 };
+  if (spec.significant !== undefined) return { significant: spec.significant };
+  return undefined;
+}
+
 function presentOutputs(
   def: CalcDefinition,
   outputs: Record<string, number>,
@@ -225,13 +232,15 @@ function presentOutputs(
         ? requested
         : autoOutputUnit(spec, outputs[spec.key]);
     const value = fromSI(outputs[spec.key], unit);
+    const precision = outputPrecision(spec);
     presented.push({
       key: spec.key,
       label: spec.label,
       ...(spec.symbol !== undefined ? { symbol: spec.symbol } : {}),
       value,
       unit,
-      formatted: formatQuantity(value, unit),
+      formatted: formatQuantity(value, unit, precision),
+      formattedValue: formatNumber(value, precision),
     });
   }
   return presented;

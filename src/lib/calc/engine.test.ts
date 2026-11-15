@@ -337,9 +337,9 @@ describe("çıktı gösterimi", () => {
   it("otomatik birimle biçimlenir, tanım sırasını izler ve sembolü taşır", () => {
     const r = expectOk(runCalc(makeDef(), state()));
     expect(r.outputs).toEqual([
-      { key: "p", label: "Güç", symbol: "P", value: 12, unit: "W", formatted: "12 W" },
-      { key: "akim", label: "Akım", symbol: "I", value: 500, unit: "mA", formatted: "500 mA" },
-      { key: "toplam", label: "Toplam", value: 2, unit: "adet", formatted: "2" },
+      { key: "p", label: "Güç", symbol: "P", value: 12, unit: "W", formatted: "12 W", formattedValue: "12" },
+      { key: "akim", label: "Akım", symbol: "I", value: 500, unit: "mA", formatted: "500 mA", formattedValue: "500" },
+      { key: "toplam", label: "Toplam", value: 2, unit: "adet", formatted: "2", formattedValue: "2" },
     ]);
   });
 
@@ -465,5 +465,19 @@ describe("numberList girdisi", () => {
   it("splitList noktalı virgül ve satır sonuyla ayırır", () => {
     expect(splitList("1;2\r\n3\n;4")).toEqual(["1", "2", "3", "4"]);
     expect(splitList("  ")).toEqual([]);
+  });
+});
+
+describe("çıktı hassasiyeti", () => {
+  const def = (spec: Partial<OutputSpec>) =>
+    makeDef({
+      outputs: [{ key: "toplam", label: "Toplam", dimension: "boyutsuz", defaultUnit: "adet", ...spec }],
+      compute: () => ({ outputs: { toplam: 17971.2 }, steps: [], checks: [] }),
+    });
+  // units-mock binlik gruplama yapmaz; gruplama gerçek birim sisteminin testlerinde denetlenir.
+  it("varsayılan 4 anlamlı basamak, significant ve integer seçenekleri", () => {
+    expect(expectOk(runCalc(def({}), state())).outputs[0].formattedValue).toBe("17970");
+    expect(expectOk(runCalc(def({ significant: 6 }), state())).outputs[0].formattedValue).toBe("17971,2");
+    expect(expectOk(runCalc(def({ integer: true }), state())).outputs[0].formattedValue).toBe("17971");
   });
 });

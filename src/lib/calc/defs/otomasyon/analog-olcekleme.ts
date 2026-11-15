@@ -310,10 +310,10 @@ export const analogOlcekleme: CalcDefinition = {
     },
   ],
   outputs: [
-    { key: "y", label: "Mühendislik değeri (proses biriminde)", symbol: "y", dimension: "boyutsuz", defaultUnit: "unitless" },
+    { key: "y", label: "Mühendislik değeri (proses biriminde)", symbol: "y", dimension: "boyutsuz", defaultUnit: "unitless", significant: 6 },
     { key: "x_ma", label: "Sinyal akımı", symbol: "x", dimension: "akim", defaultUnit: "mA", units: ["mA", "uA", "A"], autoUnit: false },
     { key: "x_v", label: "Sinyal gerilimi", symbol: "x", dimension: "gerilim", defaultUnit: "V", units: ["V", "mV"], autoUnit: false },
-    { key: "x_ham", label: "Ham değer", symbol: "x", dimension: "boyutsuz", defaultUnit: "unitless" },
+    { key: "x_ham", label: "Ham değer", symbol: "x", dimension: "boyutsuz", defaultUnit: "unitless", significant: 6 },
     { key: "oran", label: "Ölçek yüzdesi", dimension: "oran", defaultUnit: "percent", units: ["percent", "fraction"] },
   ],
 

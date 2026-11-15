@@ -158,7 +158,15 @@ const mocks = vi.hoisted(() => {
         checks,
       },
       outputs: [
-        { key: outKey, label: spec.label, symbol: spec.symbol, value, unit, formatted: `${value} ${unit}` },
+        {
+          key: outKey,
+          label: spec.label,
+          symbol: spec.symbol,
+          value,
+          unit,
+          formatted: `${value} ${unit}`,
+          formattedValue: String(value).replace(".", ","),
+        },
       ],
     };
   }

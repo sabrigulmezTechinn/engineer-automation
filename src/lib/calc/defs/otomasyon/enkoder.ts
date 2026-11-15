@@ -46,7 +46,7 @@ function num(inputs: ComputeInputs, key: string): number {
 const OUTPUTS: OutputSpec[] = [
   { key: "f", label: "Enkoder çıkış frekansı (A/B kanalı)", symbol: "f", dimension: "frekans", defaultUnit: "Hz" },
   { key: "fSayim", label: "Sayım hızı (kenar frekansı, k·f)", symbol: "f_k", dimension: "frekans", defaultUnit: "Hz" },
-  { key: "N", label: "Devir başına sayım", symbol: "N", dimension: "boyutsuz", defaultUnit: "unitless" },
+  { key: "N", label: "Devir başına sayım", symbol: "N", dimension: "boyutsuz", defaultUnit: "unitless", integer: true },
   {
     key: "cozunurlukAci",
     label: "Açısal çözünürlük",
