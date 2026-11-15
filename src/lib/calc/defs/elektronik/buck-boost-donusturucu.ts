@@ -196,7 +196,6 @@ const outputs: OutputSpec[] = [
 ];
 
 /** Hüküm olmayan notlar (kabul, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const q = specWriter([...inputs, ...outputs]);
 const t = textWriter([...inputs, ...outputs]);
@@ -460,7 +459,7 @@ function compute(inp: ComputeInputs, ctx: CalcContext) {
   if (Io <= IoSinir) {
     checks.push({ level: "uyari", message: MESSAGES.dcm(t("Io", Io), t("IoSinir", IoSinir)), reference: ref });
   } else {
-    checks.push({ level: BILGI, message: MESSAGES.ccm(t("IoSinir", IoSinir)) });
+    checks.push({ level: "bilgi", message: MESSAGES.ccm(t("IoSinir", IoSinir)) });
   }
   if (Imaxout !== undefined) {
     if (Imaxout < Io) {
@@ -469,7 +468,7 @@ function compute(inp: ComputeInputs, ctx: CalcContext) {
       checks.push({ level: "ok", message: MESSAGES.ilimOk(t("Imaxout", Imaxout)) });
     }
   }
-  checks.push({ level: BILGI, message: MESSAGES.ceramic, reference: { ...ref, clause: "Bölüm 6–7" } });
+  checks.push({ level: "bilgi", message: MESSAGES.ceramic, reference: { ...ref, clause: "Bölüm 6–7" } });
 
   return { outputs: out, steps, checks };
 }

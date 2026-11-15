@@ -23,7 +23,6 @@ const WHERE = "555-zamanlayici";
 const LN3 = Math.log(3);
 
 /** Hüküm olmayan notlar (kabul, yöntem, hatırlatma). */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const TASARIM: ZamanlayiciMod[] = ["astable-tasarim", "monostable-tasarim"];
 
@@ -310,7 +309,7 @@ export const zamanlayici555: CalcDefinition = {
       }
       Rtoplam = R1 + R2;
       rAd = "R₁ + R₂";
-      checks.push({ level: BILGI, message: MESSAGES.gorevBilgi, reference: REF.ne555 });
+      checks.push({ level: "bilgi", message: MESSAGES.gorevBilgi, reference: REF.ne555 });
       if (outputs.f > sinir.astableMaxFrekans) {
         checks.push({ level: "uyari", message: MESSAGES.fMax(t("f", outputs.f), t("f", sinir.astableMaxFrekans)), reference: REF.ne555Sinir });
       }

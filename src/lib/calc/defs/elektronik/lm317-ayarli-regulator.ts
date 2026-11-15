@@ -24,7 +24,6 @@ const WHERE = "lm317-ayarli-regulator";
 const VARSAYILAN = LIMITS.elektronikEntegre.lm317;
 
 /** Hüküm olmayan notlar (kabul, yöntem, hatırlatma). */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const GERILIM_MODLARI: Lm317Mod[] = ["gerilim", "hedef"];
 
@@ -355,8 +354,8 @@ export const lm317AyarliRegulator: CalcDefinition = {
       });
       Object.assign(outputs, { Rh, Rs, I, Iyuk, PR, Vo });
       Io = I;
-      checks.push({ level: BILGI, message: MESSAGES.direncGucu(t("PR", PR)), reference: REF.lm317Akim });
-      if (Iadj > 0) checks.push({ level: BILGI, message: MESSAGES.adjAkimi(t("Iadj", Iadj)) });
+      checks.push({ level: "bilgi", message: MESSAGES.direncGucu(t("PR", PR)), reference: REF.lm317Akim });
+      if (Iadj > 0) checks.push({ level: "bilgi", message: MESSAGES.adjAkimi(t("Iadj", Iadj)) });
       if (I < s.minYukAkimiMax) {
         checks.push({
           level: "uyari",

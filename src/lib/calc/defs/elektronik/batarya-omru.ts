@@ -21,7 +21,6 @@ import { REF, num, opt, specText, specWriter } from "./temel-ortak";
 export type BataryaProfil = "sabit" | "dongu";
 
 /** Hüküm olmayan notlar (varsayım, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const WHERE = "batarya-omru";
 
@@ -279,7 +278,7 @@ function compute(inputs: ComputeInputs) {
       },
     );
     Object.assign(outputs, { Ioz, Itop: I });
-    checks.push({ level: BILGI, message: MESSAGES.selfDischarge });
+    checks.push({ level: "bilgi", message: MESSAGES.selfDischarge });
   }
 
   const tNaif = (d * C) / I;
@@ -304,8 +303,8 @@ function compute(inputs: ComputeInputs) {
       },
     );
     outputs.tNaif = tNaif;
-    checks.push({ level: BILGI, message: MESSAGES.peukert, reference: REF.victronPeukert });
-    if (dongu || Ioz !== undefined) checks.push({ level: BILGI, message: MESSAGES.peukertAverage });
+    checks.push({ level: "bilgi", message: MESSAGES.peukert, reference: REF.victronPeukert });
+    if (dongu || Ioz !== undefined) checks.push({ level: "bilgi", message: MESSAGES.peukertAverage });
     // Anma akımının altında (C/(I·H) > 1) Peukert, k > 1 iken ömrü Peukert'siz değerden uzun verir (d'den bağımsız)
     if (k > 1 && ratio > 1) {
       checks.push({
@@ -327,7 +326,7 @@ function compute(inputs: ComputeInputs) {
     { label: "Kullanılabilir kapasite (bu akımda)", latex: `C_{\\text{kul}} = ${iSym} \\cdot t = ${iText} \\cdot ${qo("t", t)} = ${qo("Ckul", Ckul)}` },
   );
   Object.assign(outputs, { t, tGun: t, Ckul });
-  if (d === 1) checks.push({ level: BILGI, message: MESSAGES.fullCapacity, reference: REF.victronTaban });
+  if (d === 1) checks.push({ level: "bilgi", message: MESSAGES.fullCapacity, reference: REF.victronTaban });
 
   return { outputs, steps, checks };
 }

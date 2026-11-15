@@ -145,7 +145,6 @@ const t = textWriter([...inputs, ...outputs]);
 const qDT = (dT: number, operand = true) => q("pay", dT, operand);
 
 /** Hüküm olmayan notlar (kabul, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 /** Kelvin ↔ °C ofsetlerinden kalan ~1e-14 artıkları "sıfır" saymak için göreli pay */
 const REL_TOL = 1e-9;
@@ -264,8 +263,8 @@ export const sogutucuIsilHesap: CalcDefinition = {
           out.TjJA = TjJA;
           checks.push(
             TjJA <= Tjmax
-              ? { level: BILGI, message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
-              : { level: BILGI, message: MESSAGES.jaNotEnough(t("TjJA", TjJA)), reference: REF.tiIsil },
+              ? { level: "bilgi", message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
+              : { level: "bilgi", message: MESSAGES.jaNotEnough(t("TjJA", TjJA)), reference: REF.tiIsil },
           );
         } else {
           const PmaxJA = dTmax / Rja;
@@ -273,7 +272,7 @@ export const sogutucuIsilHesap: CalcDefinition = {
           out.PmaxJA = PmaxJA;
         }
       }
-      checks.push({ level: BILGI, message: MESSAGES.seriesModel, reference: REF.tiIsil });
+      checks.push({ level: "bilgi", message: MESSAGES.seriesModel, reference: REF.tiIsil });
       return { outputs: out, steps, checks };
     }
 
@@ -292,7 +291,7 @@ export const sogutucuIsilHesap: CalcDefinition = {
     if (RsaRaw > REL_TOL * Rizin) {
       steps.push({ label: "Gereken soğutucu ısıl direnci", latex: `${fark} = ${q("RsaGerekli", RsaRaw)}` });
       out.RsaGerekli = RsaRaw;
-      checks.push({ level: BILGI, message: MESSAGES.rsaOk(t("RsaGerekli", RsaRaw)), reference: REF.tiIsil });
+      checks.push({ level: "bilgi", message: MESSAGES.rsaOk(t("RsaGerekli", RsaRaw)), reference: REF.tiIsil });
     } else {
       // Hiçbir soğutucu yetmez: negatif/sıfır R_θsa gösterilmez; ideal soğutucuyla anlamlı sınırlar verilir.
       const Rmin = Rjc + Rcs;
@@ -327,11 +326,11 @@ export const sogutucuIsilHesap: CalcDefinition = {
       out.TjJA = TjJA;
       checks.push(
         TjJA <= Tjmax
-          ? { level: BILGI, message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
-          : { level: BILGI, message: MESSAGES.jaNotEnough(t("TjJA", TjJA)), reference: REF.tiIsil },
+          ? { level: "bilgi", message: MESSAGES.jaEnough(t("TjJA", TjJA)), reference: REF.tiIsil }
+          : { level: "bilgi", message: MESSAGES.jaNotEnough(t("TjJA", TjJA)), reference: REF.tiIsil },
       );
     }
-    checks.push({ level: BILGI, message: MESSAGES.seriesModel, reference: REF.tiIsil });
+    checks.push({ level: "bilgi", message: MESSAGES.seriesModel, reference: REF.tiIsil });
     return { outputs: out, steps, checks };
   },
 };

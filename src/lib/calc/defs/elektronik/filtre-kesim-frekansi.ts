@@ -24,7 +24,6 @@ export type FiltreMod = "rc" | "rl" | "lc" | "ters";
 export type FiltreTip = "lp" | "hp";
 
 /** Hüküm olmayan notlar (varsayım, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const WHERE = "filtre-kesim-frekansi";
 
@@ -229,7 +228,7 @@ function compute(inputs: ComputeInputs) {
         latex: `Z_0 = \\sqrt{\\frac{L}{C}} = \\sqrt{\\frac{${qi("L", L)}}{${qi("C", C)}}} = ${qo("Z0", Z0)}`,
       },
     );
-    checks.push({ level: BILGI, message: MESSAGES.lc, reference: REF.openstaxRezonans });
+    checks.push({ level: "bilgi", message: MESSAGES.lc, reference: REF.openstaxRezonans });
     return { outputs: { f0, Z0 }, steps, checks };
   }
 
@@ -251,7 +250,7 @@ function compute(inputs: ComputeInputs) {
       },
     );
     Object.assign(outputs, { tau, fc });
-    checks.push({ level: BILGI, message: MESSAGES.topology(TOPOLOGY.rc[tip]), reference: REF.microchipAn699 });
+    checks.push({ level: "bilgi", message: MESSAGES.topology(TOPOLOGY.rc[tip]), reference: REF.microchipAn699 });
   } else if (mod === "rl") {
     const R = num(inputs, "Rl", WHERE);
     const L = num(inputs, "L", WHERE);
@@ -265,7 +264,7 @@ function compute(inputs: ComputeInputs) {
       },
     );
     Object.assign(outputs, { tau, fc });
-    checks.push({ level: BILGI, message: MESSAGES.topology(TOPOLOGY.rl[tip]), reference: REF.openstaxRL });
+    checks.push({ level: "bilgi", message: MESSAGES.topology(TOPOLOGY.rl[tip]), reference: REF.openstaxRL });
   } else {
     const fHedef = num(inputs, "fHedef", WHERE);
     const C = num(inputs, "C", WHERE);
@@ -294,11 +293,11 @@ function compute(inputs: ComputeInputs) {
     Object.assign(outputs, { R, Rstd, fcStd: fc, sapma, tau });
     checks.push(
       {
-        level: BILGI,
+        level: "bilgi",
         message: MESSAGES.nearest(series, specText(OUTPUTS, "Rstd", Rstd), specText(OUTPUTS, "fcStd", fc), specText(OUTPUTS, "sapma", sapma)),
         reference: REF.eSerileri,
       },
-      { level: BILGI, message: MESSAGES.topology(TOPOLOGY.rc[tip]), reference: REF.microchipAn699 },
+      { level: "bilgi", message: MESSAGES.topology(TOPOLOGY.rc[tip]), reference: REF.microchipAn699 },
     );
   }
 

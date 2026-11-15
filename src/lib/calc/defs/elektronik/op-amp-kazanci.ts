@@ -23,7 +23,6 @@ export type OpampMod = "eviren" | "evirmeyen" | "fark" | "izleyici" | "toplayici
 const WHERE = "op-amp-kazanci";
 
 /** Hüküm olmayan notlar (kabul, yöntem, hatırlatma). */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const EVIREN: OpampMod[] = ["eviren", "eviren-tasarim"];
 const EVIRMEYEN: OpampMod[] = ["evirmeyen", "evirmeyen-tasarim"];
@@ -478,7 +477,7 @@ export const opAmpKazanci: CalcDefinition = {
         label: "Gürültü kazancı",
         latex: `\\text{NG} = 1 + \\frac{R_f}{R_{\\parallel}} = 1 + \\frac{${q("Rf", Rf)}}{${q("Rpar", Rpar)}} = ${q("NG", NG)}`,
       });
-      checks.push({ level: BILGI, message: MESSAGES.toplayiciZin, reference: REF.sboa272 });
+      checks.push({ level: "bilgi", message: MESSAGES.toplayiciZin, reference: REF.sboa272 });
     } else {
       throw new Error(`${WHERE}: bilinmeyen mod "${String(mode)}"`);
     }
@@ -520,7 +519,7 @@ export const opAmpKazanci: CalcDefinition = {
 
     if (Vcm !== undefined) {
       outputs.Vcm = Vcm;
-      checks.push({ level: BILGI, message: MESSAGES.ortakMod(t("Vcm", Vcm)), reference: mode === "fark" ? REF.sboa274 : REF.sboa271 });
+      checks.push({ level: "bilgi", message: MESSAGES.ortakMod(t("Vcm", Vcm)), reference: mode === "fark" ? REF.sboa274 : REF.sboa271 });
     }
 
     return { outputs, steps, checks };

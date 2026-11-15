@@ -19,7 +19,6 @@ export type ZamanSabitiMod = "rc" | "rl";
 export type ZamanSabitiIslem = "sarj" | "desarj";
 
 /** Hüküm olmayan notlar (varsayım, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const WHERE = "rc-rl-zaman-sabiti";
 
@@ -321,7 +320,7 @@ function compute(inputs: ComputeInputs) {
   );
 
   const checks: Check[] = [
-    { level: BILGI, message: rc ? MESSAGES.assumptionsRc : MESSAGES.assumptionsRl, reference: rc ? REF.openstaxRC : REF.openstaxRL },
+    { level: "bilgi", message: rc ? MESSAGES.assumptionsRc : MESSAGES.assumptionsRl, reference: rc ? REF.openstaxRC : REF.openstaxRL },
   ];
   return { outputs, steps, checks };
 }

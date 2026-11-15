@@ -20,7 +20,6 @@ import { standardNeighbours } from "../yardimci/standart-deger-serileri";
 import { E_SERI_SECENEKLERI, REF, eSeri, num, opt, specText, specWriter } from "./temel-ortak";
 
 /** Hüküm olmayan notlar (varsayım, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const WHERE = "led-on-direnci";
 
@@ -253,10 +252,10 @@ function compute(inputs: ComputeInputs) {
   const checks: Check[] = [];
   const rText = specText(OUTPUTS, "Rstd", Rstd);
   if (nb.exact) {
-    checks.push({ level: BILGI, message: MESSAGES.exact(series, rText), reference: REF.eSerileri });
+    checks.push({ level: "bilgi", message: MESSAGES.exact(series, rText), reference: REF.eSerileri });
   } else {
     const pct = (((If - I) / If) * 100).toFixed(1).replace(".", ",");
-    checks.push({ level: BILGI, message: MESSAGES.upper(series, rText, pct), reference: REF.eSerileri });
+    checks.push({ level: "bilgi", message: MESSAGES.upper(series, rText, pct), reference: REF.eSerileri });
   }
   if (Panma !== undefined) {
     const pa = specText(INPUTS, "Panma", Panma);
@@ -270,7 +269,7 @@ function compute(inputs: ComputeInputs) {
       checks.push({ level: "ok", message: MESSAGES.ratingOk(pa, need, kText), reference: REF.broadcomAn1005 });
     }
   }
-  if (m > 1) checks.push({ level: BILGI, message: MESSAGES.parallel });
+  if (m > 1) checks.push({ level: "bilgi", message: MESSAGES.parallel });
 
   return { outputs: { VR, R, Rstd, I, PR, PRmin, PLED, Itop, Ptop, eta }, steps, checks };
 }

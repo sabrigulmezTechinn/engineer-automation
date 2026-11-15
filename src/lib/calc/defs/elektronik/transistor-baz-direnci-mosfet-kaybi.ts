@@ -319,7 +319,6 @@ const outputs: OutputSpec[] = [
 ];
 
 /** Hüküm olmayan notlar (kabul, yöntem, hatırlatma) */
-const BILGI = "ok" as const; // birleştirmede "bilgi" olur
 
 const q = specWriter([...inputs, ...outputs]);
 const t = textWriter([...inputs, ...outputs]);
@@ -387,7 +386,7 @@ function computeBjt(inp: ComputeInputs) {
         `${q("VBE", VBE)} \\cdot ${q("IBg", IBg)} = ${q("PC", PC)} + ${q("PBE", PBE)} = ${q("PT", PT)}`,
     },
   ];
-  const checks: Check[] = [{ level: BILGI, message: MESSAGES.vceSat(t("betaF", betaF)), reference: REF.p2n2222a }];
+  const checks: Check[] = [{ level: "bilgi", message: MESSAGES.vceSat(t("betaF", betaF)), reference: REF.p2n2222a }];
   return { outputs: { IB, RB, RBstd, IBg, odfG, betaF, PRB, PC, PBE, PT }, steps, checks };
 }
 
@@ -425,7 +424,7 @@ function computeMosfet(inp: ComputeInputs) {
       label: "Anahtarlama enerjisi (doğrusal yaklaşım)",
       latex: `E_{sw} = \\tfrac{1}{2} \\cdot V_{DS} \\cdot I_D \\cdot (t_r + t_f) = \\tfrac{1}{2} \\cdot ${q("VDS", VDS)} \\cdot ${q("ID", ID)} \\cdot (${q("tr", tr)} + ${q("tf", tf)}) = ${q("Esw", Esw)}`,
     });
-    checks.push({ level: BILGI, message: MESSAGES.vi, reference: REF.vishay608 });
+    checks.push({ level: "bilgi", message: MESSAGES.vi, reference: REF.vishay608 });
   } else if (yontem === "enerji") {
     const Eon = num(inp, "Eon", WHERE);
     const Eoff = num(inp, "Eoff", WHERE);
@@ -434,7 +433,7 @@ function computeMosfet(inp: ComputeInputs) {
       label: "Anahtarlama enerjisi",
       latex: `E_{sw} = E_{on} + E_{off} = ${q("Eon", Eon)} + ${q("Eoff", Eoff)} = ${q("Esw", Esw)}`,
     });
-    checks.push({ level: BILGI, message: MESSAGES.enerji, reference: REF.wolfspeed });
+    checks.push({ level: "bilgi", message: MESSAGES.enerji, reference: REF.wolfspeed });
   } else {
     throw new Error(`${WHERE}: bilinmeyen yöntem "${String(yontem)}"`);
   }
@@ -452,7 +451,7 @@ function computeMosfet(inp: ComputeInputs) {
     { label: "Kapı sürme gücü", latex: `P_G = Q_g \\cdot V_{GS} \\cdot f_s = ${q("Qg", Qg)} \\cdot ${q("VGS", VGS)} \\cdot ${q("fs", fs)} = ${q("Pgate", Pgate)}` },
     { label: "Toplam kayıp", latex: `P_{\\text{top}} = P_{\\text{MOSFET}} + P_G = ${q("Pmos", Pmos)} + ${q("Pgate", Pgate)} = ${q("Ptop", Ptop)}` },
   );
-  checks.push({ level: BILGI, message: MESSAGES.gate, reference: REF.tiKapi });
+  checks.push({ level: "bilgi", message: MESSAGES.gate, reference: REF.tiKapi });
   return { outputs: { RDSsicak, Pcond, Esw, Psw, Pmos, Pgate, Ptop }, steps, checks };
 }
 
