@@ -45,3 +45,6 @@ next-env.d.ts
 
 # geliştirme e-postaları (src/lib/email.ts)
 /.dev-mail/
+
+# alt ajan çalışma kopyaları (Claude Code)
+/.claude/worktrees/
