@@ -34,8 +34,8 @@ const MESSAGES = {
   peukert:
     "Peukert üssü gerçeğin kaba bir yaklaşımıdır; çok yüksek akımlarda batarya hesaplanandan da az kapasite verir (Victron).",
   peukertAverage: "Peukert düzeltmesi ortalama akıma uygulandı; denklem sabit akımla deşarj için tanımlıdır.",
-  peukertBelowRated: (iRated: string, cKul: string) =>
-    `Akım anma deşarj akımının (C/H = ${iRated}) altında: Peukert denklemi anma kapasitesinden büyük kullanılabilir kapasite (${cKul}) veriyor; bu, anma noktasının dışına bir dışdeğerlemedir.`,
+  peukertBelowRated: (iRated: string, t: string, tNaif: string) =>
+    `Akım anma deşarj akımının (C/H = ${iRated}) altında: Peukert düzeltmesi ömrü Peukert'siz değerden (${tNaif}) uzun veriyor (${t}); bu, anma noktasının dışına bir dışdeğerlemedir.`,
   fullCapacity:
     "Kullanılabilir kapasite oranı %100: sıcaklık, yaşlanma ve kesme gerilimi etkileri hesaba katılmadı. Kurşun-asit akülerde Victron deşarj tabanı olarak %50 önerir.",
   selfDischarge: "Öz deşarj, yıllık oranın sabit eşdeğer akıma çevrilmesiyle eklendi (doğrusal yaklaşım).",
@@ -306,11 +306,11 @@ function compute(inputs: ComputeInputs) {
     outputs.tNaif = tNaif;
     checks.push({ level: BILGI, message: MESSAGES.peukert, reference: REF.victronPeukert });
     if (dongu || Ioz !== undefined) checks.push({ level: BILGI, message: MESSAGES.peukertAverage });
-    if (k > 1 && ratio > 1 && I * t > C) {
+    // Anma akımının altında (C/(I·H) > 1) Peukert, k > 1 iken ömrü Peukert'siz değerden uzun verir (d'den bağımsız)
+    if (k > 1 && ratio > 1) {
       checks.push({
         level: "uyari",
-        message: MESSAGES.peukertBelowRated(specText(OUTPUTS, "Iort", C / H), specText(OUTPUTS, "Ckul", I * t)),
-        reference: REF.victronPeukert,
+        message: MESSAGES.peukertBelowRated(specText(OUTPUTS, "Iort", C / H), specText(OUTPUTS, "t", t), specText(OUTPUTS, "tNaif", tNaif)),
       });
     }
   } else {

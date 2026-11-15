@@ -9,6 +9,8 @@
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
 import { LIMITS } from "@/config/sinirlar";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
+import { renderStrict } from "@/lib/calc/test-utils/katex";
 import type { ComputeInputs, InputState, SelectInputSpec } from "@/lib/calc/types";
 import { bataryaOmru as def } from "./batarya-omru";
 
@@ -58,18 +60,26 @@ describe("Peukert", () => {
   });
 
   it("kullanılabilir oran süreye uygulanır: d %80 → 0,8·8,7055 = 6,9644 h", () => {
-    // Elle: t = d·H·(C/(I·H))^k = 0,8 · 20 · 0,5^1,2 = 6,964405 h (d·C üssün içinde olsaydı 20·0,4^1,2 = 6,6 h olurdu)
+    // Elle: t = d·H·(C/(I·H))^k = 0,8 · 20 · 0,5^1,2 = 6,964405 h (d·C üssün içinde olsaydı 20·0,4^1,2 = 6,66 h olurdu)
     const o = def.compute({ ...PEUKERT, d: 0.8 }, ctx).outputs;
     expect(o.t / H).toBeCloseTo(6.964405, 6);
     expect(o.tNaif / H).toBeCloseTo(8, 12);
   });
 
-  it("anma akımının altında Peukert anma kapasitesinden büyük kapasite verir → uyarı", () => {
-    // Elle: 1 A, k 1,25: t = 20·5^1,25 = 149,535 h; C_kul = 149,5 Ah > 100 Ah
+  it("anma akımının altında Peukert ömrü Peukert'sizden uzun verir → uyarı", () => {
+    // Elle: 1 A, k 1,25: t = 20·5^1,25 = 149,535 h > naif 100 h
     const r = def.compute({ ...PEUKERT, I: 1, k: 1.25 }, ctx);
     expect(r.outputs.t / H).toBeCloseTo(149.5349, 4);
     expect(r.checks.filter((c) => c.level === "uyari")).toHaveLength(1);
     expect(def.compute(PEUKERT, ctx).checks.filter((c) => c.level === "uyari")).toEqual([]);
+  });
+
+  it("uyarı kullanılabilir orandan bağımsızdır: d %50, 1 A → 74,767 h (naif 50 h), yine uyarı", () => {
+    // Elle: t = 0,5 · 149,5349 = 74,767 h; t_naif = 0,5·100/1 = 50 h (C_kul = 74,8 Ah < 100 Ah olsa da dışdeğerleme)
+    const r = def.compute({ ...PEUKERT, I: 1, k: 1.25, d: 0.5 }, ctx);
+    expect(r.outputs.t / H).toBeCloseTo(74.76744, 4);
+    expect(r.outputs.tNaif / H).toBeCloseTo(50, 12);
+    expect(r.checks.filter((c) => c.level === "uyari")).toHaveLength(1);
   });
 
   it("Peukert varsayılanları config'ten: k 1,25 (Victron kurşun-asit ortalaması), H 20 h", () => {
@@ -140,6 +150,26 @@ describe("öz deşarj ve kullanılabilir oran", () => {
     expect(r.outputs.Itop).toBeCloseTo(104.56621e-6, 11);
     expect(r.outputs.t / H).toBeCloseTo(19126.64, 1);
     expect(r.checks.some((c) => c.message.includes("Öz deşarj"))).toBe(true);
+  });
+
+  it("öz deşarjlı adımlar (her profil × Peukert) KaTeX strict ve MathJax'ten geçer (runCalc, varsayılan dışı birimler)", async () => {
+    // all-calcs bu dalı görmez (öz deşarj varsayılanda boş)
+    for (const profil of ["sabit", "dongu"]) {
+      for (const peukert of ["yok", "var"]) {
+        const r = run({
+          profil: { value: profil },
+          peukert: { value: peukert },
+          C: { value: "2,4", unit: "Ah" },
+          oz: { value: "0,03", unit: "fraction" },
+        });
+        if (!r.ok) throw new Error(JSON.stringify(r));
+        expect(r.result.outputs).toHaveProperty("Ioz");
+        for (const s of r.result.steps) {
+          expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+          expect((await latexToSvg(s.latex)).hata, s.latex).toBe(false);
+        }
+      }
+    }
   });
 
   it("öz deşarj boşsa I_öz verilmez; varsayılan durumda ömür 2000 mAh/100 mA = 20 h", () => {

@@ -7,6 +7,8 @@
 import { describe, expect, it } from "vitest";
 import { defaultContext, defaultState, runCalc } from "@/lib/calc/engine";
 import { LIMITS } from "@/config/sinirlar";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
+import { renderStrict } from "@/lib/calc/test-utils/katex";
 import type { ComputeInputs, InputState, SelectInputSpec } from "@/lib/calc/types";
 import { ledOnDirenci as def } from "./led-on-direnci";
 
@@ -74,7 +76,7 @@ describe("ön direnç ve standart değer", () => {
     expect(o.eta).toBeCloseTo(0.8, 12);
   });
 
-  it("Broadcom AN1005: 5 V, V_SAT 0,1 V, V_F 1,95 V, 42 mA → R ≈ 70 Ω; E96'da 71,5 Ω ile 1/4 W yeterli", () => {
+  it("Broadcom AN1005: 5 V, V_SAT 0,1 V, V_F 1,95 V, 42 mA → R ≈ 70 Ω; E96'da 71,5 Ω ile 1/4 W yeterli", async () => {
     // Elle: R = (5 − 0,1 − 1,95)/0,042 = 70,238 Ω (kaynak: 70 Ω). E96: 69,8 < 70,24 < 71,5 → 71,5 Ω;
     // I = 2,95/71,5 = 41,259 mA; P_R = 2,95²/71,5 = 0,121713 W; 2·P_R = 0,243427 W ≤ 0,25 W (kaynak: "use a 1/4 watt")
     const r = run({
@@ -95,6 +97,12 @@ describe("ön direnç ve standart değer", () => {
     expect(o.PR).toBeCloseTo(0.1217133, 7);
     expect(o.PRmin).toBeCloseTo(0.2434266, 7);
     expect(r.result.checks.find((c) => c.message.includes("yeterli"))?.level).toBe("ok");
+    // all-calcs V_sat'lı dalı görmez (varsayılan 0): adımlar KaTeX strict ve PDF MathJax'ten geçmeli
+    expect(r.result.steps[0].latex).toContain("V_{\\text{sat}}");
+    for (const s of r.result.steps) {
+      expect(() => renderStrict(s.latex), s.latex).not.toThrow();
+      expect((await latexToSvg(s.latex)).hata, s.latex).toBe(false);
+    }
   });
 });
 
