@@ -12,6 +12,8 @@ import { latexAuto, latexNum, latexQty } from "@/lib/calc/latex";
 import type { CalcDefinition, Check, Step } from "@/lib/calc/types";
 import { num, optNum, qFrac } from "./ortak";
 
+/** Yıl = 365 gün (birim kataloğundaki "yr" ile aynı) */
+const YIL_S = 365 * 86400;
 const WHERE = "motor-verimi-enerji-tasarrufu";
 
 /** 366 günlük yıl, saniye */
@@ -149,10 +151,12 @@ export const motorVerimiEnerjiTasarrufu: CalcDefinition = {
     { key: "dC", label: "Yıllık maliyet tasarrufu", symbol: "\\Delta C", dimension: "para", defaultUnit: "TL" },
     {
       key: "geriOdeme",
-      label: "Basit geri ödeme süresi (yıl)",
+      label: "Basit geri ödeme süresi",
       symbol: "t_{\\text{gö}}",
-      dimension: "boyutsuz",
-      defaultUnit: "unitless",
+      dimension: "zaman",
+      defaultUnit: "yr",
+      units: ["yr", "day"],
+      autoUnit: false,
     },
   ],
 
@@ -186,7 +190,8 @@ export const motorVerimiEnerjiTasarrufu: CalcDefinition = {
       checks.push({ level: "ok", message: MESSAGES.noPriceDifference });
     } else {
       const years = dK / dC;
-      outputs.geriOdeme = years;
+      // ΔC yıllık tasarruftur; süre SI'da (s) döner, yıl = 365 gün.
+      outputs.geriOdeme = years * YIL_S;
       steps.push({
         label: "Basit geri ödeme süresi",
         latex: `t_{\\text{gö}} = \\frac{\\Delta K}{\\Delta C} = \\frac{${qTL(dK)}}{${qTL(dC)}/\\text{yıl}} = ${latexNum(years)}\\ \\text{yıl}`,

@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo } from "react";
 import { Formula } from "@/components/formula";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cx } from "@/components/ui/cx";
-import { defaultState, runCalc, visibleInputs as resolveVisibleInputs } from "@/lib/calc/engine";
+import { visibleInputs as resolveVisibleInputs } from "@/lib/calc/engine";
+import { useCalcState, type CalcStateApi } from "./use-calc-state";
 import { getCalc } from "@/lib/calc/registry";
 import type {
   CalcDefinition,
@@ -17,7 +18,6 @@ import type {
   NumberListInputSpec,
   OutputSpec,
   PresentedOutput,
-  RunResult,
   SelectInputSpec,
   Step,
 } from "@/lib/calc/types";
@@ -38,7 +38,13 @@ export function CalcForm({ slug }: { slug: string }) {
       </p>
     );
   }
-  return <CalcFormInner key={def.slug} def={def} />;
+  return <StandaloneCalcForm key={def.slug} def={def} />;
+}
+
+/** Kendi durumunu tutan bağımsız form (testler ve CalcWorkspace dışı kullanım için). */
+function StandaloneCalcForm({ def }: { def: CalcDefinition }) {
+  const calc = useCalcState(def);
+  return <CalcFormView calc={calc} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,24 +56,6 @@ type UnitSpec = Pick<NumericInputSpec | OutputSpec, "dimension" | "units">;
 /** Girdi/çıktı için seçilebilir birimler: tanımda `units` varsa onlar, yoksa boyutun tüm birimleri. */
 function unitOptions(spec: UnitSpec): UnitDef[] {
   return spec.units && spec.units.length > 0 ? spec.units.map(getUnit) : unitsFor(spec.dimension);
-}
-
-/** runCalc sözleşmeye göre fırlatmaz; yine de bir tanım hatası tüm sayfayı düşürmesin. */
-function safeRun(
-  def: CalcDefinition,
-  state: InputState,
-  outputUnits: Record<string, string>,
-): RunResult {
-  try {
-    return runCalc(def, state, { outputUnits });
-  } catch (error) {
-    console.error(`runCalc(${def.id}) beklenmeyen hata`, error);
-    return {
-      ok: false,
-      fieldErrors: {},
-      checks: [{ level: "hata", message: "Hesap çalıştırılırken beklenmeyen bir hata oluştu." }],
-    };
-  }
 }
 
 function selectValue(def: CalcDefinition, state: InputState, key: string): string | undefined {
@@ -89,14 +77,11 @@ const CONTROL =
 // ---------------------------------------------------------------------------
 // Form
 
-function CalcFormInner({ def }: { def: CalcDefinition }) {
+/** Hesap formu ve sonuç paneli; durum dışarıdan (useCalcState) gelir. */
+export function CalcFormView({ calc }: { calc: CalcStateApi }) {
+  const { def, state, touched, run, setNumberValue, setNumberUnit, setSelectValue, setOutputUnit, reset } = calc;
   const baseId = `hf-${safeIdPart(useId())}`;
   const fieldId = (key: string) => `${baseId}-${key}`;
-
-  const [state, setState] = useState<InputState>(() => defaultState(def));
-  const [outputUnits, setOutputUnits] = useState<Record<string, string>>({});
-  // Boş ve henüz dokunulmamış zorunlu alanlarda hata metni gösterme (özet panelinde yine listelenir).
-  const [touched, setTouched] = useState<ReadonlySet<string>>(() => new Set());
 
   const inputUnits = useMemo(() => {
     const map = new Map<string, UnitDef[]>();
@@ -111,32 +96,8 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
     return map;
   }, [def]);
 
-  const run = useMemo(() => safeRun(def, state, outputUnits), [def, state, outputUnits]);
   const fieldErrors = run.ok ? {} : run.fieldErrors;
   const checks = run.ok ? run.result.checks : run.checks;
-
-  const markTouched = (key: string) =>
-    setTouched((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
-
-  const setNumberValue = (spec: NumericInputSpec, value: string) => {
-    setState((prev) => ({ ...prev, [spec.key]: { unit: spec.defaultUnit, ...prev[spec.key], value } }));
-    markTouched(spec.key);
-  };
-
-  const setNumberUnit = (spec: NumericInputSpec, unit: string) => {
-    // Birim değişince sayı korunur: kullanıcı yazdığı değerin birimini seçer.
-    setState((prev) => ({ ...prev, [spec.key]: { value: prev[spec.key]?.value ?? "", unit } }));
-  };
-
-  const setSelectValue = (spec: SelectInputSpec, value: string) => {
-    setState((prev) => ({ ...prev, [spec.key]: { value } }));
-  };
-
-  const reset = () => {
-    setState(defaultState(def));
-    setOutputUnits({});
-    setTouched(new Set());
-  };
 
   // Motorun çözümü: visibleWhen zincirlerini de izler (denetleyici gizliyse bağımlı da gizli).
   const visibleInputs = resolveVisibleInputs(def, state);
@@ -197,7 +158,7 @@ function CalcFormInner({ def }: { def: CalcDefinition }) {
                 outputs={run.outputs}
                 specs={outputSpecs}
                 unitOptions={outputUnitOptions}
-                onUnit={(key, unit) => setOutputUnits((prev) => ({ ...prev, [key]: unit }))}
+                onUnit={setOutputUnit}
               />
             ) : (
               <FailedSummary
@@ -464,7 +425,6 @@ function OutputCards({ outputs, specs, unitOptions, onUnit }: {
         const units = unitOptions.get(output.key) ?? [];
         const spec = specs.get(output.key);
         const symbol = output.symbol ?? spec?.symbol;
-        const current = units.find((u) => u.id === output.unit);
         return (
           <li
             key={output.key}
@@ -500,7 +460,7 @@ function OutputCards({ outputs, specs, unitOptions, onUnit }: {
                   ))}
                 </select>
               ) : (
-                <span className="text-sm text-muted">{current?.symbol ?? units[0]?.symbol ?? ""}</span>
+                <span className="text-sm text-muted">{output.unitSymbol}</span>
               )}
             </div>
           </li>

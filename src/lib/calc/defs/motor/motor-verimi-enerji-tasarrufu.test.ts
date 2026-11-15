@@ -35,7 +35,7 @@ describe("SI hesap (elle hesap)", () => {
     // Elle: ΔE = 741,107·6000 = 4446,64 kWh; ΔC = 17 786,56 TL; 25 000/17 786,56 = 1,40556 yıl
     const r = def.compute({ P: 15000, eta1: 0.88, eta2: 0.92, t: 6000 * H, c: 4 * TL_PER_KWH, dK: 25000 }, ctx);
     expect(r.outputs.dC).toBeCloseTo(17786.5613, 4);
-    expect(r.outputs.geriOdeme).toBeCloseTo(1.405556, 6);
+    expect(r.outputs.geriOdeme / (365 * 86400)).toBeCloseTo(1.405556, 6); // SI: s
     expect(r.checks).toEqual([]);
   });
 
@@ -67,7 +67,7 @@ describe("varsayılan dışı birimler (runCalc)", () => {
     expect(o.dP).toBeCloseTo(705.1535, 4);
     expect(o.dE / KWH).toBeCloseTo(4230.9213, 4);
     expect(o.dC).toBeCloseTo(14808.2244, 4);
-    expect(o.geriOdeme).toBeCloseTo(2.025901, 6);
+    expect(o.geriOdeme / (365 * 86400)).toBeCloseTo(2.025901, 6); // SI: s
     // Kartlar: ΔE kWh'de sabit (autoUnit: false), ΔP W'a iner, para TL'de kalır
     expect(r.outputs.find((x) => x.key === "dE")).toMatchObject({ unit: "kWh", formatted: "4231 kWh" });
     expect(r.outputs.find((x) => x.key === "dP")).toMatchObject({ unit: "W" });

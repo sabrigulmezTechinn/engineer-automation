@@ -1,0 +1,69 @@
+"use client";
+
+/**
+ * Hesap sayfasının çalışma alanı: tek bir useCalcState durumu; form (genel ya da özel arayüz), kaydetme araçları,
+ * rapor düğmesi ve senaryo paneli bu durumu paylaşır. Kayıtlı hesap açıldığında (`kayit`) durum ondan başlar;
+ * bileşen kayıt kimliğiyle anahtarlanır (başka kayda geçişte durum sıfırlansın).
+ */
+import { getCalc } from "@/lib/calc/registry";
+import type { CalcDefinition } from "@/lib/calc/types";
+import type { KayitliHesap } from "@/lib/kayit/types";
+import { CalcFormView } from "./calc-form";
+import { CustomCalc } from "./custom";
+import { useCalcState, type CalcTercihleri } from "./use-calc-state";
+import { KayitAraclari } from "@/components/kayit/kayit-araclari";
+import { RaporDugmesi } from "@/components/rapor/rapor-dugmesi";
+import { SenaryoPaneli } from "@/components/karsilastirma/senaryo-paneli";
+
+export function CalcWorkspace({
+  slug,
+  kayit,
+  tercihler,
+  girisYapildi = false,
+}: {
+  slug: string;
+  kayit?: KayitliHesap | null;
+  tercihler?: CalcTercihleri;
+  girisYapildi?: boolean;
+}) {
+  const def = getCalc(slug);
+  if (!def) {
+    return (
+      <p role="alert" className="rounded-md border border-hata-line bg-hata-bg px-4 py-3 text-sm text-hata">
+        Hesap tanımı bulunamadı: <code className="font-mono">{slug}</code>
+      </p>
+    );
+  }
+  return (
+    <Workspace key={kayit?.id ?? def.slug} def={def} kayit={kayit ?? null} tercihler={tercihler} girisYapildi={girisYapildi} />
+  );
+}
+
+function Workspace({
+  def,
+  kayit,
+  tercihler,
+  girisYapildi,
+}: {
+  def: CalcDefinition;
+  kayit: KayitliHesap | null;
+  tercihler?: CalcTercihleri;
+  girisYapildi: boolean;
+}) {
+  const calc = useCalcState(
+    def,
+    kayit ? { state: kayit.girdiler, outputUnits: kayit.ciktiBirimleri } : undefined,
+    tercihler,
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 empty:hidden">
+        <KayitAraclari calc={calc} kayit={kayit} girisYapildi={girisYapildi} />
+        <RaporDugmesi calc={calc} kayit={kayit} />
+      </div>
+      {def.customUi ? <CustomCalc id={def.customUi} calc={calc} /> : <CalcFormView calc={calc} />}
+      <SenaryoPaneli calc={calc} />
+    </div>
+  );
+}

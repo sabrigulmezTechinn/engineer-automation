@@ -214,7 +214,7 @@ describe("better-auth + PostgreSQL", () => {
 
     // Sunucu tarafı doğrulayıcılar geçersiz tercihleri Türkçe mesajla reddeder
     await expect(auth.api.updateUser({ headers, body: { decimals: 9 } })).rejects.toMatchObject({
-      body: { code: "VALIDATION_ERROR", message: "Ondalık basamak en fazla 6 olabilir." },
+      body: { code: "VALIDATION_ERROR", message: "Anlamlı basamak en fazla 8 olabilir." },
     });
     expect(
       await errorCode(auth.api.updateUser({ headers, body: { unitSystem: "metrik" as "si" } })),
@@ -303,7 +303,7 @@ describe("better-auth + PostgreSQL", () => {
     expect(
       await errorCode(
         auth.api.signUpEmail({
-          body: { name: "Ondalık", email: uniqueEmail("ondalik"), password: PASSWORD, decimals: 7 },
+          body: { name: "Ondalık", email: uniqueEmail("ondalik"), password: PASSWORD, decimals: 9 },
         }),
       ),
     ).toBe("VALIDATION_ERROR");

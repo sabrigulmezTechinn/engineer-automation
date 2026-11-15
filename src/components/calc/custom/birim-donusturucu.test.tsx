@@ -9,7 +9,9 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runCalc } from "@/lib/calc/engine";
 import type { InputState } from "@/lib/calc/types";
-import { BirimDonusturucu } from "./birim-donusturucu";
+import { getCalc } from "@/lib/calc/registry";
+import { useCalcState } from "../use-calc-state";
+import { BirimDonusturucuBagimsiz as BirimDonusturucu } from "./birim-donusturucu";
 import { CustomCalc } from "./index";
 
 vi.mock("@/lib/calc/engine", async (importOriginal) => {
@@ -127,7 +129,11 @@ describe("<BirimDonusturucu>", () => {
   });
 
   it("CustomCalc eşlemesi dönüştürücüyü gösterir; bilinmeyen slug Türkçe hata verir", () => {
-    render(<CustomCalc id="birim-donusturucu" slug="birim-donusturucu" />);
+    function Harness() {
+      const calc = useCalcState(getCalc("birim-donusturucu")!);
+      return <CustomCalc id="birim-donusturucu" calc={calc} />;
+    }
+    render(<Harness />);
     expect(screen.getByLabelText("Büyüklük")).toBeTruthy();
     cleanup();
     render(<BirimDonusturucu slug="olmayan" />);

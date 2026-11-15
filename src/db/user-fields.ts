@@ -28,13 +28,18 @@ export const STANDARD_SETS = [
 export type StandardSet = (typeof STANDARD_SETS)[number]["value"];
 export const STANDARD_SET_VALUES = STANDARD_SETS.map((s) => s.value) as [StandardSet, ...StandardSet[]];
 
-/** Sonuçlarda gösterilecek ondalık basamak sınırları */
-export const DECIMALS_MIN = 0;
-export const DECIMALS_MAX = 6;
+/**
+ * Sonuçlarda gösterilecek anlamlı basamak sayısı sınırları. Sütun adı geçmişten dolayı `decimals`;
+ * anlamı Faz 2'de "anlamlı basamak" olarak yeniden tanımlandı (KAPSAM §3.1 "ondalık basamak"tan bilinçli sapma:
+ * otomatik önekli birimlerle sabit ondalık 230,000 V gibi gereksiz sıfırlar üretir). Tam sayı basamakları
+ * bu değerden bağımsız olarak hiçbir zaman atılmaz.
+ */
+export const DECIMALS_MIN = 3;
+export const DECIMALS_MAX = 8;
 
 export const PREFERENCE_DEFAULTS = {
   unitSystem: "si",
-  decimals: 3,
+  decimals: 4,
   standardSet: "iec",
 } as const satisfies { unitSystem: UnitSystem; decimals: number; standardSet: StandardSet };
 
@@ -62,10 +67,10 @@ const companyValidator = optionalText(COMPANY_MAX, "Şirket");
 const jobTitleValidator = optionalText(JOB_TITLE_MAX, "Unvan");
 const unitSystemValidator = z.enum(UNIT_SYSTEM_VALUES, "Geçersiz birim sistemi.");
 const decimalsValidator = z
-  .number({ error: "Ondalık basamak sayı olmalıdır." })
-  .int("Ondalık basamak tam sayı olmalıdır.")
-  .min(DECIMALS_MIN, `Ondalık basamak en az ${DECIMALS_MIN} olabilir.`)
-  .max(DECIMALS_MAX, `Ondalık basamak en fazla ${DECIMALS_MAX} olabilir.`);
+  .number({ error: "Anlamlı basamak sayı olmalıdır." })
+  .int("Anlamlı basamak tam sayı olmalıdır.")
+  .min(DECIMALS_MIN, `Anlamlı basamak en az ${DECIMALS_MIN} olabilir.`)
+  .max(DECIMALS_MAX, `Anlamlı basamak en fazla ${DECIMALS_MAX} olabilir.`);
 const standardSetValidator = z.enum(STANDARD_SET_VALUES, "Geçersiz standart seti.");
 
 /**

@@ -337,9 +337,9 @@ describe("çıktı gösterimi", () => {
   it("otomatik birimle biçimlenir, tanım sırasını izler ve sembolü taşır", () => {
     const r = expectOk(runCalc(makeDef(), state()));
     expect(r.outputs).toEqual([
-      { key: "p", label: "Güç", symbol: "P", value: 12, unit: "W", formatted: "12 W", formattedValue: "12" },
-      { key: "akim", label: "Akım", symbol: "I", value: 500, unit: "mA", formatted: "500 mA", formattedValue: "500" },
-      { key: "toplam", label: "Toplam", value: 2, unit: "adet", formatted: "2", formattedValue: "2" },
+      { key: "p", label: "Güç", symbol: "P", value: 12, unit: "W", unitSymbol: "W", formatted: "12 W", formattedValue: "12" },
+      { key: "akim", label: "Akım", symbol: "I", value: 500, unit: "mA", unitSymbol: "mA", formatted: "500 mA", formattedValue: "500" },
+      { key: "toplam", label: "Toplam", value: 2, unit: "adet", unitSymbol: "", formatted: "2", formattedValue: "2" },
     ]);
   });
 
@@ -479,5 +479,31 @@ describe("çıktı hassasiyeti", () => {
     expect(expectOk(runCalc(def({}), state())).outputs[0].formattedValue).toBe("17971"); // tam sayı basamakları atılmaz
     expect(expectOk(runCalc(def({ significant: 6 }), state())).outputs[0].formattedValue).toBe("17971,2");
     expect(expectOk(runCalc(def({ integer: true }), state())).outputs[0].formattedValue).toBe("17971");
+  });
+});
+
+describe("runCalc seçenekleri: tercih edilen birim, varsayılan hassasiyet, unitLabel", () => {
+  it("tercih edilen birim otomatik seçimden önce gelir; kullanıcı seçimi her ikisinden önce", () => {
+    const pref = { preferredUnits: { guc: "kW" } as const };
+    expect(expectOk(runCalc(makeDef(), state(), pref)).outputs.find((o) => o.key === "p")?.unit).toBe("kW");
+    const both = { ...pref, outputUnits: { p: "W" } };
+    expect(expectOk(runCalc(makeDef(), state(), both)).outputs.find((o) => o.key === "p")?.unit).toBe("W");
+    // izinli olmayan tercih yok sayılır
+    expect(expectOk(runCalc(makeDef(), state(), { preferredUnits: { guc: "yok" } })).outputs.find((o) => o.key === "p")?.unit).toBe("W");
+  });
+
+  it("significant seçeneği tanımda hassasiyet yoksa uygulanır", () => {
+    const def = makeDef({ compute: () => ({ outputs: { akim: 0.123456 }, steps: [], checks: [] }) });
+    expect(expectOk(runCalc(def, state(), { significant: 6, outputUnits: { akim: "A" } })).outputs[0].formattedValue).toBe("0,123456");
+    expect(expectOk(runCalc(def, state(), { outputUnits: { akim: "A" } })).outputs[0].formattedValue).toBe("0,1235");
+  });
+
+  it("unitLabel birim sembolünün yerine yazılır", () => {
+    const def = makeDef({
+      outputs: [{ key: "toplam", label: "Seviye", dimension: "boyutsuz", defaultUnit: "adet", unitLabel: "dBm" }],
+      compute: () => ({ outputs: { toplam: 20 }, steps: [], checks: [] }),
+    });
+    const o = expectOk(runCalc(def, state())).outputs[0];
+    expect(o).toMatchObject({ unitSymbol: "dBm", formatted: "20 dBm", formattedValue: "20" });
   });
 });

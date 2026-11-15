@@ -113,6 +113,11 @@ export interface OutputSpec {
   significant?: number;
   /** Tam sayı çıktısı (sayım, adım sayısı): yuvarlanmadan, ondalıksız gösterilir (16384 → "16 384"). */
   integer?: boolean;
+  /**
+   * Gösterimde birim sembolü yerine yazılacak etiket (ör. dB biriminde "dBm", "dBV"). Yalnızca tek birimli
+   * çıktılarda anlamlıdır; birim dönüşümünü etkilemez.
+   */
+  unitLabel?: string;
 }
 
 /** Ara adım: formülün değerler yerine konmuş hali */
@@ -182,9 +187,25 @@ export interface PresentedOutput {
   symbol?: string;
   value: number; // seçili birimde
   unit: string; // unit id
+  /** Gösterilecek birim metni: OutputSpec.unitLabel varsa o, yoksa birim sembolü */
+  unitSymbol: string;
   formatted: string; // ör. "1,5 kV"
   /** Yalnızca sayı, çıktının hassasiyetiyle biçimlenmiş (ör. "1,5"); kartta birim ayrı gösterilir. */
   formattedValue: string;
+}
+
+/** runCalc seçenekleri (kullanıcı tercihleri dahil) */
+export interface RunOptions {
+  ctx?: CalcContext;
+  /** Çıktı başına kullanıcının seçtiği gösterim birimi (output key → unit id) */
+  outputUnits?: Record<string, string>;
+  /** Hassasiyeti tanımda belirtilmemiş çıktılar için varsayılan anlamlı basamak (profil tercihi; varsayılan 4) */
+  significant?: number;
+  /**
+   * Boyut başına tercih edilen gösterim birimi (ör. imperial tercihinde güç → hp). Kullanıcı o çıktı için
+   * birim seçmediyse ve birim çıktının izinli birimleri arasındaysa otomatik seçimden önce gelir.
+   */
+  preferredUnits?: Partial<Record<Dimension, string>>;
 }
 
 export type RunResult =

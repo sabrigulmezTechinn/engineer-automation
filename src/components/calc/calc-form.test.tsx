@@ -164,6 +164,7 @@ const mocks = vi.hoisted(() => {
           symbol: spec.symbol,
           value,
           unit,
+          unitSymbol: unit,
           formatted: `${value} ${unit}`,
           formattedValue: String(value).replace(".", ","),
         },

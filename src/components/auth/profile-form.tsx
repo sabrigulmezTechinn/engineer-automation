@@ -103,10 +103,10 @@ function ProfileFormInner({ initial }: { initial: ProfileFormValues }) {
         />
         <SelectField
           name="decimals"
-          label="Ondalık basamak"
+          label="Anlamlı basamak"
           options={DECIMAL_OPTIONS}
           defaultValue={v.decimals}
-          hint="Sonuçlarda gösterilecek ondalık basamak sayısı."
+          hint="Sonuçlarda gösterilecek anlamlı basamak sayısı (tam sayı basamakları her zaman gösterilir)."
           error={err("decimals")}
         />
         <SelectField

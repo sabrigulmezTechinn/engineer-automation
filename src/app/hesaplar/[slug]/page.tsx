@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { CalcForm } from "@/components/calc/calc-form";
-import { CustomCalc } from "@/components/calc/custom";
+import { Suspense } from "react";
+import { CalcWorkspace } from "@/components/calc/calc-workspace";
+import { CalismaAlani } from "./calisma-alani";
 import { categoryMeta } from "@/components/calc/kapsam";
 import { DisclaimerBox } from "@/components/disclaimer";
 import { Formula } from "@/components/formula";
@@ -41,7 +42,7 @@ function SectionHeading({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
-export default async function HesapPage({ params }: PageProps<"/hesaplar/[slug]">) {
+export default async function HesapPage({ params, searchParams }: PageProps<"/hesaplar/[slug]">) {
   const { slug } = await params;
   const def = getCalc(slug);
   if (!def) notFound();
@@ -100,11 +101,9 @@ export default async function HesapPage({ params }: PageProps<"/hesaplar/[slug]"
       <section aria-labelledby="hesaplama" className="mt-8">
         <SectionHeading id="hesaplama">Hesaplama</SectionHeading>
         <div className="mt-3">
-          {def.customUi ? (
-            <CustomCalc key={def.slug} id={def.customUi} slug={def.slug} />
-          ) : (
-            <CalcForm key={def.slug} slug={def.slug} />
-          )}
+          <Suspense fallback={<CalcWorkspace slug={def.slug} />}>
+            <CalismaAlani slug={def.slug} searchParams={searchParams} />
+          </Suspense>
         </div>
       </section>
 

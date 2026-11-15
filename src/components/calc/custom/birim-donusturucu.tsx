@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
+import { useCalcState, type CalcStateApi } from "../use-calc-state";
 import { Formula } from "@/components/formula";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,15 +15,12 @@ import {
   type AwgYon,
   type LinearQuantity,
 } from "@/lib/calc/defs/yardimci/birim-donusturucu";
-import { defaultState, runCalc } from "@/lib/calc/engine";
 import { getCalc } from "@/lib/calc/registry";
 import type {
   CalcDefinition,
   Check,
   CheckLevel,
-  InputState,
   NumberInputSpec,
-  RunResult,
   SelectInputSpec,
   Step,
 } from "@/lib/calc/types";
@@ -38,7 +36,13 @@ import { formatQuantity, fromSI, unitsFor, type UnitDef } from "@/lib/units";
 /** Dönüşüm tablosunda gösterilen anlamlı basamak sayısı (formdaki 4'ten fazla: dönüştürücüde hassasiyet önemli). */
 const TABLE_DIGITS = 6;
 
-export function BirimDonusturucu({ slug }: { slug: string }) {
+/** CalcWorkspace içinde: durum dışarıdan (useCalcState) gelir; kaydetme/senaryo/rapor aynı durumu kullanır. */
+export function BirimDonusturucu({ calc }: { calc: CalcStateApi }) {
+  return <Converter calc={calc} />;
+}
+
+/** Kendi durumunu tutan bağımsız kullanım (testler için). */
+export function BirimDonusturucuBagimsiz({ slug }: { slug: string }) {
   const def = getCalc(slug);
   if (!def) {
     return (
@@ -47,24 +51,16 @@ export function BirimDonusturucu({ slug }: { slug: string }) {
       </p>
     );
   }
-  return <Converter key={def.slug} def={def} />;
+  return <Standalone key={def.slug} def={def} />;
+}
+
+function Standalone({ def }: { def: CalcDefinition }) {
+  const calc = useCalcState(def);
+  return <Converter calc={calc} />;
 }
 
 // ---------------------------------------------------------------------------
 // Yardımcılar
-
-function safeRun(def: CalcDefinition, state: InputState): RunResult {
-  try {
-    return runCalc(def, state);
-  } catch (error) {
-    console.error(`runCalc(${def.id}) beklenmeyen hata`, error);
-    return {
-      ok: false,
-      fieldErrors: {},
-      checks: [{ level: "hata", message: "Hesap çalıştırılırken beklenmeyen bir hata oluştu." }],
-    };
-  }
-}
 
 function safeIdPart(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
@@ -108,13 +104,10 @@ const fmt = (valueSI: number, unitId: string) =>
 // ---------------------------------------------------------------------------
 // Ana bileşen
 
-function Converter({ def }: { def: CalcDefinition }) {
+function Converter({ calc }: { calc: CalcStateApi }) {
+  const { def, state, touched, run, reset } = calc;
   const baseId = `bd-${safeIdPart(useId())}`;
   const fieldId = (key: string) => `${baseId}-${key}`;
-
-  const [state, setState] = useState<InputState>(() => defaultState(def));
-  const [touched, setTouched] = useState<ReadonlySet<string>>(() => new Set());
-  const run = useMemo(() => safeRun(def, state), [def, state]);
 
   const fieldErrors = run.ok ? {} : run.fieldErrors;
   const checks = run.ok ? run.result.checks : run.checks;
@@ -127,18 +120,12 @@ function Converter({ def }: { def: CalcDefinition }) {
   const quantity = LINEAR_QUANTITIES.find((q) => q.id === buyukluk);
   const isAwg = buyukluk === AWG_ID;
 
-  const setValue = (spec: NumberInputSpec, value: string) => {
-    setState((prev) => ({ ...prev, [spec.key]: { unit: spec.defaultUnit, ...prev[spec.key], value } }));
-    setTouched((prev) => (prev.has(spec.key) ? prev : new Set(prev).add(spec.key)));
-  };
-  const setUnit = (spec: NumberInputSpec, unit: string) => {
-    // Birim değişince sayı korunur: kullanıcı yazdığı değerin birimini seçer (genel formla aynı).
-    setState((prev) => ({ ...prev, [spec.key]: { value: prev[spec.key]?.value ?? "", unit } }));
-  };
-  const setSelect = (key: string, value: string) => setState((prev) => ({ ...prev, [key]: { value } }));
-  const reset = () => {
-    setState(defaultState(def));
-    setTouched(new Set());
+  const setValue = calc.setNumberValue;
+  // Birim değişince sayı korunur: kullanıcı yazdığı değerin birimini seçer (genel formla aynı).
+  const setUnit = calc.setNumberUnit;
+  const setSelect = (key: string, value: string) => {
+    const spec = selectSpec(def, key);
+    if (spec) calc.setSelectValue(spec, value);
   };
 
   const labelOf = (key: string) => def.inputs.find((i) => i.key === key)?.label ?? key;

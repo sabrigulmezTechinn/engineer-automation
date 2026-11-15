@@ -3,7 +3,7 @@
  * Sunucu ve istemcide çalışır.
  */
 import { LIMITS } from "@/config/sinirlar";
-import { MONEY_FORMAT, formatNumber, formatQuantity, fromSI, parseNumber, toSI, unitsFor, type FormatOptions } from "@/lib/units";
+import { MONEY_FORMAT, formatNumber, formatQuantity, fromSI, getUnit, parseNumber, toSI, unitsFor, type FormatOptions } from "@/lib/units";
 import { autoOutputUnit } from "./auto-unit";
 import type {
   CalcContext,
@@ -17,6 +17,7 @@ import type {
   NumberListInputSpec,
   OutputSpec,
   PresentedOutput,
+  RunOptions,
   RunResult,
   SelectInputSpec,
 } from "./types";
@@ -211,37 +212,45 @@ function failure(checks: Check[], fieldErrors: Record<string, string> = {}): Run
 }
 
 /** Çıktının gösterim hassasiyeti: tam sayılar ondalıksız, aksi halde anlamlı basamak (varsayılan 4). */
-function outputPrecision(spec: OutputSpec): FormatOptions | undefined {
+export function outputPrecision(spec: OutputSpec, defaultSignificant?: number): FormatOptions | undefined {
   if (spec.integer) return { decimals: 0 };
   if (spec.significant !== undefined) return { significant: spec.significant };
   if (spec.dimension === "para") return MONEY_FORMAT;
+  if (defaultSignificant !== undefined) return { significant: defaultSignificant };
   return undefined;
 }
 
-function presentOutputs(
-  def: CalcDefinition,
-  outputs: Record<string, number>,
-  outputUnits: Record<string, string> | undefined,
-): PresentedOutput[] {
+/**
+ * Çıktının gösterim birimi. Öncelik: kullanıcının seçimi → tercih edilen birim (imperial vb.) →
+ * otomatik önek seçimi. İzinli olmayan birimler yok sayılır.
+ */
+export function displayUnit(spec: OutputSpec, valueSI: number, options?: RunOptions): string {
+  const allowed = allowedUnits(spec);
+  const requested = options?.outputUnits?.[spec.key];
+  if (requested !== undefined && allowed.includes(requested)) return requested;
+  const preferred = options?.preferredUnits?.[spec.dimension];
+  if (preferred !== undefined && allowed.includes(preferred)) return preferred;
+  return autoOutputUnit(spec, valueSI);
+}
+
+function presentOutputs(def: CalcDefinition, outputs: Record<string, number>, options?: RunOptions): PresentedOutput[] {
   const presented: PresentedOutput[] = [];
   for (const spec of def.outputs) {
     if (!(spec.key in outputs)) continue;
-    const requested = outputUnits?.[spec.key];
-    // Kullanıcının seçtiği birim önceliklidir; seçilmemişse veya bu çıktıya ait değilse otomatik seçilir.
-    const unit =
-      requested !== undefined && allowedUnits(spec).includes(requested)
-        ? requested
-        : autoOutputUnit(spec, outputs[spec.key]);
+    const unit = displayUnit(spec, outputs[spec.key], options);
     const value = fromSI(outputs[spec.key], unit);
-    const precision = outputPrecision(spec);
+    const precision = outputPrecision(spec, options?.significant);
+    const formattedValue = formatNumber(value, precision);
+    const unitSymbol = spec.unitLabel ?? getUnit(unit).symbol;
     presented.push({
       key: spec.key,
       label: spec.label,
       ...(spec.symbol !== undefined ? { symbol: spec.symbol } : {}),
       value,
       unit,
-      formatted: formatQuantity(value, unit, precision),
-      formattedValue: formatNumber(value, precision),
+      unitSymbol,
+      formatted: spec.unitLabel !== undefined ? `${formattedValue} ${spec.unitLabel}` : formatQuantity(value, unit, precision),
+      formattedValue,
     });
   }
   return presented;
@@ -252,11 +261,7 @@ function presentOutputs(
  * Hiçbir zaman fırlatmaz: hatalar RunResult içinde döner (compute'un fırlattığı hata da dahil).
  * `outputUnits` ile çıktı başına gösterim birimi seçilebilir (anahtar: output key).
  */
-export function runCalc(
-  def: CalcDefinition,
-  state: InputState,
-  options?: { ctx?: CalcContext; outputUnits?: Record<string, string> },
-): RunResult {
+export function runCalc(def: CalcDefinition, state: InputState, options?: RunOptions): RunResult {
   try {
     const ctx = options?.ctx ?? defaultContext();
 
@@ -324,7 +329,7 @@ export function runCalc(
       ok: true,
       inputsSI,
       result,
-      outputs: presentOutputs(def, outputs, options?.outputUnits),
+      outputs: presentOutputs(def, outputs, options),
     };
   } catch {
     return failure([{ level: "hata", message: MESSAGES.unexpected }]);

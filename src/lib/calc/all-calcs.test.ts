@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import { getUnit } from "@/lib/units";
 import { defaultState, runCalc } from "./engine";
 import { allCalcs } from "./registry";
+import { latexToSvg } from "@/lib/rapor/latex-svg";
 import { renderStrict } from "./test-utils/katex";
 import type { CalcDefinition, InputState } from "./types";
 
@@ -58,6 +59,19 @@ describe.each(calcs.map((d) => [`${d.id} ${d.slug}`, d] as const))("%s", (_name,
   it("girdi ve çıktı sembolleri KaTeX strict'ten geçer", () => {
     for (const spec of [...def.inputs, ...def.outputs]) {
       if (spec.symbol) expect(() => renderStrict(spec.symbol as string), `${spec.key}: ${spec.symbol}`).not.toThrow();
+    }
+  });
+
+  it("formüller, varsayılan adımlar ve semboller PDF'teki MathJax'ten hatasız geçer", async () => {
+    const r = runCalc(def, defaultState(def));
+    const latexler = [
+      ...def.formulas.map((f) => f.latex),
+      ...(r.ok ? r.result.steps.map((s) => s.latex) : []),
+      ...[...def.inputs, ...def.outputs].flatMap((s) => (s.symbol ? [s.symbol] : [])),
+    ];
+    for (const latex of latexler) {
+      const svg = await latexToSvg(latex);
+      expect(svg.hata, latex).toBe(false);
     }
   });
 

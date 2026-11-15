@@ -3,7 +3,7 @@ import * as z from "zod";
 import { companyField, jobTitleField, nameField } from "@/app/(auth)/_lib/validation";
 import { DECIMALS_MAX, DECIMALS_MIN, STANDARD_SET_VALUES, UNIT_SYSTEM_VALUES } from "@/db/user-fields";
 
-const ONDALIK_MESAJI = `Ondalık basamak ${DECIMALS_MIN} ile ${DECIMALS_MAX} arasında bir tam sayı olmalıdır.`;
+const ONDALIK_MESAJI = `Anlamlı basamak ${DECIMALS_MIN} ile ${DECIMALS_MAX} arasında bir tam sayı olmalıdır.`;
 
 export const profileSchema = z.object({
   name: nameField,

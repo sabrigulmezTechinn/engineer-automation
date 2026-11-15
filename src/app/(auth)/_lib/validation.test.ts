@@ -74,9 +74,9 @@ describe("profil formu doğrulaması", () => {
     expect(r.success && r.data.decimals).toBe(6);
   });
 
-  it.each(["7", "-1", "", "2.5", "abc"])("ondalık basamak %j reddedilir", (decimals) => {
+  it.each(["9", "2", "-1", "", "2.5", "abc"])("anlamlı basamak %j reddedilir", (decimals) => {
     const r = profileSchema.safeParse({ ...gecerli, decimals });
-    expect(fieldErrorsOf(r.error!).decimals).toEqual(["Ondalık basamak 0 ile 6 arasında bir tam sayı olmalıdır."]);
+    expect(fieldErrorsOf(r.error!).decimals).toEqual(["Anlamlı basamak 3 ile 8 arasında bir tam sayı olmalıdır."]);
   });
 
   it("bilinmeyen birim sistemi ve standart setini reddeder", () => {
@@ -92,13 +92,13 @@ describe("better-auth ek alan doğrulayıcıları", () => {
 
   it("geçerli değerleri kabul eder", () => {
     expect(validate("company", null)).not.toHaveProperty("issues");
-    expect(validate("decimals", 0)).not.toHaveProperty("issues");
+    expect(validate("decimals", 3)).not.toHaveProperty("issues");
     expect(validate("unitSystem", "si")).not.toHaveProperty("issues");
   });
 
   it("geçersiz değerleri Türkçe mesajla reddeder", () => {
-    const sonuc = validate("decimals", 7) as { issues: { message: string }[] };
-    expect(sonuc.issues[0].message).toBe("Ondalık basamak en fazla 6 olabilir.");
+    const sonuc = validate("decimals", 9) as { issues: { message: string }[] };
+    expect(sonuc.issues[0].message).toBe("Anlamlı basamak en fazla 8 olabilir.");
     expect(validate("standardSet", "ansi")).toHaveProperty("issues");
   });
 });

@@ -120,6 +120,8 @@ const ALL: UnitDef[] = [
     { id: "min", symbol: "dk", name: "dakika", factor: 60 },
     { id: "h", symbol: "sa", name: "saat", factor: 3600 },
     { id: "day", symbol: "gün", name: "gün", factor: 86400 },
+    // Enerji/maliyet hesaplarında yıl 365 gün = 8760 saat kabul edilir (geri ödeme süresi vb.).
+    { id: "yr", symbol: "yıl", name: "yıl (365 gün)", factor: 365 * 86400 },
   ]),
   ...group("uzunluk", [
     { id: "um", symbol: "µm", name: "mikrometre", factor: 1e-6 },
