@@ -7,5 +7,6 @@ import { kisaDevreAkimi } from "./kisa-devre-akimi";
 import { kompanzasyon } from "./kompanzasyon";
 import { panoIsiHesabi } from "./pano-isi-hesabi";
 import { topraklamaDirenci } from "./topraklama-direnci";
+import { trafoSecimiYuklenme } from "./trafo-secimi-yuklenme";
 
-export const TESISAT: CalcDefinition[] = [kompanzasyon, kisaDevreAkimi, topraklamaDirenci, panoIsiHesabi];
+export const TESISAT: CalcDefinition[] = [kompanzasyon, kisaDevreAkimi, trafoSecimiYuklenme, topraklamaDirenci, panoIsiHesabi];
