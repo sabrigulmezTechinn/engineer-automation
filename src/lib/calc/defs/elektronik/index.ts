@@ -4,7 +4,9 @@
  */
 import type { CalcDefinition } from "../../types";
 import { pcbYolGenisligi } from "./pcb-yol-genisligi";
+import { renkSmdKondansatorKodlari } from "./renk-smd-kondansator-kodlari";
 
 export const ELEKTRONIK: CalcDefinition[] = [
+  renkSmdKondansatorKodlari,
   pcbYolGenisligi,
 ];
