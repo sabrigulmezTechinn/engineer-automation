@@ -156,6 +156,24 @@ describe("<RenkKodu>", () => {
     expect(panel().getByRole("img", { name: "Kondansatör çizimi: 229C" })).toBeTruthy();
   });
 
+  it("değerden koda: 4,7 kΩ için 4 ve 5 bant çizilir; 4,75 kΩ'da 4 bant 4,8 kΩ'a yuvarlanır", () => {
+    render(<RenkKodu slug={SLUG} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Değerden koda" }));
+    const renkler = (bant: string) =>
+      Array.from(document.querySelectorAll(`[data-ters="${bant}"] [data-bant]`)).map((el) => el.getAttribute("data-renk"));
+    expect(renkler("4")).toEqual(["sari", "mor", "kirmizi", "altin"]);
+    expect(renkler("5")).toEqual(["sari", "mor", "siyah", "kahverengi", "altin"]);
+    expect(lastState().mod).toEqual({ value: "ters" });
+
+    fireEvent.change(screen.getByLabelText("Direnç değeri"), { target: { value: "4,75" } });
+    expect(renkler("4")).toEqual(["sari", "gri", "kirmizi", "altin"]);
+    expect(renkler("5")).toEqual(["sari", "mor", "yesil", "kahverengi", "altin"]);
+    expect(document.querySelector('[data-ters="4"] figcaption')?.textContent).toContain("4,8 kΩ");
+    expect(document.querySelector('[data-ters="5"] figcaption')?.textContent).toContain("4,75 kΩ");
+    // SMD kodları sonuç bölümündeki bilgi mesajında
+    expect(screen.getByText(/SMD kodları: 3 karakter tam gösterilemez; 4 karakter 4751; EIA-96 66B\./)).toBeTruthy();
+  });
+
   it("varsayılanlara dön paneli de sıfırlar; CustomCalc eşlemesi paneli gösterir; bilinmeyen slug hata verir", () => {
     function Harness() {
       const calc = useCalcState(getCalc(SLUG)!);

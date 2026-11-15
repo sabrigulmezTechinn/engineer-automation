@@ -217,6 +217,63 @@ describe("kondansatör kodu", () => {
   });
 });
 
+describe("ters yön: değerden koda", () => {
+  const T: ComputeInputs = { mod: "ters", Rd: 4700, tol: "altin" };
+  const mesaj = (r: { checks: { message: string }[] }, bas: string) => bilgi(r.checks, bas);
+
+  it("4,7 kΩ: 4 bant Sarı–Mor–Kırmızı–Altın (47, n = 2); 5 bant Sarı–Mor–Siyah–Kahverengi (470, n = 1); SMD 472, 4701", () => {
+    const r = def.compute(T, ctx);
+    expect(r.outputs).toMatchObject({ R4: 4700, h4: 47, n4: 2, sapma4: 0, R5: 4700, h5: 470, n5: 1, sapma5: 0 });
+    expect(mesaj(r, "4 bant")).toBe("4 bant (soldan sağa): Sarı (4) – Mor (7) – Kırmızı (×100) – Altın (±%5) → 4,7 kΩ ±%5.");
+    expect(mesaj(r, "5 bant")).toBe(
+      "5 bant (soldan sağa): Sarı (4) – Mor (7) – Siyah (0) – Kahverengi (×10) – Altın (±%5) → 4,7 kΩ ±%5.",
+    );
+    // 4,7 E96'da yok (464, 475): EIA-96 kodu yok
+    expect(mesaj(r, "SMD kodları")).toBe("SMD kodları: 3 karakter 472; 4 karakter 4701; EIA-96 tam gösterilemez.");
+  });
+
+  it("4,75 kΩ: 4 bant 4,8 kΩ'a yuvarlanır (+%1,053); 5 bant 475·10; EIA-96 66B (TT TN004 satır 66: 4K75)", () => {
+    const r = def.compute({ ...T, Rd: 4750 }, ctx);
+    expect(r.outputs.R4).toBe(4800);
+    expect(r.outputs.h4).toBe(48);
+    expect(r.outputs.sapma4).toBeCloseTo(50 / 4750, 12);
+    expect(r.outputs).toMatchObject({ R5: 4750, h5: 475, n5: 1, sapma5: 0 });
+    expect(mesaj(r, "4 bant")).toContain("sapma %1,053");
+    expect(mesaj(r, "SMD kodları")).toBe("SMD kodları: 3 karakter tam gösterilemez; 4 karakter 4751; EIA-96 66B.");
+  });
+
+  it("12,4 kΩ → EIA-96 10C (Bourns); 1 MΩ → 105, 1004, 01E; Kahverengi–Siyah–Yeşil", () => {
+    expect(mesaj(def.compute({ ...T, Rd: 12400 }, ctx), "SMD kodları")).toContain("EIA-96 10C");
+    const r = def.compute({ ...T, Rd: 1e6 }, ctx);
+    expect(mesaj(r, "SMD kodları")).toBe("SMD kodları: 3 karakter 105; 4 karakter 1004; EIA-96 01E.");
+    expect(mesaj(r, "4 bant")).toContain("Kahverengi (1) – Siyah (0) – Yeşil (×100 k)");
+  });
+
+  it("0,47 Ω: 4 bant Sarı–Mor–Gümüş; 5 bantla gösterilemez (çarpan 10⁻³ yok); SMD R47, R470", () => {
+    const r = def.compute({ ...T, Rd: 0.47 }, ctx);
+    expect(r.outputs).toMatchObject({ h4: 47, n4: -2 });
+    expect(r.outputs.R5).toBeUndefined();
+    expect(mesaj(r, "4 bant")).toContain("Gümüş (×0,01)");
+    expect(mesaj(r, "5 bantla gösterilemez")).toBeTruthy();
+    expect(mesaj(r, "SMD kodları")).toBe("SMD kodları: 3 karakter R47; 4 karakter R470; EIA-96 tam gösterilemez.");
+  });
+
+  it("47,5 mΩ: renk koduyla gösterilemez; 4 karakter 47L5 (Vishay L işareti)", () => {
+    const r = def.compute({ ...T, Rd: 0.0475 }, ctx);
+    expect(r.outputs.R4).toBeUndefined();
+    expect(r.outputs.R5).toBeUndefined();
+    expect(mesaj(r, "SMD kodları")).toBe("SMD kodları: 3 karakter tam gösterilemez; 4 karakter 47L5; EIA-96 tam gösterilemez.");
+  });
+
+  it("varsayılan dışı birim (runCalc): 2,2 MΩ girdi, 4 bant değeri kΩ ile", () => {
+    const r = run({ mod: { value: "ters" }, Rd: { value: "2,2", unit: "Mohm" } }, { R4: "kohm" });
+    if (!r.ok) throw new Error(JSON.stringify(r));
+    expect(r.outputs.find((o) => o.key === "R4")).toMatchObject({ unit: "kohm", formatted: "2200 kΩ" });
+    expect(r.outputs.find((o) => o.key === "h4")?.formatted).toBe("22");
+    expect(r.outputs.find((o) => o.key === "n4")?.formatted).toBe("5");
+  });
+});
+
 describe("seçim kombinasyonları (kombinasyon testi 'hata'sız sonuç ister)", () => {
   const selects = def.inputs.filter((i): i is SelectInputSpec => i.kind === "select");
   const controllerKeys = new Set(def.inputs.flatMap((i) => (i.visibleWhen ? [i.visibleWhen.key] : [])));
@@ -230,7 +287,7 @@ describe("seçim kombinasyonları (kombinasyon testi 'hata'sız sonuç ister)", 
   it("her mod × bant sayısı × SMD biçiminde diğer her select'in her seçeneği geçerli ve hatasız sonuç verir", () => {
     let bases: InputState[] = [{}];
     for (const c of controllers) bases = bases.flatMap((b) => c.options.map((o) => ({ ...b, [c.key]: { value: o.value } })));
-    expect(bases).toHaveLength(27);
+    expect(bases).toHaveLength(36);
     let n = 0;
     for (const base of bases) {
       for (const s of [undefined, ...others]) {
@@ -244,6 +301,6 @@ describe("seçim kombinasyonları (kombinasyon testi 'hata'sız sonuç ister)", 
         }
       }
     }
-    expect(n).toBeGreaterThan(27 * 100);
+    expect(n).toBeGreaterThan(36 * 100);
   });
 });

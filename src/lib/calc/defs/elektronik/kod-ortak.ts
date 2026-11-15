@@ -53,9 +53,10 @@ export const ANAHTAR = {
   eiaHarf: "eia_harf",
   kond: ["k1", "k2", "k3"],
   kTol: "ktol",
+  tersDeger: "Rd",
 } as const;
 
-export type KodMod = "renk" | "smd" | "kondansator";
+export type KodMod = "renk" | "smd" | "kondansator" | "ters";
 export type BantSayisi = "4" | "5" | "6";
 export type SmdTip = "3" | "4" | "eia96";
 
@@ -238,6 +239,78 @@ export const KOND_TOLERANS: Readonly<Record<string, KondTolerans>> = {
   M: { tur: "oran", deger: 0.2 },
   Z: { tur: "asimetrik", arti: 0.8, eksi: 0.2 },
 };
+
+// ---------------------------------------------------------------------------
+// Ters yön: değer → renk bantları / SMD kodu
+
+export interface AnlamliGosterim {
+  /** s anlamlı hane, tam sayı (10^(s−1) ≤ m < 10^s) */
+  m: number;
+  /** Değer = m · 10^us */
+  us: number;
+  /** Yuvarlanmış değer */
+  deger: number;
+}
+
+/** R > 0 değerini s anlamlı haneye yuvarlar: 4750 Ω, s = 2 → m = 48, us = 2 (4,8 kΩ). */
+export function anlamliHane(R: number, s: number): AnlamliGosterim {
+  if (!(R > 0) || !Number.isFinite(R)) throw new Error(`kod-ortak: geçersiz değer ${R}`);
+  let us = Math.floor(Math.log10(R)) - (s - 1);
+  let m = Math.round(us >= 0 ? R / 10 ** us : R * 10 ** -us);
+  // log10 yuvarlama hatası ya da 9,96 → 10,0 gibi taşmalar
+  if (m >= 10 ** s) {
+    m = Math.round(m / 10);
+    us += 1;
+  } else if (m < 10 ** (s - 1)) {
+    m = Math.round(us - 1 >= 0 ? R / 10 ** (us - 1) : R * 10 ** -(us - 1));
+    us -= 1;
+  }
+  return { m, us, deger: scaled(m, us) };
+}
+
+/** Rakam ve çarpan bantlarının renkleri (m'nin haneleri + 10^us çarpanı); çarpan rengi yoksa null. */
+export function bantRenkleri(m: number, us: number): Renk[] | null {
+  const carpan = (Object.keys(CARPAN_US) as Renk[]).find((r) => CARPAN_US[r] === us);
+  if (!carpan) return null;
+  return [...Array.from(String(m), (d) => RAKAM_RENKLERI[Number(d)]), carpan];
+}
+
+/** Göreli eşitlik payı (4,7 kΩ girişi 4700,000000000001 gelebilir) */
+const TAM = 1e-9;
+
+/**
+ * Değerin çip direnç kodları (Vishay 20020 düzeni): 3 karakter (2 anlamlı hane), 4 karakter (3 anlamlı hane; 0,01–0,1 Ω
+ * arası L ile), EIA-96 (3 hane E96'daysa). Değer o biçimde tam gösterilemiyorsa null.
+ */
+export function smdKodlari(R: number): { uc: string | null; dort: string | null; eia96: string | null } {
+  const iki = anlamliHane(R, 2);
+  const uc = anlamliHane(R, 3);
+  const tam2 = Math.abs(iki.deger - R) <= TAM * R;
+  const tam3 = Math.abs(uc.deger - R) <= TAM * R;
+
+  let kod3: string | null = null;
+  if (tam2) {
+    const d = String(iki.m);
+    if (iki.us >= 0 && iki.us <= 7) kod3 = `${d}${iki.us}`;
+    else if (iki.us === -1) kod3 = `${d[0]}R${d[1]}`;
+    else if (iki.us === -2) kod3 = `R${d}`;
+  }
+
+  let kod4: string | null = null;
+  let eia: string | null = null;
+  if (tam3) {
+    const d = String(uc.m);
+    if (uc.us >= 0 && uc.us <= 6) kod4 = `${d}${uc.us}`;
+    else if (uc.us === -1) kod4 = `${d.slice(0, 2)}R${d[2]}`;
+    else if (uc.us === -2) kod4 = `${d[0]}R${d.slice(1)}`;
+    else if (uc.us === -3) kod4 = `R${d}`;
+    else if (uc.us === -4) kod4 = `${d.slice(0, 2)}L${d[2]}`;
+    const n = E_SERIES.E96.indexOf(uc.m);
+    const harf = Object.keys(EIA96_HARF_US).find((h) => EIA96_HARF_US[h] === uc.us);
+    if (n >= 0 && harf) eia = `${String(n + 1).padStart(2, "0")}${harf}`;
+  }
+  return { uc: kod3, dort: kod4, eia96: eia };
+}
 
 // ---------------------------------------------------------------------------
 // Tek metin kutusu: kod metni ↔ girdiler

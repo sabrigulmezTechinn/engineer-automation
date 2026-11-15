@@ -13,7 +13,7 @@ import { useId, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { cx } from "@/components/ui/cx";
 import { visibleInputs } from "@/lib/calc/engine";
-import { ANAHTAR, kodCoz, kodYaz, type KodTuru, type Renk } from "@/lib/calc/defs/elektronik/kod-ortak";
+import { ANAHTAR, bantRenkleri, kodCoz, kodYaz, type KodTuru, type Renk } from "@/lib/calc/defs/elektronik/kod-ortak";
 import { getCalc } from "@/lib/calc/registry";
 import type { CalcDefinition, NumberInputSpec, SelectInputSpec } from "@/lib/calc/types";
 import { CalcFormView } from "../calc-form";
@@ -114,6 +114,8 @@ function KodPaneli({ calc }: { calc: CalcStateApi }) {
           ) : mod === "smd" || mod === "kondansator" ? (
             // Kip değişince metin kutusunun taslağı sıfırlansın.
             <KodKutusu key={mod} calc={calc} tur={mod} baseId={baseId} />
+          ) : mod === "ters" ? (
+            <TersCizim calc={calc} />
           ) : null}
         </div>
         <Ozet calc={calc} />
@@ -136,6 +138,51 @@ function Ozet({ calc }: { calc: CalcStateApi }) {
       <span className="text-xl font-semibold tracking-tight text-fg tabular-nums">{value.formatted}</span>
       {tol && <span className="ml-2 tabular-nums">±{tol.formatted}</span>}
     </p>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Ters yön: hesabın bulduğu rakamlar (h4/n4, h5/n5) çizime dönüştürülür
+
+function TersCizim({ calc }: { calc: CalcStateApi }) {
+  const { run, def } = calc;
+  if (!run.ok) return <p className="text-sm text-muted">Değeri girin; renk bantları burada çizilir.</p>;
+  const out = (key: string) => run.outputs.find((o) => o.key === key);
+  const rakamSpec = selectSpec(def, ANAHTAR.rakam[1]);
+  const carpanSpec = selectSpec(def, ANAHTAR.carpan);
+  const tolSpec = selectSpec(def, ANAHTAR.tol);
+  const tol = (currentValue(calc, ANAHTAR.tol) ?? "yok") as Renk;
+  const labelOf = (spec: SelectInputSpec | undefined, value: string) => spec?.options.find((o) => o.value === value)?.label ?? value;
+
+  const cizimler = (["4", "5"] as const).flatMap((bant) => {
+    const h = run.result.outputs[`h${bant}`];
+    const n = run.result.outputs[`n${bant}`];
+    const deger = out(`R${bant}`);
+    if (h === undefined || n === undefined || !deger) return [];
+    const renkler = bantRenkleri(h, n);
+    if (!renkler) return [];
+    const bantlar = [
+      ...renkler.slice(0, -1).map((r, i) => ({ key: ANAHTAR.rakam[i], renk: r, label: labelOf(rakamSpec, r) })),
+      { key: ANAHTAR.carpan, renk: renkler[renkler.length - 1], label: labelOf(carpanSpec, renkler[renkler.length - 1]) },
+      { key: ANAHTAR.tol, renk: tol, label: labelOf(tolSpec, tol) },
+    ];
+    return [{ bant, bantlar, deger: deger.formatted }];
+  });
+
+  if (cizimler.length === 0) {
+    return <p className="text-sm text-muted">Bu değer renk koduyla gösterilemiyor; SMD kodları sonuç bölümünde.</p>;
+  }
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {cizimler.map((c) => (
+        <figure key={c.bant} data-ters={c.bant}>
+          <DirencCizimi bantlar={c.bantlar} />
+          <figcaption className="mt-1 text-center text-sm text-muted">
+            {c.bant} bant: <span className="font-medium text-fg tabular-nums">{c.deger}</span>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
   );
 }
 

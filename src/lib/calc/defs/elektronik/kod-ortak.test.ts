@@ -14,6 +14,9 @@ import { E_SERIES } from "../yardimci/e-serileri";
 import {
   ANAHTAR,
   EIA96_HARF_US,
+  anlamliHane,
+  bantRenkleri,
+  smdKodlari,
   KOND_CARPAN_US,
   eia96Taban,
   kodCoz,
@@ -184,5 +187,51 @@ describe("kodCoz — tek metin kutusu", () => {
   it("anahtarlar ve kondansatör çarpan haneleri (7 yok)", () => {
     expect(ANAHTAR.s4).toHaveLength(4);
     expect(Object.keys(KOND_CARPAN_US).sort()).toEqual(["0", "1", "2", "3", "4", "5", "6", "8", "9"]);
+  });
+});
+
+describe("ters yön yardımcıları", () => {
+  it("anlamliHane: 4750 → 48·10² (2 hane), 475·10 (3 hane); 9960 → 10·10³; 0,47 → 47·10⁻²", () => {
+    expect(anlamliHane(4750, 2)).toEqual({ m: 48, us: 2, deger: 4800 });
+    expect(anlamliHane(4750, 3)).toEqual({ m: 475, us: 1, deger: 4750 });
+    expect(anlamliHane(9960, 2)).toEqual({ m: 10, us: 3, deger: 10000 });
+    expect(anlamliHane(0.47, 2)).toEqual({ m: 47, us: -2, deger: 0.47 });
+    expect(anlamliHane(1e15, 2)).toMatchObject({ m: 10, us: 14 });
+    expect(anlamliHane(1e-3, 3)).toMatchObject({ m: 100, us: -5 });
+  });
+
+  it("bantRenkleri: 47·10² → sarı, mor, kırmızı; 10⁻³ çarpanının rengi yok", () => {
+    expect(bantRenkleri(47, 2)).toEqual(["sari", "mor", "kirmizi"]);
+    expect(bantRenkleri(470, -2)).toEqual(["sari", "mor", "siyah", "gumus"]);
+    expect(bantRenkleri(47, -3)).toBeNull();
+  });
+
+  it("smdKodlari gidiş-dönüş: üretilen her kod çözüldüğünde aynı değeri verir (E24 ve E96, 0,01 Ω – 976 MΩ)", () => {
+    let sayac = 0;
+    for (const [seri, olcek] of [
+      [E_SERIES.E24, 10],
+      [E_SERIES.E96, 100],
+    ] as const) {
+      for (let us = -4; us <= 9; us++) {
+        for (const m of seri) {
+          const R = scaled(m, us) / olcek;
+          if (R < 0.01 || R > 976e6) continue;
+          const k = smdKodlari(R);
+          for (const kod of [k.uc, k.dort]) {
+            if (kod === null) continue;
+            expect(smdOhm(kod) / R, kod).toBeCloseTo(1, 12);
+            sayac++;
+          }
+          if (k.eia96) {
+            const r = kodCoz(k.eia96, "smd");
+            if (!r.ok) throw new Error(r.hata);
+            const deger = scaled(eia96Taban(Number(r.sayilar.eia_kod)), EIA96_HARF_US[r.secimler.eia_harf]);
+            expect(deger / R, k.eia96).toBeCloseTo(1, 12);
+            sayac++;
+          }
+        }
+      }
+    }
+    expect(sayac).toBeGreaterThan(1000);
   });
 });

@@ -13,7 +13,7 @@
  * Tablolar ve kaynakları: kod-ortak.ts.
  */
 import { autoOutputUnit } from "@/lib/calc/auto-unit";
-import { latexNum, latexSpec } from "@/lib/calc/latex";
+import { latexSpec } from "@/lib/calc/latex";
 import type {
   CalcDefinition,
   Check,
@@ -30,6 +30,9 @@ import { standardNeighbours } from "../yardimci/standart-deger-serileri";
 import {
   ANAHTAR,
   CARPAN_US,
+  anlamliHane,
+  bantRenkleri,
+  smdKodlari,
   EIA96_HARF_US,
   KOND_CARPAN_US,
   KOND_TOLERANS,
@@ -166,8 +169,24 @@ const INPUTS: InputSpec[] = [
       { value: "renk", label: "Renk bantları" },
       { value: "smd", label: "SMD direnç kodu" },
       { value: "kondansator", label: "Kondansatör kodu" },
+      { value: "ters", label: "Değerden koda" },
     ],
     default: "renk",
+  },
+  // Ters yön: değer → kod
+  {
+    kind: "number",
+    key: ANAHTAR.tersDeger,
+    label: "Direnç değeri",
+    symbol: "R",
+    dimension: "direnc",
+    defaultUnit: "kohm",
+    units: ["mohm", "ohm", "kohm", "Mohm"],
+    default: 4.7,
+    min: 0.01,
+    max: 1e12,
+    help: "Renk bantları ve SMD kodları bulunur; değer iki (4 bant) ya da üç (5 bant) anlamlı haneye yuvarlanır.",
+    visibleWhen: { key: ANAHTAR.mod, equals: "ters" },
   },
   // Renk bantları
   {
@@ -225,7 +244,7 @@ const INPUTS: InputSpec[] = [
       label: r === "yok" ? `Yok (${yuzde(0.2)})` : `${RENK_ADI[r]} (${yuzde((TOLERANS[r] as { tol: number }).tol)})`,
     })),
     default: "altin",
-    visibleWhen: renkModu,
+    visibleWhen: { key: ANAHTAR.mod, equals: ["renk", "ters"] },
   },
   {
     kind: "select",
@@ -347,6 +366,15 @@ const OUTPUTS: OutputSpec[] = [
   { key: "tolCabs", label: "Tolerans (mutlak)", symbol: "\\Delta C", dimension: "kapasitans", defaultUnit: "pF", units: ["pF"] },
   { key: "Cmin", label: "En küçük kapasitans", symbol: "C_{\\min}", dimension: "kapasitans", defaultUnit: "pF", units: C_UNITS },
   { key: "Cmax", label: "En büyük kapasitans", symbol: "C_{\\max}", dimension: "kapasitans", defaultUnit: "pF", units: C_UNITS },
+  // Ters yön
+  { key: "R4", label: "4 bant: gösterilen değer", symbol: "R_4", dimension: "direnc", defaultUnit: "ohm", units: R_UNITS },
+  { key: "h4", label: "4 bant: rakamlar", symbol: "d_1 d_2", dimension: "boyutsuz", defaultUnit: "unitless", integer: true },
+  { key: "n4", label: "4 bant: çarpan üssü", symbol: "n_4", dimension: "boyutsuz", defaultUnit: "unitless", integer: true },
+  { key: "sapma4", label: "4 bant: yuvarlama sapması", symbol: "\\delta_4", dimension: "oran", defaultUnit: "percent", units: ["percent"] },
+  { key: "R5", label: "5 bant: gösterilen değer", symbol: "R_5", dimension: "direnc", defaultUnit: "ohm", units: R_UNITS },
+  { key: "h5", label: "5 bant: rakamlar", symbol: "d_1 d_2 d_3", dimension: "boyutsuz", defaultUnit: "unitless", integer: true },
+  { key: "n5", label: "5 bant: çarpan üssü", symbol: "n_5", dimension: "boyutsuz", defaultUnit: "unitless", integer: true },
+  { key: "sapma5", label: "5 bant: yuvarlama sapması", symbol: "\\delta_5", dimension: "oran", defaultUnit: "percent", units: ["percent"] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -386,14 +414,13 @@ function etiket(key: string, value: string): string {
   return spec?.options.find((o) => o.value === value)?.label ?? value;
 }
 
-/** Anlamlı haneler için LaTeX ağırlıklı toplam: (10 \cdot 4 + 7) */
-function haneToplami(haneler: number[]): { sembol: string; deger: string } {
+/**
+ * Anlamlı haneler için LaTeX ağırlıklı toplam: (10 \cdot 4 + 7). Her kip tek ve kısa bir adım üretir: hesap bir tablo
+ * okumasıdır; tolerans sınırları çıktı kartlarında. (Kombinasyon testi her seçeneği tek tek KaTeX'ten geçirir.)
+ */
+function haneToplami(haneler: number[]): string {
   const n = haneler.length;
-  const terim = (i: number, x: string) => (n - 1 - i === 0 ? x : `${10 ** (n - 1 - i)} \\cdot ${x}`);
-  return {
-    sembol: `(${haneler.map((_, i) => terim(i, `d_${i + 1}`)).join(" + ")})`,
-    deger: `(${haneler.map((d, i) => terim(i, String(d))).join(" + ")})`,
-  };
+  return `(${haneler.map((d, i) => (n - 1 - i === 0 ? String(d) : `${10 ** (n - 1 - i)} \\cdot ${d}`)).join(" + ")})`;
 }
 
 const SERILER: ESeriesId[] = ["E6", "E12", "E24", "E48", "E96", "E192"];
@@ -418,6 +445,9 @@ const MESSAGES = {
   eia96: "EIA-96 kodu 0603 boyutundaki %1'lik (E96) dirençlerde kullanılır; tolerans ayrıca işaretlenmez.",
   smd3Tablo: "Çarpan hanesi 8 ya da 9: Vishay tablosu 3 karakterli kodu 107–917'ye (100–910 MΩ) kadar verir. Kodu kontrol edin.",
   smd4Tablo: "Çarpan hanesi 7 ya da üstü: Vishay tablosu 4 karakterli kodu 1006–9766'ya (100–976 MΩ) kadar verir. Kodu kontrol edin.",
+  tersYok: (bant: string, aralik: string) => `${bant} bantla gösterilemez (renk koduyla ${aralik}).`,
+  tersSmd: (uc: string, dort: string, eia: string) => `SMD kodları: 3 karakter ${uc}; 4 karakter ${dort}; EIA-96 ${eia}.`,
+  tersSmdYok: "tam gösterilemez",
   kopru: "Değer 0 Ω: köprü (jumper). Bourns CR serisinde 0603 ve üstü köprüler tek \"0\" ile işaretlenir.",
   mutlakBuyuk: "Mutlak tolerans kapasitansın kendisinden büyük; en küçük değer 0 alındı. Kodu kontrol edin.",
 } as const;
@@ -446,16 +476,8 @@ function renkHesabi(inputs: ComputeInputs) {
   const Rmin = R * (1 - t);
   const Rmax = R * (1 + t);
   const outputs: Record<string, number> = { R, tol: t, Rmin, Rmax };
-  const toplam = haneToplami(haneler);
   const steps: Step[] = [
-    {
-      label: `Değer (${bant} bant)`,
-      latex: `R = ${toplam.sembol} \\cdot 10^{n} = ${toplam.deger} \\cdot 10^{${us}}\\,\\Omega = ${q("R", R)}`,
-    },
-    {
-      label: "Tolerans sınırları",
-      latex: `R_{\\min} = R \\cdot (1 - t) = ${q("R", R)} \\cdot (1 - ${latexNum(t)}) = ${q("Rmin", Rmin)}, \\quad R_{\\max} = R \\cdot (1 + t) = ${q("Rmax", Rmax)}`,
-    },
+    { label: `Değer (${bant} bant)`, latex: `R = ${haneToplami(haneler)} \\cdot 10^{${us}}\\,\\Omega = ${q("R", R)}` },
   ];
 
   const parcalar = [
@@ -501,7 +523,7 @@ function smdHesabi(inputs: ComputeInputs) {
     kod = `${String(n).padStart(2, "0")}${harf}`;
     steps.push({
       label: `EIA-96: kod ${String(n).padStart(2, "0")} → ${taban}, ${harf} → ${CARPAN_METNI[us]}`,
-      latex: `R = \\text{E96}_{${n}} \\cdot 10^{${us}} = ${taban} \\cdot 10^{${us}}\\,\\Omega = ${q("R", R)}`,
+      latex: `R = ${taban} \\cdot 10^{${us}}\\,\\Omega = ${q("R", R)}`,
     });
     checks.push({ level: BILGI, message: `Kod ${kod} → ${metin("R", R)}. ${MESSAGES.eia96}`, reference: REF_BOURNS_CR });
   } else if (tip === "3" || tip === "4") {
@@ -511,11 +533,9 @@ function smdHesabi(inputs: ComputeInputs) {
     R = scaled(d.m, d.us);
     kod = chars.join("");
     if (d.isaret === null) {
-      const haneler = chars.slice(0, -1).map(Number);
-      const toplam = haneToplami(haneler);
       steps.push({
         label: `Kod ${kod}: son hane sıfır sayısıdır`,
-        latex: `R = ${toplam.sembol} \\cdot 10^{n} = ${toplam.deger} \\cdot 10^{${d.us}}\\,\\Omega = ${q("R", R)}`,
+        latex: `R = ${haneToplami(chars.slice(0, -1).map(Number))} \\cdot 10^{${d.us}}\\,\\Omega = ${q("R", R)}`,
       });
       const tabloSiniri = tip === "3" ? 7 : 6;
       if (d.us > tabloSiniri) {
@@ -551,11 +571,10 @@ function kondansatorHesabi(inputs: ComputeInputs) {
   const C = scaled(m, us - 12);
   const harf = sel(inputs, ANAHTAR.kTol);
   const outputs: Record<string, number> = { C };
-  const toplam = haneToplami(haneler);
   const steps: Step[] = [
     {
       label: `Kod ${d1}${d2}${d3}: iki anlamlı hane + çarpan hanesi (pF)`,
-      latex: `C = ${toplam.sembol} \\cdot 10^{n}\\,\\mathrm{pF} = ${toplam.deger} \\cdot 10^{${us}}\\,\\mathrm{pF} = ${q("C", C)}`,
+      latex: `C = ${haneToplami(haneler)} \\cdot 10^{${us}}\\,\\mathrm{pF} = ${q("C", C)}`,
     },
   ];
   const checks: Check[] = [];
@@ -570,28 +589,16 @@ function kondansatorHesabi(inputs: ComputeInputs) {
       Cmax = C + tol.deger;
       Cmin = Math.max(0, C - tol.deger);
       outputs.tolCabs = tol.deger;
-      steps.push({
-        label: `Tolerans ${harf} (mutlak)`,
-        latex: `C_{\\min} = C - \\Delta C = ${q("Cmin", Cmin)}, \\quad C_{\\max} = C + \\Delta C = ${q("Cmax", Cmax)}`,
-      });
       if (C - tol.deger < 0) checks.push({ level: "uyari", message: MESSAGES.mutlakBuyuk, reference: REF_KEMET });
       tolMetni = `${harf}: ±${metin("tolCabs", tol.deger)}`;
     } else if (tol.tur === "oran") {
       Cmin = C * (1 - tol.deger);
       Cmax = C * (1 + tol.deger);
       outputs.tolC = tol.deger;
-      steps.push({
-        label: `Tolerans ${harf}`,
-        latex: `C_{\\min} = C \\cdot (1 - ${latexNum(tol.deger)}) = ${q("Cmin", Cmin)}, \\quad C_{\\max} = C \\cdot (1 + ${latexNum(tol.deger)}) = ${q("Cmax", Cmax)}`,
-      });
       tolMetni = `${harf}: ${yuzde(tol.deger)}`;
     } else {
       Cmin = C * (1 - tol.eksi);
       Cmax = C * (1 + tol.arti);
-      steps.push({
-        label: `Tolerans ${harf} (+%80 / −%20)`,
-        latex: `C_{\\min} = C \\cdot (1 - ${latexNum(tol.eksi)}) = ${q("Cmin", Cmin)}, \\quad C_{\\max} = C \\cdot (1 + ${latexNum(tol.arti)}) = ${q("Cmax", Cmax)}`,
-      });
       tolMetni = `${harf}: +%80 / −%20`;
     }
     Object.assign(outputs, { Cmin, Cmax });
@@ -603,13 +610,63 @@ function kondansatorHesabi(inputs: ComputeInputs) {
   return { outputs, steps, checks };
 }
 
+/** Ters yön: değeri 4 ve 5 bantlı renk koduna ve SMD kodlarına çevirir. */
+function tersHesabi(inputs: ComputeInputs) {
+  const R = num(inputs, ANAHTAR.tersDeger);
+  const tolRenk = sel(inputs, ANAHTAR.tol) as Renk;
+  const tolBilgi = TOLERANS[tolRenk];
+  if (!tolBilgi) throw new Error(`renk-smd-kondansator-kodlari: "${tolRenk}" tolerans rengi değil`);
+  const tolEtiketi = tolRenk === "yok" ? "tolerans bandı yok" : etiket(ANAHTAR.tol, tolRenk);
+  const outputs: Record<string, number> = {};
+  const adimlar: string[] = [];
+  const checks: Check[] = [];
+
+  for (const [bant, s] of [
+    ["4", 2],
+    ["5", 3],
+  ] as const) {
+    const g = anlamliHane(R, s);
+    const renkler = bantRenkleri(g.m, g.us);
+    if (!renkler) {
+      checks.push({ level: BILGI, message: MESSAGES.tersYok(bant, bant === "4" ? "0,1 Ω – 99 GΩ" : "1 Ω – 999 GΩ"), reference: REF_VISHAY_20020 });
+      continue;
+    }
+    const sapma = (g.deger - R) / R;
+    Object.assign(outputs, { [`R${bant}`]: g.deger, [`h${bant}`]: g.m, [`n${bant}`]: g.us, [`sapma${bant}`]: sapma });
+    adimlar.push(`R_${bant} = ${g.m} \\cdot 10^{${g.us}}\\,\\Omega = ${q(`R${bant}`, g.deger)}`);
+    const adlar = [
+      ...renkler.slice(0, -1).map((r, i) => etiket(ANAHTAR.rakam[i], r)),
+      etiket(ANAHTAR.carpan, renkler[renkler.length - 1]),
+      tolEtiketi,
+    ];
+    const yuvarlama = Math.abs(sapma) > 1e-9 ? ` (girilen değerden sapma ${metin("sapma4", sapma)})` : "";
+    checks.push({
+      level: BILGI,
+      message: `${bant} bant (soldan sağa): ${adlar.join(" – ")} → ${metin("R", g.deger)} ${yuzde(tolBilgi.tol)}${yuvarlama}.`,
+      reference: REF_VISHAY_20020,
+    });
+  }
+
+  const smd = smdKodlari(R);
+  const yok = MESSAGES.tersSmdYok;
+  checks.push({
+    level: BILGI,
+    message: MESSAGES.tersSmd(smd.uc ?? yok, smd.dort ?? yok, smd.eia96 ?? yok),
+    reference: REF_VISHAY_20020,
+  });
+  checks.push(seriKontrolu("R", R, MESSAGES.kodKontrol));
+  const steps: Step[] =
+    adimlar.length > 0 ? [{ label: "Renk kodu: 4 bant 2, 5 bant 3 anlamlı haneye yuvarlanır", latex: adimlar.join(", \\quad ") }] : [];
+  return { outputs, steps, checks };
+}
+
 export const renkSmdKondansatorKodlari: CalcDefinition = {
   id: "4.5",
   slug: "renk-smd-kondansator-kodlari",
   category: "elektronik",
   title: "Direnç renk kodu, SMD ve kondansatör kodları",
   description:
-    "Direnç renk bantlarından (4, 5, 6 bant), SMD direnç kodundan (472, 4R7, 4702, EIA-96 01C) ya da kondansatör kodundan (104J) değeri, toleransı ve tolerans sınırlarını bulun.",
+    "Direnç renk bantlarından (4, 5, 6 bant), SMD direnç kodundan (472, 4R7, 4702, EIA-96 01C) ya da kondansatör kodundan (104J) değeri, toleransı ve tolerans sınırlarını bulun; ya da bir direnç değerinin renk bantlarını ve SMD kodlarını görün.",
   formulas: [
     { label: "Renk bantları (4 bant)", latex: "R = (10 \\cdot d_1 + d_2) \\cdot 10^{n}\\,\\Omega" },
     { label: "Renk bantları (5 ve 6 bant)", latex: "R = (100 \\cdot d_1 + 10 \\cdot d_2 + d_3) \\cdot 10^{n}\\,\\Omega" },
@@ -639,6 +696,7 @@ export const renkSmdKondansatorKodlari: CalcDefinition = {
     if (mod === "renk") return renkHesabi(inputs);
     if (mod === "smd") return smdHesabi(inputs);
     if (mod === "kondansator") return kondansatorHesabi(inputs);
+    if (mod === "ters") return tersHesabi(inputs);
     throw new Error(`renk-smd-kondansator-kodlari: bilinmeyen kod türü "${String(mod)}"`);
   },
 };
