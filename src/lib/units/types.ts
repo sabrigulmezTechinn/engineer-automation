@@ -40,6 +40,8 @@ export type Dimension =
   | "debi" // hacimsel debi, m³/s
   | "atalet" // kütle atalet momenti, kg·m²
   | "ozdirenc" // Ω·m
+  | "direnc_uzunluk" // birim uzunluk başına direnç, Ω/m (kablo katalogları Ω/km verir)
+  | "veri_hizi" // bit/s (RS485/Modbus)
   | "isil_direnc" // K/W
   | "isi_transfer_katsayisi"; // W/(m²·K)
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { LIMITS } from "@/config/sinirlar";
-import { MESSAGES, defaultContext, defaultState, numberToInputText, runCalc, visibleInputs } from "./engine";
-import type { CalcDefinition, CalcResult, InputState, RunResult } from "./types";
+import { MESSAGES, autoOutputUnit, defaultContext, defaultState, numberToInputText, runCalc, visibleInputs } from "./engine";
+import type { CalcDefinition, CalcResult, InputState, OutputSpec, RunResult } from "./types";
 
 vi.mock("@/lib/units", () => import("@/lib/calc/test-utils/units-mock"));
 
@@ -334,11 +334,11 @@ describe("compute", () => {
 });
 
 describe("çıktı gösterimi", () => {
-  it("varsayılan birimle biçimlenir, tanım sırasını izler ve sembolü taşır", () => {
+  it("otomatik birimle biçimlenir, tanım sırasını izler ve sembolü taşır", () => {
     const r = expectOk(runCalc(makeDef(), state()));
     expect(r.outputs).toEqual([
       { key: "p", label: "Güç", symbol: "P", value: 12, unit: "W", formatted: "12 W" },
-      { key: "akim", label: "Akım", symbol: "I", value: 0.5, unit: "A", formatted: "0,5 A" },
+      { key: "akim", label: "Akım", symbol: "I", value: 500, unit: "mA", formatted: "500 mA" },
       { key: "toplam", label: "Toplam", value: 2, unit: "adet", formatted: "2" },
     ]);
   });
@@ -351,10 +351,37 @@ describe("çıktı gösterimi", () => {
     expect(r.result.outputs.akim).toBe(0.5);
   });
 
-  it("çıktıya ait olmayan birim istenirse varsayılan birime düşülür", () => {
+  it("çıktıya ait olmayan birim istenirse otomatik seçime düşülür", () => {
     const r = expectOk(runCalc(makeDef(), state(), { outputUnits: { akim: "V", p: "yok" } }));
-    expect(r.outputs.find((o) => o.key === "akim")?.unit).toBe("A");
+    expect(r.outputs.find((o) => o.key === "akim")?.unit).toBe("mA");
     expect(r.outputs.find((o) => o.key === "p")?.unit).toBe("W");
+  });
+
+  it("otomatik birim: 1 ≤ |değer| < 1000 aralığını verecek önekli kardeşi seçer", () => {
+    const akim: OutputSpec = { key: "i", label: "Akım", dimension: "akim", defaultUnit: "A" };
+    expect(autoOutputUnit(akim, 0.005455)).toBe("mA");
+    expect(autoOutputUnit(akim, -0.25)).toBe("mA");
+    expect(autoOutputUnit(akim, 2)).toBe("A");
+    expect(autoOutputUnit(akim, 1500)).toBe("A"); // mock'ta kA yok: en büyük aday
+    expect(autoOutputUnit(akim, 1e-6)).toBe("mA"); // en küçük adaydan küçük: en küçük aday
+    // 4 anlamlı basamakta 1'e yuvarlanan değer bir üst birimde gösterilir ("1000 mA" değil "1 A")
+    expect(autoOutputUnit(akim, 0.99996)).toBe("A");
+    expect(autoOutputUnit(akim, 0.9994)).toBe("mA");
+    expect(autoOutputUnit({ ...akim, defaultUnit: "mA" }, 2)).toBe("A");
+  });
+
+  it("otomatik birim: sıfır, kapalı boyut, autoUnit:false ve izin listesi dışı birimler", () => {
+    const akim: OutputSpec = { key: "i", label: "Akım", dimension: "akim", defaultUnit: "A" };
+    expect(autoOutputUnit(akim, 0)).toBe("A");
+    expect(autoOutputUnit({ ...akim, autoUnit: false }, 0.005)).toBe("A");
+    expect(autoOutputUnit({ ...akim, units: ["A"] }, 0.005)).toBe("A");
+    // Alan mekanik büyüklük: varsayılan kapalı, istenirse açılır
+    const alan: OutputSpec = { key: "a", label: "Kesit", dimension: "alan", defaultUnit: "mm2" };
+    expect(autoOutputUnit(alan, 2)).toBe("mm2");
+    expect(autoOutputUnit({ ...alan, autoUnit: true }, 2)).toBe("m2");
+    // Ofsetli birim (°C) asla otomatik değişmez; 3600 katı (sa) 10³ⁿ ailesine girmez
+    expect(autoOutputUnit({ key: "t", label: "T", dimension: "sicaklik", defaultUnit: "degC", autoUnit: true }, 500)).toBe("degC");
+    expect(autoOutputUnit({ key: "z", label: "Süre", dimension: "zaman", defaultUnit: "s" }, 7200)).toBe("s");
   });
 
   it("sonuçta olmayan çıktı atlanır", () => {

@@ -275,6 +275,19 @@ function describedBy(...ids: Array<string | false | undefined>): string | undefi
   return list.length ? list.join(" ") : undefined;
 }
 
+/** Negatif değer alabilen girdi: alt sınırı yok veya sıfırın altında */
+export function allowsNegative(spec: NumberInputSpec): boolean {
+  return spec.min === undefined || spec.min < 0;
+}
+
+/** Metnin başındaki eksi işaretini ekler/kaldırır ("12" ↔ "-12"; Unicode eksi de tanınır). */
+export function toggleSign(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("-") || trimmed.startsWith("−")) return trimmed.slice(1);
+  if (trimmed.startsWith("+")) return `-${trimmed.slice(1)}`;
+  return `-${trimmed}`;
+}
+
 function NumberField({ id, spec, value, unit, units, error, showError, onValue, onUnit }: {
   id: string;
   spec: NumberInputSpec;
@@ -290,6 +303,7 @@ function NumberField({ id, spec, value, unit, units, error, showError, onValue, 
   const errorId = `${id}-hata`;
   const helpId = `${id}-yardim`;
   const hasUnitControl = units.length > 1 || (units.length === 1 && units[0].symbol !== "");
+  const negative = allowsNegative(spec);
 
   return (
     <div>
@@ -311,9 +325,25 @@ function NumberField({ id, spec, value, unit, units, error, showError, onValue, 
             CONTROL,
             "min-w-0 flex-1 bg-surface px-3 font-mono tabular-nums",
             hasUnitControl ? "rounded-l-md" : "rounded-md",
+            negative && !hasUnitControl && "pointer-coarse:rounded-r-none",
             "aria-[invalid=true]:border-hata aria-[invalid=true]:ring-hata/25",
           )}
         />
+        {negative && (
+          // Telefonların ondalık tuş takımında eksi tuşu yok (iOS); yalnızca dokunmatik ekranda gösterilir.
+          <button
+            type="button"
+            onClick={() => onValue(toggleSign(value))}
+            aria-label={`${spec.label}: işareti değiştir`}
+            className={cx(
+              CONTROL,
+              "-ml-px hidden w-11 shrink-0 items-center justify-center bg-surface-muted font-mono text-base pointer-coarse:inline-flex",
+              !hasUnitControl && "rounded-r-md",
+            )}
+          >
+            ±
+          </button>
+        )}
         {units.length > 1 ? (
           <select
             aria-label={`${spec.label} birimi`}

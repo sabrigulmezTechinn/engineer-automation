@@ -79,6 +79,13 @@ export interface OutputSpec {
   dimension: Dimension;
   defaultUnit: string;
   units?: string[];
+  /**
+   * Kullanıcı birim seçmediyse gösterim birimi değere göre otomatik seçilsin mi
+   * (0,005 A → 5 mA). Yalnızca varsayılan birimin 10³ⁿ katı olan kardeşleri arasında seçilir
+   * (A → mA/kA; bar → mbar, kPa'ya geçmez). Verilmezse elektrik büyüklüklerinde açık,
+   * mekanik büyüklüklerde kapalıdır (ör. uzunluk teknik resimdeki gibi mm'de kalır).
+   */
+  autoUnit?: boolean;
 }
 
 /** Ara adım: formülün değerler yerine konmuş hali */

@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { getUnit, siUnit } from "@/lib/units";
-import { defaultState, runCalc } from "./engine";
+import { autoOutputUnit, defaultState, runCalc } from "./engine";
 import { allCalcs } from "./registry";
 import { ohmYasasi } from "./defs/temel-elektrik/ohm-yasasi";
 import { renderStrict } from "./test-utils/katex";
@@ -34,9 +34,23 @@ describe("Ohm yasası, gerçek birimlerle", () => {
     expect(I?.value).toBeCloseTo(6, 9);
     expect(I?.formatted).toMatch(/^6\s*mA$/);
 
+    // Birim seçilmeyen çıktı otomatik önekle gösterilir: 0,072 W → 72 mW
     const P = r.outputs.find((o) => o.key === "P");
-    expect(P?.unit).toBe("W");
-    expect(P?.value).toBeCloseTo(0.072, 12);
+    expect(P?.unit).toBe("mW");
+    expect(P?.value).toBeCloseTo(72, 9);
+    expect(r.result.outputs.P).toBeCloseTo(0.072, 12);
+  });
+
+  it("otomatik birim gerçek katalogla: 2,2 kΩ, kWh → MWh, mekanik büyüklük değişmez", () => {
+    const r = expectOk(
+      runCalc(ohmYasasi, { mod: { value: "V-I" }, V: { value: "12", unit: "V" }, I: { value: "5,455", unit: "mA" } }),
+    );
+    expect(r.outputs.find((o) => o.key === "R")).toMatchObject({ unit: "kohm" });
+    expect(r.outputs.find((o) => o.key === "R")?.value).toBeCloseTo(2.19982, 4);
+    expect(autoOutputUnit({ key: "e", label: "E", dimension: "enerji", defaultUnit: "kWh" }, 3.6e9)).toBe("MWh");
+    expect(autoOutputUnit({ key: "e", label: "E", dimension: "enerji", defaultUnit: "kWh" }, 3.6e3)).toBe("Wh");
+    expect(autoOutputUnit({ key: "p", label: "p", dimension: "basinc", defaultUnit: "bar", autoUnit: true }, 50)).toBe("mbar");
+    expect(autoOutputUnit({ key: "l", label: "l", dimension: "uzunluk", defaultUnit: "mm" }, 1.5)).toBe("mm");
   });
 
   it("ondalık virgülle girilen değer doğru okunur", () => {

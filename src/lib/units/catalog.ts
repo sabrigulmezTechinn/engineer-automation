@@ -10,6 +10,7 @@
  * - Yalnızca ASCII harf, rakam ve "_": µ → "u", ² → "2", ³ → "3", Ω → "ohm", ° → "deg".
  * - Çarpım bitişik yazılır ("Nm", "kgm2"); bölme "_" ile yazılır ("m_s", "L_min", "K_W").
  *   İstisna: özdirençte okunurluk için "ohm_m" (Ω·m) ve "ohm_mm2_m" (Ω·mm²/m); buradaki ilk "_" çarpımdır.
+ *   Bu yüzden birim uzunluk başına dirençte bölme "_per_" ile yazılır: "ohm_per_m" (Ω/m), "ohm_per_km" (Ω/km).
  * - Kimlikler büyük/küçük harf duyarlıdır (SI önekleri gibi): "mW" ≠ "MW", "mohm" ≠ "Mohm", "ms" ≠ "mS".
  * - Bir kimlik yalnızca bir boyutta bulunur: gram "g", yerçekimi ivmesi "gn"; mutlak sıcaklık "K"/"degC",
  *   sıcaklık farkı "deltaK"/"deltaDegC".
@@ -234,6 +235,20 @@ const ALL: UnitDef[] = [
     { id: "ohm_m", symbol: "Ω·m", name: "ohm-metre", factor: 1 },
     { id: "ohm_mm2_m", symbol: "Ω·mm²/m", name: "ohm-milimetrekare/metre", factor: 1e-6 },
   ]),
+  ...group("direnc_uzunluk", [
+    // Ω·m (özdirenç) ile karışmasın diye bu boyutta bölme "_per_" ile yazılır.
+    { id: "ohm_per_m", symbol: "Ω/m", name: "ohm/metre", factor: 1 },
+    { id: "mohm_per_m", symbol: "mΩ/m", name: "miliohm/metre", factor: 1e-3 },
+    // Kablo üretici katalogları iletken direncini Ω/km verir (2.2, 2.5, 5.7).
+    { id: "ohm_per_km", symbol: "Ω/km", name: "ohm/kilometre", factor: 1e-3 },
+  ]),
+  ...group("veri_hizi", [
+    { id: "bit_s", symbol: "bit/s", name: "bit/saniye", factor: 1 },
+    { id: "kbit_s", symbol: "kbit/s", name: "kilobit/saniye", factor: 1e3 },
+    { id: "Mbit_s", symbol: "Mbit/s", name: "megabit/saniye", factor: 1e6 },
+    // RS485/UART'ta sembol başına bir bit taşındığı için baud = bit/s kabul edilir (5.7).
+    { id: "Bd", symbol: "Bd", name: "baud", factor: 1 },
+  ]),
   ...group("isil_direnc", [
     { id: "K_W", symbol: "K/W", name: "kelvin/watt", factor: 1 },
     // Soğutucu veri sayfaları °C/W verir (4.11); K/W ile aynı değer.
@@ -278,6 +293,8 @@ export const SI_UNIT_IDS: Readonly<Record<Dimension, string>> = Object.freeze({
   debi: "m3_s",
   atalet: "kgm2",
   ozdirenc: "ohm_m",
+  direnc_uzunluk: "ohm_per_m",
+  veri_hizi: "bit_s",
   isil_direnc: "K_W",
   isi_transfer_katsayisi: "W_m2K",
 });
