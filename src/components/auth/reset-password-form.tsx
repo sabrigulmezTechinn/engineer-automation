@@ -5,13 +5,23 @@ import { useActionState } from "react";
 import { resetPasswordAction, type ResetPasswordState } from "@/app/(auth)/_lib/actions";
 import { firstError } from "@/app/(auth)/_lib/form";
 import { PASSWORD_MIN } from "@/db/user-fields";
+import { FormResetBoundary, useResetOnHide } from "./form-reset";
 import { Alert, SubmitButton, TextField, linkClass } from "./form-ui";
 
 const initialState: ResetPasswordState = { status: "idle" };
 
 /** Yeni şifre formu. `token`: e-postadaki bağlantıdan gelen sıfırlama jetonu. */
 export function ResetPasswordForm({ token }: { token: string }) {
+  return (
+    <FormResetBoundary>
+      <ResetPasswordFormInner token={token} />
+    </FormResetBoundary>
+  );
+}
+
+function ResetPasswordFormInner({ token }: { token: string }) {
   const [state, formAction, pending] = useActionState(resetPasswordAction, initialState);
+  useResetOnHide(state.status !== "idle");
 
   if (state.status === "success") {
     return (

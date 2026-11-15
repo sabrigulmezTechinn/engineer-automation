@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { resendVerificationAction, type ResendVerificationState } from "@/app/(auth)/_lib/actions";
 import { firstError } from "@/app/(auth)/_lib/form";
+import { FormResetBoundary, useResetOnHide } from "./form-reset";
 import { Alert, SubmitButton, TextField } from "./form-ui";
 
 const initialState: ResendVerificationState = { status: "idle" };
@@ -13,7 +14,16 @@ const initialState: ResendVerificationState = { status: "idle" };
  * verilmezse kullanıcı adresini yazar (ör. süresi dolmuş bağlantı sayfasında).
  */
 export function ResendVerificationForm({ email }: { email?: string }) {
+  return (
+    <FormResetBoundary>
+      <ResendVerificationFormInner email={email} />
+    </FormResetBoundary>
+  );
+}
+
+function ResendVerificationFormInner({ email }: { email?: string }) {
   const [state, formAction, pending] = useActionState(resendVerificationAction, initialState);
+  useResetOnHide(state.status !== "idle");
 
   if (state.status === "success") {
     return <Alert tone="success">{state.message}</Alert>;

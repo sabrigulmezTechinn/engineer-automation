@@ -35,6 +35,8 @@ async function ProfileContent() {
   const { user } = await requireSession("/profil");
   return (
     <ProfileForm
+      // Kullanıcı değişirse (çıkış + başka hesapla giriş) form durumu sıfırlansın.
+      key={user.id}
       initial={{
         name: user.name,
         email: user.email,

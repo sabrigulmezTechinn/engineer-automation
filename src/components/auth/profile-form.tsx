@@ -13,6 +13,7 @@ import {
   STANDARD_SETS,
   UNIT_SYSTEMS,
 } from "@/db/user-fields";
+import { FormResetBoundary, useResetOnHide, useResultKey } from "./form-reset";
 import { Alert, SelectField, SubmitButton, TextField } from "./form-ui";
 
 export interface ProfileFormValues {
@@ -32,14 +33,29 @@ const DECIMAL_OPTIONS = Array.from({ length: DECIMALS_MAX - DECIMALS_MIN + 1 }, 
   return { value: n, label: n };
 });
 
+/**
+ * Profil formu. Sayfa bunu kullanıcı kimliğiyle anahtarlar (`key={user.id}`): oturum başka bir
+ * kullanıcıya geçerse önceki kullanıcının form durumu taşınmaz.
+ */
 export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
+  return (
+    <FormResetBoundary>
+      <ProfileFormInner initial={initial} />
+    </FormResetBoundary>
+  );
+}
+
+function ProfileFormInner({ initial }: { initial: ProfileFormValues }) {
   const [state, formAction, pending] = useActionState(updateProfileAction, initialState);
-  // Gönderimden sonra React formu sıfırlar; alanlar son gönderilen değerlerle yeniden doldurulur.
+  useResetOnHide(state.status !== "idle");
+  // Her sonuçta form yeniden oluşturulur ve alanlar son gönderilen değerlerle dolar
+  // (select'ler dahil; bkz. useResultKey).
+  const formKey = useResultKey(state);
   const v = { ...initial, ...state.values };
   const err = (alan: ProfileField) => firstError(state.fieldErrors, alan);
 
   return (
-    <form action={formAction} noValidate className="space-y-8">
+    <form key={formKey} action={formAction} noValidate className="space-y-8">
       {state.status === "success" ? <Alert tone="success">{state.message}</Alert> : null}
       {state.status === "error" && state.message ? <Alert tone="error">{state.message}</Alert> : null}
 

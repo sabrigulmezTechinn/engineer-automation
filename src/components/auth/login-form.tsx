@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signInAction, type SignInState } from "@/app/(auth)/_lib/actions";
 import { firstError } from "@/app/(auth)/_lib/form";
+import { FormResetBoundary, useResetOnHide } from "./form-reset";
 import { Alert, SubmitButton, TextField, linkClass } from "./form-ui";
 import { ResendVerificationForm } from "./resend-verification-form";
 
@@ -11,7 +12,16 @@ const initialState: SignInState = { status: "idle" };
 
 /** Giriş formu. `redirectTo`: giriş sonrası dönülecek (doğrulanmış) yol; boşsa ana sayfa. */
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+  return (
+    <FormResetBoundary>
+      <LoginFormInner redirectTo={redirectTo} />
+    </FormResetBoundary>
+  );
+}
+
+function LoginFormInner({ redirectTo }: { redirectTo?: string }) {
   const [state, formAction, pending] = useActionState(signInAction, initialState);
+  useResetOnHide(state.status !== "idle");
 
   return (
     <div className="space-y-6">

@@ -1,8 +1,9 @@
 /**
  * Kimlik doğrulama ve profil formlarının ortak görsel parçaları (Tailwind).
- * Durum içermez; hem sunucu hem istemci bileşenlerinde kullanılabilir.
+ * Durum içermez; hem sunucu hem istemci bileşenlerinde kullanılabilir
+ * (TextField/SelectField yalnızca `useId` kullanır).
  */
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 export function AuthCard({
   title,
@@ -92,7 +93,8 @@ export function TextField({
   maxLength?: number;
   readOnly?: boolean;
 }) {
-  const id = `alan-${name}`;
+  // Benzersiz kimlik: gizlenmiş (Activity) sayfalar DOM'da kaldığı için aynı ad başka sayfada da olabilir.
+  const id = useId();
   return (
     <FieldShell id={id} label={label} optional={optional} hint={hint} error={error}>
       <input
@@ -126,7 +128,7 @@ export function SelectField({
   error?: string;
   hint?: string;
 }) {
-  const id = `alan-${name}`;
+  const id = useId();
   return (
     <FieldShell id={id} label={label} hint={hint} error={error}>
       <select

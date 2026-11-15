@@ -6,12 +6,22 @@ import { signUpAction, type SignUpState } from "@/app/(auth)/_lib/actions";
 import { firstError } from "@/app/(auth)/_lib/form";
 import type { SignUpField } from "@/app/(auth)/_lib/validation";
 import { COMPANY_MAX, JOB_TITLE_MAX, NAME_MAX, PASSWORD_MIN } from "@/db/user-fields";
+import { FormResetBoundary, useResetOnHide } from "./form-reset";
 import { Alert, SubmitButton, TextField, linkClass } from "./form-ui";
 
 const initialState: SignUpState = { status: "idle" };
 
 export function SignupForm() {
+  return (
+    <FormResetBoundary>
+      <SignupFormInner />
+    </FormResetBoundary>
+  );
+}
+
+function SignupFormInner() {
   const [state, formAction, pending] = useActionState(signUpAction, initialState);
+  useResetOnHide(state.status !== "idle");
 
   if (state.status === "success") {
     return (
