@@ -11,6 +11,9 @@ export const TESISAT_GUC_SINIRLARI = {
    * Açılan belge: EPDK "Son Hali" Word dosyası (dosya tarihi 28/11/2022; 28/04/2022 tarihli 10961 sayılı değişikliği içerir)
    *   https://www.epdk.gov.tr/Detay/Icerik/3-17057/elektrik-piyasasi-tarifeleri-uygulama-usul-ve-esa
    *   https://www.epdk.gov.tr/Detay/DownloadDocument?id=MESSe3sPiW4=
+   * Aynı sayfadaki değişiklik kararları arşivinin (https://www.epdk.gov.tr/Detay/DownloadDocument?id=dUdfdvZVIm4=) en yeni
+   * kararı 11338 sayılıdır (dosya tarihi 28/11/2022); "Son Hali" bununla aynı tarihlidir. 15/11/2026 itibarıyla daha yeni
+   * değişiklik sayfada görünmüyordu.
    * Madde 13 (1): mesken, aydınlatma, tek fazla beslenen tüketiciler ile kurulu gücü 15 kW'a (dâhil) kadar olan kullanıcılara
    * reaktif enerji tarifesi uygulanmaz.
    */
