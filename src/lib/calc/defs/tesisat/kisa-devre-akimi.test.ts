@@ -114,6 +114,14 @@ describe("gerilim katsayısı seçimi (config: CT158 Fig. 25)", () => {
     expect(ctx.limits.tesisatGuc.gerilimKatsayisi.ag6.cMaks).toBe(1.05);
   });
 
+  it("kesme kapasitesi mesajı yalnızca c_maks hesabında (c_min/özel c belirleyici değildir)", () => {
+    const has = (hesap: string) =>
+      run({ ...SADECE_TRAFO, hesap: { value: hesap } }).result.checks.some((c) => /kesme kapasitesi/.test(c.message));
+    expect(has("cmaks")).toBe(true);
+    expect(has("cmin")).toBe(false);
+    expect(has("ozel")).toBe(false);
+  });
+
   it("K_T c_maks'ı tolerans seçiminden alır, hesaplanan c'den değil", () => {
     // Yalnızca trafo, R = 0: x_T = u_k = 0,06; K_T = 0,95·1,10/(1 + 0,036) = 1,00869
     const r = run({ ...SADECE_TRAFO, kT: { value: "uygula" }, tolerans: { value: "10" } });

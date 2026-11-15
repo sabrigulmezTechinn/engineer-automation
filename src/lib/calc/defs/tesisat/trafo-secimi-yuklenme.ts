@@ -199,7 +199,7 @@ export const trafoSecimiYuklenme: CalcDefinition = {
       key: "kayip",
       label: "Kayıp ve verim hesabı",
       options: [
-        { value: "yok", label: "Hesaplama" },
+        { value: "yok", label: "Hesaplanmasın" },
         { value: "var", label: "Boşta ve yükte kayıplardan hesapla" },
       ],
       default: "yok",

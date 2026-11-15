@@ -219,7 +219,7 @@ export const kisaDevreAkimi: CalcDefinition = {
       label: "Trafo empedans düzeltme katsayısı K_T",
       options: [
         { value: "uygula", label: "Uygula (IEC 60909-0 ağ trafosu)" },
-        { value: "uygulama", label: "Uygulama" },
+        { value: "uygulama", label: "Uygulanmasın" },
       ],
       default: "uygula",
     },
@@ -335,7 +335,7 @@ export const kisaDevreAkimi: CalcDefinition = {
       key: "fazToprak",
       label: "Faz-toprak kısa devre akımı",
       options: [
-        { value: "yok", label: "Hesaplama" },
+        { value: "yok", label: "Hesaplanmasın" },
         { value: "var", label: "Hesapla (basitleştirilmiş döngü)" },
       ],
       default: "yok",
@@ -533,10 +533,14 @@ export const kisaDevreAkimi: CalcDefinition = {
     }
     if (inputs.hesap === "cmin") checks.push({ level: "ok", message: MESSAGES.cmin });
 
-    checks.push({
-      level: "ok",
-      message: `Seçilecek koruma düzeninin kesme kapasitesi ${qText(S("Ik3"), Ik3)} değerinden, baraların dinamik dayanımı ${qText(S("ip"), ip)} darbe akımından küçük olmamalıdır.`,
-    });
+    // Kesme kapasitesi ve dinamik dayanım en büyük kısa devre akımına (c_maks) göre seçilir; c_min veya özel c ile
+    // hesaplanan akım bu seçim için belirleyici değildir.
+    if (inputs.hesap === "cmaks") {
+      checks.push({
+        level: "ok",
+        message: `Seçilecek koruma düzeninin kesme kapasitesi ${qText(S("Ik3"), Ik3)} değerinden, baraların dinamik dayanımı ${qText(S("ip"), ip)} darbe akımından küçük olmamalıdır.`,
+      });
+    }
 
     return { outputs, steps, checks };
   },

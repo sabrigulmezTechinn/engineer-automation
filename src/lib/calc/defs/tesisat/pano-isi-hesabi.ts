@@ -66,7 +66,8 @@ const OUTPUTS: OutputSpec[] = [
 ];
 
 const S = (key: string) => specOf(OUTPUTS, key);
-const qLen = (v: number) => latexSpec({ dimension: "uzunluk", defaultUnit: "m" }, v);
+/** Boyutlar girdilerin varsayılan birimiyle (mm) yazılır; formülde sayısal yerine koyma yapılmaz. */
+const qLen = (v: number) => latexSpec({ dimension: "uzunluk", defaultUnit: "mm" }, v);
 const qA = (v: number) => latexSpec(S("A"), v);
 const qP = (v: number) => latexSpec(S("Qs"), v);
 const qK = (v: number) => latexSpec({ dimension: "isi_transfer_katsayisi", defaultUnit: "W_m2K" }, v);

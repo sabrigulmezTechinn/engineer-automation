@@ -342,7 +342,7 @@ export const topraklamaDirenci: CalcDefinition = {
         { value: "rcd", label: "Hata akımı koruma düzeni (RCD)" },
         { value: "rcdS", label: "Seçici (S tipi) hata akımı koruma düzeni" },
         { value: "ia", label: "Aşırı akım koruma düzeni (I_a gir)" },
-        { value: "yok", label: "Kontrol etme" },
+        { value: "yok", label: "Kontrol edilmesin" },
       ],
       default: "rcd",
     },
