@@ -1,11 +1,12 @@
 /**
  * PID ayarı (5.5) testleri. Gerçek birim sistemiyle çalışır.
  *
- * Kaynak: Åström & Hägglund, "Advanced PID Control" (ISA, 2006), §6.2:
+ * Katsayılar: klasik Ziegler–Nichols (Ogata, Modern Control Engineering, Tablo 8-1/8-2).
+ * Örnekler: Åström & Hägglund, "Advanced PID Control" (ISA, 2006), §6.2 (PID; klasik tabloyla aynı):
  * - Örnek 6.1 (basamak yanıtı): a = 0,218, L = 0,806 → PID: K = 5,50, T_i = 1,61, T_d = 0,403.
  * - Örnek 6.2 (frekans yanıtı): K_u = 8, T_u = 2π/√3 = 3,63 → PID: K = 4,8, T_i = 1,81.
  *   Kitap T_d = 0,44 basar; Tablo 6.2'ye göre 0,125 · 3,6276 = 0,4534 (elle) — test elle hesaba göre yazıldı.
- * Diğer beklentiler Tablo 6.1/6.2 katsayılarıyla elle hesaplanmıştır.
+ * Diğer beklentiler klasik katsayılarla elle hesaplanmıştır.
  */
 import { describe, expect, it } from "vitest";
 import { defaultState, runCalc } from "@/lib/calc/engine";
@@ -22,16 +23,16 @@ function run(patch: InputState = {}) {
 const u = (value: string) => ({ value, unit: "unitless" });
 const s = (value: string, unit = "s") => ({ value, unit });
 
-describe("katsayılar (Åström & Hägglund 2006, Tablo 6.1 ve 6.2)", () => {
-  it("kapalı çevrim: P 0,5; PI 0,4 / 0,8; PID 0,6 / 0,5 / 0,125", () => {
+describe("katsayılar (klasik Ziegler–Nichols; T_p Åström & Hägglund)", () => {
+  it("kapalı çevrim: P 0,5; PI 0,45 / T_u/1,2; PID 0,6 / 0,5 / 0,125", () => {
     expect(ZN_RULES.kapali.P).toEqual({ kp: 0.5, tp: 1.0 });
-    expect(ZN_RULES.kapali.PI).toEqual({ kp: 0.4, ti: 0.8, tp: 1.4 });
+    expect(ZN_RULES.kapali.PI).toEqual({ kp: 0.45, tiDiv: 1.2 });
     expect(ZN_RULES.kapali.PID).toEqual({ kp: 0.6, ti: 0.5, td: 0.125, tp: 0.85 });
   });
 
-  it("açık çevrim: P 1/a; PI 0,9/a, 3L; PID 1,2/a, 2L, L/2", () => {
+  it("açık çevrim: P 1/a; PI 0,9/a, L/0,3; PID 1,2/a, 2L, L/2", () => {
     expect(ZN_RULES.acik.P).toEqual({ kp: 1, tp: 4 });
-    expect(ZN_RULES.acik.PI).toEqual({ kp: 0.9, ti: 3, tp: 5.7 });
+    expect(ZN_RULES.acik.PI).toEqual({ kp: 0.9, tiDiv: 0.3 });
     expect(ZN_RULES.acik.PID).toEqual({ kp: 1.2, ti: 2, td: 0.5, tp: 3.4 });
   });
 });
@@ -72,13 +73,14 @@ describe("motor üzerinden (runCalc), elle hesap", () => {
     expect(r.result.checks[0].message).toMatch(/çeyrek genlik/);
   });
 
-  it("kapalı çevrim PI: K_p = 1, T_i = 32 s, K_i = 1/32 s⁻¹; türev çıktısı yok", () => {
+  it("kapalı çevrim PI: K_p = 1,125, T_i = 40/1,2 = 33,33 s, K_i = 0,03375 s⁻¹; türev ve T_p yok", () => {
     const o = run({ tip: { value: "PI" } }).result.outputs;
-    expect(o.Kp).toBeCloseTo(1, 12);
-    expect(o.Ti).toBeCloseTo(32, 12);
-    expect(o.Ki).toBeCloseTo(1 / 32, 12);
+    expect(o.Kp).toBeCloseTo(1.125, 12); // 0,45 · 2,5
+    expect(o.Ti).toBeCloseTo(100 / 3, 12); // 40 s / 1,2
+    expect(o.Ki).toBeCloseTo(0.03375, 12); // 1,125 / 33,33 s
     expect(o).not.toHaveProperty("Td");
     expect(o).not.toHaveProperty("Kd");
+    expect(o).not.toHaveProperty("Tp");
   });
 
   it("kapalı çevrim P: yalnız K_p = 1,25 ve T_p = 40 s", () => {
@@ -106,12 +108,12 @@ describe("motor üzerinden (runCalc), elle hesap", () => {
     expect(o.Tp).toBeCloseTo(17, 12); // 3,4 · 5 s
   });
 
-  it("açık çevrim PI, ms ve dk birimleriyle: L = 500 ms, T = 0,1 dk, K = 2 → a = 1/6, K_p = 5,4, T_i = 1,5 s", () => {
+  it("açık çevrim PI, ms ve dk birimleriyle: L = 500 ms, T = 0,1 dk, K = 2 → a = 1/6, K_p = 5,4, T_i = 0,5/0,3 = 1,667 s", () => {
     const o = run({ yontem: { value: "acik" }, tip: { value: "PI" }, K: u("2"), L: s("500", "ms"), T: s("0,1", "min") }).result
       .outputs;
     expect(o.a).toBeCloseTo((2 * 0.5) / 6, 12);
     expect(o.Kp).toBeCloseTo(0.9 / (1 / 6), 12);
-    expect(o.Ti).toBeCloseTo(1.5, 12);
+    expect(o.Ti).toBeCloseTo(0.5 / 0.3, 12);
   });
 
   it("açık çevrim P: K_p = 1/a = 4", () => {

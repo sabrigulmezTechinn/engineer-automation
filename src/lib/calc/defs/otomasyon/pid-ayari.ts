@@ -1,15 +1,15 @@
 /**
  * KAPSAM 5.5 — PID ayarı (Ziegler–Nichols).
  *
- * KAYNAK (katsayılar birincil metinden okundu):
- *   K. J. Åström, T. Hägglund, "Advanced PID Control", ISA, 2006, §6.2 Ziegler-Nichols and Related Methods,
- *   Tablo 6.1 (basamak yanıtı / reaksiyon eğrisi yöntemi) ve Tablo 6.2 (frekans yanıtı / kapalı çevrim yöntemi).
- *   Örnek 6.1 ve 6.2 testlerde kullanılmıştır. Aynı bölüm, kuralların tasarım ölçütünün çeyrek genlik
- *   sönüm oranı olduğunu ve bunun çoğu zaman fazla salınımlı olduğunu belirtir.
- *
- * Not: Ziegler & Nichols'ın 1942 tarihli özgün makalesinde kapalı çevrim PI için 0,45·K_u ve T_u/1,2 verilir
- * (Hellem, NTNU 2001 özetine göre); Åström & Hägglund Tablo 6.2 bunu 0,4·K_u ve 0,8·T_u olarak verir. Burada
- * tutarlılık için tümüyle Åström & Hägglund tabloları kullanılmıştır.
+ * KAYNAKLAR:
+ *   - Klasik Ziegler–Nichols kuralları (1942): K. Ogata, "Modern Control Engineering", Tablo 8-1 (basamak yanıtı:
+ *     P 1/a; PI 0,9/a, T_i = L/0,3; PID 1,2/a, 2L, 0,5L) ve Tablo 8-2 (kapalı çevrim: P 0,5·K_u; PI 0,45·K_u,
+ *     T_i = T_u/1,2; PID 0,6·K_u, 0,5·T_u, 0,125·T_u). Mühendislik pratiğinde ve ders kitaplarında bilinen
+ *     değerler bunlar olduğu için kullanılır.
+ *   - K. J. Åström, T. Hägglund, "Advanced PID Control", ISA, 2006, §6.2: a = K·L/T tanımı, Örnek 6.1/6.2
+ *     (PID; klasik tabloyla aynı) ve beklenen kapalı çevrim periyodu T_p (P ve PID için). Åström & Hägglund
+ *     PI için değiştirilmiş katsayılar (0,4·K_u, 0,8·T_u; 3L) verir; burada klasik değerler tercih edildi ve
+ *     klasik PI için T_p tahmini verilmez. Aynı bölüm kuralların çeyrek genlik sönümü hedeflediğini belirtir.
  *
  * Açık çevrim parametresi: birinci dereceden ölü zamanlı model K·e^(−sL)/(1 + sT) için en dik teğet t = L'de
  * K/T eğimlidir ve dikey ekseni −K·L/T'de keser; bu yüzden a = K·L/T.
@@ -26,24 +26,32 @@ interface Rule {
   kp: number;
   /** Kapalı çevrimde T_i/T_u; açık çevrimde T_i/L */
   ti?: number;
+  /** Verilirse T_i = (T_u veya L)/tiDiv (klasik tablodaki yazım: T_u/1,2 ve L/0,3) */
+  tiDiv?: number;
   /** Kapalı çevrimde T_d/T_u; açık çevrimde T_d/L */
   td?: number;
-  /** Kapalı çevrim periyodu tahmini: T_p/T_u veya T_p/L */
-  tp: number;
+  /** Kapalı çevrim periyodu tahmini: T_p/T_u veya T_p/L (Åström & Hägglund; yalnız P ve PID) */
+  tp?: number;
 }
 
-/** Åström & Hägglund (2006), Tablo 6.2 (kapalı çevrim) ve Tablo 6.1 (açık çevrim) */
+/** Klasik Ziegler–Nichols (Ogata Tablo 8-1/8-2); T_p: Åström & Hägglund (2006) Tablo 6.1/6.2 */
 export const ZN_RULES: Record<PidYontem, Record<PidTip, Rule>> = {
   kapali: {
     P: { kp: 0.5, tp: 1.0 },
-    PI: { kp: 0.4, ti: 0.8, tp: 1.4 },
+    PI: { kp: 0.45, tiDiv: 1.2 },
     PID: { kp: 0.6, ti: 0.5, td: 0.125, tp: 0.85 },
   },
   acik: {
     P: { kp: 1, tp: 4 },
-    PI: { kp: 0.9, ti: 3, tp: 5.7 },
+    PI: { kp: 0.9, tiDiv: 0.3 },
     PID: { kp: 1.2, ti: 2, td: 0.5, tp: 3.4 },
   },
+};
+
+const OGATA: Reference = {
+  standard: "Ogata, Modern Control Engineering",
+  title: "Ziegler–Nichols ayar kuralları",
+  clause: "Tablo 8-1 ve 8-2",
 };
 
 const ASTROM: Reference = {
@@ -80,20 +88,21 @@ export const pidAyari: CalcDefinition = {
     },
     { label: "Paralel form kazançları", latex: "K_i = \\frac{K_p}{T_i}, \\quad K_d = K_p \\cdot T_d" },
     {
-      label: "Kapalı çevrim (Tablo 6.2)",
+      label: "Kapalı çevrim (salınım deneyi)",
       latex:
-        "\\begin{aligned} \\text{P}&: K_p = 0{,}5\\,K_u \\\\ \\text{PI}&: K_p = 0{,}4\\,K_u,\\; T_i = 0{,}8\\,T_u \\\\ \\text{PID}&: K_p = 0{,}6\\,K_u,\\; T_i = 0{,}5\\,T_u,\\; T_d = 0{,}125\\,T_u \\end{aligned}",
+        "\\begin{aligned} \\text{P}&: K_p = 0{,}5\\,K_u \\\\ \\text{PI}&: K_p = 0{,}45\\,K_u,\\; T_i = T_u/1{,}2 \\\\ \\text{PID}&: K_p = 0{,}6\\,K_u,\\; T_i = 0{,}5\\,T_u,\\; T_d = 0{,}125\\,T_u \\end{aligned}",
     },
     {
-      label: "Açık çevrim (Tablo 6.1), a = K·L/T",
+      label: "Açık çevrim (reaksiyon eğrisi), a = K·L/T",
       latex:
-        "\\begin{aligned} \\text{P}&: K_p = 1/a \\\\ \\text{PI}&: K_p = 0{,}9/a,\\; T_i = 3L \\\\ \\text{PID}&: K_p = 1{,}2/a,\\; T_i = 2L,\\; T_d = L/2 \\end{aligned}",
+        "\\begin{aligned} \\text{P}&: K_p = 1/a \\\\ \\text{PI}&: K_p = 0{,}9/a,\\; T_i = L/0{,}3 \\\\ \\text{PID}&: K_p = 1{,}2/a,\\; T_i = 2L,\\; T_d = L/2 \\end{aligned}",
     },
   ],
   references: [
+    { ...OGATA, note: "Ziegler & Nichols (1942), Trans. ASME 64:759–768 klasik kuralları." },
     {
       ...ASTROM,
-      note: "Ziegler & Nichols (1942), Trans. ASME 64:759–768 kurallarının yorumu. Özgün makaledeki kapalı çevrim PI değerleri 0,45·K_u ve T_u/1,2 olarak aktarılır (Hellem, NTNU 2001; özgün metin incelenmedi); burada Tablo 6.2 kullanıldı.",
+      note: "a = K·L/T tanımı, örnekler ve beklenen kapalı çevrim periyodu (P, PID). PI için değiştirilmiş katsayılar (0,4·K_u, 0,8·T_u; 3L) önerir; burada klasik değerler kullanılır.",
     },
   ],
   inputs: [
@@ -232,12 +241,18 @@ export const pidAyari: CalcDefinition = {
     }
     outputs.Kp = Kp;
 
-    if (rule.ti !== undefined) {
-      const Ti = rule.ti * base;
+    if (rule.ti !== undefined || rule.tiDiv !== undefined) {
+      const Ti = rule.tiDiv !== undefined ? base / rule.tiDiv : (rule.ti as number) * base;
       const Ki = Kp / Ti;
       outputs.Ti = Ti;
       outputs.Ki = Ki;
-      steps.push({ label: "İntegral zamanı", latex: `T_i = ${n(rule.ti)} \\cdot ${baseSym} = ${n(rule.ti)} \\cdot ${qt(base)} = ${qt(Ti)}` });
+      steps.push({
+        label: "İntegral zamanı",
+        latex:
+          rule.tiDiv !== undefined
+            ? `T_i = \\frac{${baseSym}}{${n(rule.tiDiv)}} = \\frac{${qt(base)}}{${n(rule.tiDiv)}} = ${qt(Ti)}`
+            : `T_i = ${n(rule.ti as number)} \\cdot ${baseSym} = ${n(rule.ti as number)} \\cdot ${qt(base)} = ${qt(Ti)}`,
+      });
       steps.push({
         label: "İntegral kazancı (paralel form)",
         latex: `K_i = \\frac{K_p}{T_i} = \\frac{${n(Kp)}}{${qt(Ti)}} = ${n(Ki)}\\,\\mathrm{s}^{-1}`,
@@ -251,11 +266,13 @@ export const pidAyari: CalcDefinition = {
       steps.push({ label: "Türev zamanı", latex: `T_d = ${n(rule.td)} \\cdot ${baseSym} = ${n(rule.td)} \\cdot ${qt(base)} = ${qt(Td)}` });
       steps.push({ label: "Türev kazancı (paralel form)", latex: `K_d = K_p \\cdot T_d = ${n(Kp)} \\cdot ${qt(Td)} = ${qt(Kd)}` });
     }
-    const Tp = rule.tp * base;
-    outputs.Tp = Tp;
-    steps.push({ label: "Beklenen kapalı çevrim periyodu", latex: `T_p = ${n(rule.tp)} \\cdot ${baseSym} = ${n(rule.tp)} \\cdot ${qt(base)} = ${qt(Tp)}` });
+    if (rule.tp !== undefined) {
+      const Tp = rule.tp * base;
+      outputs.Tp = Tp;
+      steps.push({ label: "Beklenen kapalı çevrim periyodu", latex: `T_p = ${n(rule.tp)} \\cdot ${baseSym} = ${n(rule.tp)} \\cdot ${qt(base)} = ${qt(Tp)}` });
+    }
 
-    const checks: Check[] = [{ level: "uyari", message: MESSAGES.aggressive, reference: ASTROM }];
+    const checks: Check[] = [{ level: "uyari", message: MESSAGES.aggressive, reference: OGATA }];
     return { outputs, steps, checks };
   },
 };
