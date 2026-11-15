@@ -176,13 +176,14 @@ describe("<KayitAraclari> (CalcWorkspace içinde)", () => {
     expect((await within(panel).findByRole("alert")).textContent).toContain("Proje bulunamadı.");
 
     m.kayitOlusturAction.mockResolvedValue({ ok: false, hata: "Oturumunuz sona ermiş.", girisGerekli: true });
-    fireEvent.click(within(panel).getByRole("button", { name: "Kaydet" }));
+    // Önceki istek bitince düğme "Kaydediliyor…"dan "Kaydet"e döner; tıklamadan önce bekle (yük altında zamanlama).
+    fireEvent.click(await within(panel).findByRole("button", { name: "Kaydet" }));
     const giris = await within(panel).findByRole("link", { name: "Giriş yapın" });
     expect(giris.getAttribute("href")).toBe("/giris?yonlendir=/hesaplar/ohm-yasasi");
 
     m.kayitOlusturAction.mockRejectedValue(new TypeError("Failed to fetch"));
     const konsol = vi.spyOn(console, "error").mockImplementation(() => {});
-    fireEvent.click(within(panel).getByRole("button", { name: "Kaydet" }));
+    fireEvent.click(await within(panel).findByRole("button", { name: "Kaydet" }));
     expect((await within(panel).findByRole("alert")).textContent).toContain("Sunucuya ulaşılamadı");
     konsol.mockRestore();
     expect(m.replace).not.toHaveBeenCalled();

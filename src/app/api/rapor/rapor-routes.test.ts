@@ -350,7 +350,7 @@ describe("POST /api/rapor/karsilastirma", () => {
     expect(gelen[0].state.R).toEqual({ value: "1", unit: "ohm" });
     expect(gelen[0].state.V).toEqual({ value: "12", unit: "V" }); // varsayılanla tamamlanır
     expect(m.girdileriSuz).toHaveBeenCalledTimes(3);
-    expect(secenek).toMatchObject({ significant: 6, outputUnits: { I: "mA" }, preferredUnits: expect.objectContaining({ guc: "hp" }) });
+    expect(secenek).toMatchObject({ significant: 6, outputUnits: { I: "mA" }, preferredUnits: expect.objectContaining({ tork: "lbfft" }) });
     expect(m.taramaYap).toHaveBeenCalledWith(def, gelen[0], TARAMA, secenek);
     expect(m.cizgiGrafikSvg).toHaveBeenCalledWith(SERI);
     const [baslik, k, tarama] = m.karsilastirmaRaporuPdf.mock.calls[0] as unknown as [RaporBasligi, Karsilastirma, unknown];
